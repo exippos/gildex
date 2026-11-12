@@ -1,0 +1,19 @@
+# Go
+prototype/catalog.db
+prototype/thumbnails/
+prototype/_inbox/
+prototype/*.exe
+prototype/seed-out/
+
+# Node
+node_modules/
+frontend/dist/
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# test data
+test-data/

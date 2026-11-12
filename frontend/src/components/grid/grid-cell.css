@@ -1,0 +1,211 @@
+/* Grid cell — artwork is the only opaque object; no card chrome. */
+
+.grid-cell {
+  position: absolute;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+}
+
+.grid-cell:focus-visible {
+  outline: 1px solid var(--text-muted);
+  outline-offset: -1px;
+}
+
+.grid-cell.is-selected::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gilt);
+  border-radius: var(--radius-sm);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.cell-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* ---- placeholders ---- */
+
+.cell-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.cell-placeholder.is-missing {
+  background: var(--surface);
+}
+
+.cell-placeholder-frame {
+  width: 34%;
+  height: 34%;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  opacity: 0.8;
+}
+
+.cell-glyph {
+  width: 22px;
+  height: 22px;
+  opacity: 0.55;
+}
+
+.cell-glyph.is-danger {
+  color: var(--danger);
+  opacity: 0.8;
+}
+
+.cell-danger-tick {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 3px;
+  height: 14px;
+  background: var(--danger);
+}
+
+/* D42: a few thin vertical bars of varying height, like a rough spectrogram. */
+.cell-placeholder.is-audio {
+  padding: 0 12%;
+}
+
+.spectro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  width: 100%;
+  height: 52%;
+}
+
+.spectro-bar {
+  flex: 1 1 0;
+  min-width: 1px;
+  max-width: 3px;
+  background: var(--text-muted);
+  opacity: 0.55;
+  border-radius: 0;
+}
+
+/* ---- hover: faint frosted tint, no strobing ---- */
+
+.cell-hover {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-glass);
+  opacity: 0;
+  transition: opacity 120ms linear;
+  pointer-events: none;
+}
+
+.grid-cell:hover .cell-hover,
+.grid-cell:focus-visible .cell-hover {
+  opacity: 0.38;
+}
+
+/* ---- badges (D22) ---- */
+
+.cell-fav {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  background: var(--gilt);
+  transform: rotate(45deg);
+  z-index: 2;
+}
+
+.cell-meta {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-glass);
+  pointer-events: none;
+}
+
+.cell-status {
+  display: block;
+  width: 3px;
+  height: 9px;
+  border-radius: 0;
+}
+
+.cell-status.status-final {
+  background: var(--status-final);
+}
+.cell-status.status-wip {
+  background: var(--status-wip);
+}
+.cell-status.status-draft {
+  background: var(--status-draft);
+}
+
+.cell-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.rating-dot {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--hairline);
+}
+
+.rating-dot.is-on {
+  background: var(--text-muted);
+}
+
+/* ---- selection: 2px ring (above) + stepped corner tick ---- */
+
+.cell-tick {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-left: 2px solid var(--gilt);
+  border-top: 2px solid var(--gilt);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.cell-tick::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 7px;
+  height: 7px;
+  border-left: 1px solid var(--gilt);
+  border-top: 1px solid var(--gilt);
+  opacity: 0.7;
+}

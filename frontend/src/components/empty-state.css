@@ -1,0 +1,134 @@
+/* First-run empty state — opaque (part of the grid wall), engraved ornament. */
+
+.empty-state {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  text-align: center;
+  background: var(--bg);
+}
+
+.empty-ornament {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.empty-ornament span {
+  display: block;
+  height: 1px;
+  background: var(--gilt);
+  opacity: 0.6;
+}
+
+.empty-ornament span:nth-child(1) {
+  width: 72px;
+}
+.empty-ornament span:nth-child(2) {
+  width: 46px;
+  opacity: 0.42;
+}
+.empty-ornament span:nth-child(3) {
+  width: 22px;
+  opacity: 0.28;
+}
+
+.empty-line {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.empty-hint {
+  max-width: 46ch;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.empty-root {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.empty-stage {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-progress {
+  width: 240px;
+  max-width: 100%;
+  height: 2px;
+  margin-top: 2px;
+  background: var(--hairline);
+}
+
+.empty-progress span {
+  display: block;
+  height: 100%;
+  background: var(--gilt);
+  transition: width 120ms linear;
+}
+
+.empty-form {
+  display: flex;
+  gap: 4px;
+  width: 380px;
+  max-width: 100%;
+  margin-top: 6px;
+}
+
+.empty-form input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.empty-form button {
+  flex: 0 0 auto;
+  padding: 4px 12px;
+  border-color: var(--gilt);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.empty-form button:hover {
+  color: var(--gilt-bright);
+  border-color: var(--gilt-bright);
+}
+
+.empty-error {
+  max-width: 46ch;
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.empty-action {
+  margin-top: 6px;
+  border-color: var(--gilt);
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 14px;
+}
+
+.empty-action:hover {
+  color: var(--gilt-bright);
+  border-color: var(--gilt-bright);
+}

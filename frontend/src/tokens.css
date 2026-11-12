@@ -1,0 +1,55 @@
+/* GILDEX design tokens — transcribe exactly from docs_v2/06-ui-visual-style.md §3.
+   Gilt is an edge, never a fill. Zero network: fonts are local stacks. */
+
+:root {
+  /* dark ("gilt vault") is default */
+  --bg: #0f1713;
+  --surface: #16201b;
+  --surface-inset: #0e1913;
+  --surface-glass: rgba(22, 32, 27, 0.55);
+  --hairline: #26322b;
+  --text: #e6eae4;
+  --text-muted: #93a099;
+
+  --gilt: #c6a15b;
+  --gilt-bright: #d4af37;
+  --status-final: #5e7a6a;
+  --status-wip: #a97648;
+  --status-draft: #93a099;
+  --danger: #a4574e;
+  --focus: #d4af37;
+
+  --space: 4px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --blur: 12px;
+
+  /* local font stacks (Archivo/Marcellus bundled in v1, never fetched) */
+  --font-ui: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Marcellus', 'Cinzel', 'Palatino Linotype', Georgia, serif;
+
+  --rail-width: 220px;
+  --preview-width: 300px;
+  --header-height: 48px;
+  --footer-height: 36px;
+}
+
+/* light ("scandinavian daylight") overrides only the neutrals */
+[data-theme='light'] {
+  --bg: #f4f3ee;
+  --surface: #ffffff;
+  --surface-inset: #ece9e1;
+  --surface-glass: rgba(255, 255, 255, 0.6);
+  --hairline: #d8d5cc;
+  --text: #1c221e;
+  --text-muted: #6b726b;
+}
+
+/* semantic aliases */
+:root {
+  --accent: var(--gilt);
+  --accent-strong: var(--gilt-bright);
+  --border: var(--hairline);
+  --muted: var(--text-muted);
+  --radius: var(--radius-sm);
+}
