@@ -31,12 +31,11 @@ These rules govern how work is divided across models.
 
 `main` is the stable baseline. Prototypes never land on it by accident.
 
-- **Layout.** One checkout. Prototype work happens on a `prototype/*` branch;
-  `main` is the untouched baseline (`stable-pre-ui` tag marks the pre-UI
-  commit) and is only reached by an explicitly approved merge.
-- **Branches.** One branch per experiment, cut from `main`
-  (`prototype/<area>-vN`). Don't chain experiments unless the new one
-  explicitly builds on the previous branch.
+- **Layout.** One checkout, two branches only: `main` (stable baseline, tagged
+  `stable-pre-ui`) and `ui-flair` (the UI prototype).
+- **Branches.** Commit prototype work to `ui-flair`; do not create additional
+  branches. New experiments land there too, and `main` is only reached by an
+  explicitly approved merge.
 - **Clean-tree gate.** `git status --porcelain` must be empty before creating,
   switching, or merging branches. Commit or stash first; never `git add -A`
   with untracked docs/design/scratch files present.
@@ -64,8 +63,7 @@ at the repository root — no separate checkout:
 - `design/` — README plus the six `*-bento-ui.html` mockups and `refs/`
 - Catalogue, palette per mockup, and usage notes: `design/README.md`
 
-`design/` is local-only: git ignores it via `.git/info/exclude` so it stays
-visible on every branch. The versioned copy is branch `design/ui-references`.
+`design/` is tracked on `ui-flair` (absent when `main` is checked out).
 
 Before changing UI, pick one mockup and name it in the task description; port
 its tokens rather than copying its CSS.
