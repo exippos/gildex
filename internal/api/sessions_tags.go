@@ -1,8 +1,11 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
+
+	"gildex/internal/store"
 )
 
 func (a *API) handleSessions(w http.ResponseWriter, r *http.Request) {
@@ -18,23 +21,31 @@ func (a *API) handleSessions(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, sessions)
 }
 
-func (a *API) handleRenameSession(w http.ResponseWriter, r *http.Request) {
+func (a *API) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
 	st := a.requireStore(w)
 	if st == nil {
 		return
 	}
-	var body struct {
-		Label string `json:"label"`
-	}
-	if !decodeJSON(w, r, &body) {
+	var raw map[string]json.RawMessage
+	if !decodeJSON(w, r, &raw) {
 		return
 	}
-	label := strings.TrimSpace(body.Label)
-	if label == "" {
-		writeError(w, http.StatusBadRequest, "label is required")
+	var patch store.SessionPatch
+	if v, ok := raw["label"]; ok {
+		var label string
+		if err := json.Unmarshal(v, &label); err != nil || strings.TrimSpace(label) == "" {
+			writeError(w, http.StatusBadRequest, "label is required")
+			return
+		}
+		patch.Label = &label
+	}
+	cover, err := rawNullableString(raw, "coverItemId")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid coverItemId")
 		return
 	}
-	session, err := st.RenameSession(r.PathValue("id"), label)
+	patch.CoverItemID = cover
+	session, err := st.UpdateSession(r.PathValue("id"), patch)
 	if err != nil {
 		writeStoreError(w, err)
 		return

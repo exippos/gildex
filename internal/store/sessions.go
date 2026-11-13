@@ -3,6 +3,7 @@ package store
 import (
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 
 	"gildex/internal/model"
@@ -13,11 +14,15 @@ const sessionGapMS int64 = 7200000 // 2 hours
 // Sessions lists clusters ordered newest first.
 func (s *Store) Sessions() ([]model.Session, error) {
 	rows, err := s.db.Query(`
-		SELECT s.id, s.label, s.starts_at, s.ends_at,
+		SELECT s.id, s.label, s.starts_at, s.ends_at, s.cover_item_id,
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id),
-			COALESCE((SELECT i.thumbnail_path FROM items i
-				WHERE i.session_id = s.id AND i.thumbnail_path <> ''
-				ORDER BY i.timestamp DESC LIMIT 1), '')
+			COALESCE(
+				(SELECT i.thumbnail_path FROM items i
+					WHERE i.id = s.cover_item_id AND i.session_id = s.id AND i.thumbnail_path <> ''),
+				(SELECT i.thumbnail_path FROM items i
+					WHERE i.session_id = s.id AND i.thumbnail_path <> ''
+					ORDER BY i.timestamp DESC LIMIT 1),
+				'')
 		FROM sessions s
 		ORDER BY s.starts_at DESC`)
 	if err != nil {
@@ -27,10 +32,14 @@ func (s *Store) Sessions() ([]model.Session, error) {
 
 	out := []model.Session{}
 	for rows.Next() {
-		var sess model.Session
-		if err := rows.Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &sess.ItemCount, &sess.ThumbnailPath); err != nil {
+		var (
+			sess  model.Session
+			cover sql.NullString
+		)
+		if err := rows.Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover, &sess.ItemCount, &sess.ThumbnailPath); err != nil {
 			return nil, err
 		}
+		sess.CoverItemID = nullString(cover)
 		out = append(out, sess)
 	}
 	return out, rows.Err()
@@ -38,33 +47,94 @@ func (s *Store) Sessions() ([]model.Session, error) {
 
 // GetSession returns one session.
 func (s *Store) GetSession(id string) (*model.Session, error) {
-	var sess model.Session
+	var (
+		sess  model.Session
+		cover sql.NullString
+	)
 	err := s.db.QueryRow(`
-		SELECT s.id, s.label, s.starts_at, s.ends_at,
+		SELECT s.id, s.label, s.starts_at, s.ends_at, s.cover_item_id,
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id),
-			COALESCE((SELECT i.thumbnail_path FROM items i
-				WHERE i.session_id = s.id AND i.thumbnail_path <> ''
-				ORDER BY i.timestamp DESC LIMIT 1), '')
+			COALESCE(
+				(SELECT i.thumbnail_path FROM items i
+					WHERE i.id = s.cover_item_id AND i.session_id = s.id AND i.thumbnail_path <> ''),
+				(SELECT i.thumbnail_path FROM items i
+					WHERE i.session_id = s.id AND i.thumbnail_path <> ''
+					ORDER BY i.timestamp DESC LIMIT 1),
+				'')
 		FROM sessions s WHERE s.id = ?`, id).
-		Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &sess.ItemCount, &sess.ThumbnailPath)
+		Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover, &sess.ItemCount, &sess.ThumbnailPath)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
+	sess.CoverItemID = nullString(cover)
 	return &sess, nil
 }
 
-// RenameSession updates a session label.
-func (s *Store) RenameSession(id, label string) (*model.Session, error) {
-	res, err := s.db.Exec(`UPDATE sessions SET label = ? WHERE id = ?`, label, id)
+// SessionPatch is a partial session update. CoverItemID.Set with a nil Value
+// clears the user-picked label image.
+type SessionPatch struct {
+	Label       *string
+	CoverItemID NullableString
+}
+
+// UpdateSession updates a session label and/or its label image.
+func (s *Store) UpdateSession(id string, p SessionPatch) (*model.Session, error) {
+	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	n, _ := res.RowsAffected()
-	if n == 0 {
-		return nil, ErrNotFound
+	defer tx.Rollback()
+
+	var sets []string
+	var args []any
+	if p.Label != nil {
+		label := strings.TrimSpace(*p.Label)
+		if label == "" {
+			return nil, invalid("label is required")
+		}
+		sets = append(sets, "label = ?")
+		args = append(args, label)
+	}
+	if p.CoverItemID.Set {
+		if p.CoverItemID.Value == nil {
+			sets = append(sets, "cover_item_id = NULL")
+		} else {
+			var member int
+			if err := tx.QueryRow(`SELECT COUNT(*) FROM items WHERE id = ? AND session_id = ?`,
+				*p.CoverItemID.Value, id).Scan(&member); err != nil {
+				return nil, err
+			}
+			if member == 0 {
+				return nil, invalid("cover item is not in this session")
+			}
+			sets = append(sets, "cover_item_id = ?")
+			args = append(args, *p.CoverItemID.Value)
+		}
+	}
+
+	if len(sets) == 0 {
+		var one int
+		if err := tx.QueryRow(`SELECT 1 FROM sessions WHERE id = ?`, id).Scan(&one); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+	} else {
+		args = append(args, id)
+		res, err := tx.Exec(`UPDATE sessions SET `+strings.Join(sets, ", ")+` WHERE id = ?`, args...)
+		if err != nil {
+			return nil, err
+		}
+		if n, _ := res.RowsAffected(); n == 0 {
+			return nil, ErrNotFound
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 	return s.GetSession(id)
 }
@@ -74,6 +144,7 @@ type oldSession struct {
 	label    string
 	startsAt int64
 	endsAt   int64
+	cover    sql.NullString
 	used     bool
 }
 
@@ -103,14 +174,14 @@ func (s *Store) ReclusterSessions() error {
 		return err
 	}
 
-	oldRows, err := s.db.Query(`SELECT id, label, starts_at, ends_at FROM sessions`)
+	oldRows, err := s.db.Query(`SELECT id, label, starts_at, ends_at, cover_item_id FROM sessions`)
 	if err != nil {
 		return err
 	}
 	var olds []oldSession
 	for oldRows.Next() {
 		var o oldSession
-		if err := oldRows.Scan(&o.id, &o.label, &o.startsAt, &o.endsAt); err != nil {
+		if err := oldRows.Scan(&o.id, &o.label, &o.startsAt, &o.endsAt, &o.cover); err != nil {
 			oldRows.Close()
 			return err
 		}
@@ -160,6 +231,7 @@ func (s *Store) ReclusterSessions() error {
 
 		sessionID := ""
 		label := ""
+		var cover any
 		bestOverlap := int64(0)
 		bestIdx := -1
 		for i := range olds {
@@ -184,14 +256,17 @@ func (s *Store) ReclusterSessions() error {
 		if bestIdx >= 0 {
 			sessionID = olds[bestIdx].id
 			label = olds[bestIdx].label
+			if olds[bestIdx].cover.Valid {
+				cover = olds[bestIdx].cover.String
+			}
 			olds[bestIdx].used = true
 		} else {
 			sessionID = NewID()
 			label = "Session · " + time.UnixMilli(start).Local().Format("2006-01-02")
 		}
 
-		if _, err := tx.Exec(`INSERT INTO sessions (id, label, starts_at, ends_at) VALUES (?, ?, ?, ?)`,
-			sessionID, label, start, end); err != nil {
+		if _, err := tx.Exec(`INSERT INTO sessions (id, label, starts_at, ends_at, cover_item_id) VALUES (?, ?, ?, ?, ?)`,
+			sessionID, label, start, end, cover); err != nil {
 			return err
 		}
 		for _, t := range cluster {

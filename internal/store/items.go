@@ -379,6 +379,19 @@ func (s *Store) Batch(p BatchPatch) error {
 			if _, err := tx.Exec(`DELETE FROM collection_item WHERE collection_id = ? AND item_id = ?`, p.RemoveFromCollectionID, id); err != nil {
 				return err
 			}
+			if _, err := tx.Exec(`UPDATE collections SET cover_item_id = NULL WHERE id = ? AND cover_item_id = ?`,
+				p.RemoveFromCollectionID, id); err != nil {
+				return err
+			}
+		}
+	}
+	if p.SessionSet {
+		// Reassigning items can strand a session's label image on an item that
+		// is no longer part of it.
+		if _, err := tx.Exec(`UPDATE sessions SET cover_item_id = NULL
+			WHERE cover_item_id IS NOT NULL
+				AND cover_item_id NOT IN (SELECT id FROM items WHERE session_id = sessions.id)`); err != nil {
+			return err
 		}
 	}
 	return tx.Commit()

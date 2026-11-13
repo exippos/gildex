@@ -69,12 +69,13 @@ type Item struct {
 
 // Session is a first-class time-gap cluster (D6, D20).
 type Session struct {
-	ID            string `json:"id"`
-	Label         string `json:"label"`
-	StartsAt      int64  `json:"startsAt"`
-	EndsAt        int64  `json:"endsAt"`
-	ItemCount     int    `json:"itemCount"`
-	ThumbnailPath string `json:"thumbnailPath"`
+	ID            string  `json:"id"`
+	Label         string  `json:"label"`
+	StartsAt      int64   `json:"startsAt"`
+	EndsAt        int64   `json:"endsAt"`
+	ItemCount     int     `json:"itemCount"`
+	ThumbnailPath string  `json:"thumbnailPath"`
+	CoverItemID   *string `json:"coverItemId"` // user-picked label image, nil = derived
 }
 
 // Tag is a flat user-owned vocabulary term (D6, D23).
@@ -86,11 +87,12 @@ type Tag struct {
 
 // Collection is a user-authored, ordered index (D21).
 type Collection struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	ItemCount     int    `json:"itemCount"`
-	ThumbnailPath string `json:"thumbnailPath"`
+	ID            string  `json:"id"`
+	Name          string  `json:"name"`
+	Description   string  `json:"description"`
+	ItemCount     int     `json:"itemCount"`
+	ThumbnailPath string  `json:"thumbnailPath"`
+	CoverItemID   *string `json:"coverItemId"` // user-picked label image, nil = derived
 }
 
 // Note is a markdown context record (D8, D10).

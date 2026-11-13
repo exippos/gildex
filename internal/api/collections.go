@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"gildex/internal/store"
@@ -49,18 +50,27 @@ func (a *API) handleUpdateCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		Name        *string   `json:"name"`
-		Description *string   `json:"description"`
-		Order       *[]string `json:"order"`
+		Name        *string         `json:"name"`
+		Description *string         `json:"description"`
+		Order       *[]string       `json:"order"`
+		CoverItemID json.RawMessage `json:"coverItemId"`
 	}
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	collection, err := st.UpdateCollection(r.PathValue("id"), store.CollectionPatch{
-		Name:        body.Name,
-		Description: body.Description,
-		Order:       body.Order,
-	})
+	var patch store.CollectionPatch
+	patch.Name = body.Name
+	patch.Description = body.Description
+	patch.Order = body.Order
+	if body.CoverItemID != nil {
+		cover, err := rawNullableString(map[string]json.RawMessage{"coverItemId": body.CoverItemID}, "coverItemId")
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid coverItemId")
+			return
+		}
+		patch.CoverItemID = cover
+	}
+	collection, err := st.UpdateCollection(r.PathValue("id"), patch)
 	if err != nil {
 		writeStoreError(w, err)
 		return

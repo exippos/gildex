@@ -34,7 +34,7 @@ func (a *API) Register(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH /api/items/{id}", a.handlePatchItem)
 
 	mux.HandleFunc("GET /api/sessions", a.handleSessions)
-	mux.HandleFunc("PATCH /api/sessions/{id}", a.handleRenameSession)
+	mux.HandleFunc("PATCH /api/sessions/{id}", a.handleUpdateSession)
 
 	mux.HandleFunc("GET /api/tags", a.handleTags)
 	mux.HandleFunc("POST /api/tags", a.handleCreateTag)
@@ -69,6 +69,11 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 }
 
 func writeStoreError(w http.ResponseWriter, err error) {
+	var ve store.ValidationError
+	if errors.As(err, &ve) {
+		writeError(w, http.StatusBadRequest, ve.Message)
+		return
+	}
 	if errors.Is(err, store.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "not found")
 		return

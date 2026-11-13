@@ -19,6 +19,13 @@ import (
 // ErrNotFound is returned when a requested row does not exist.
 var ErrNotFound = errors.New("not found")
 
+// ValidationError marks input the user can correct; the API answers 400.
+type ValidationError struct{ Message string }
+
+func (e ValidationError) Error() string { return e.Message }
+
+func invalid(message string) error { return ValidationError{Message: message} }
+
 // Store wraps the SQLite database and its root path.
 type Store struct {
 	db   *sql.DB
@@ -56,10 +63,11 @@ CREATE TABLE IF NOT EXISTS items (
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
-  id        TEXT PRIMARY KEY,
-  label     TEXT NOT NULL,
-  starts_at INTEGER NOT NULL,
-  ends_at   INTEGER NOT NULL
+  id            TEXT PRIMARY KEY,
+  label         TEXT NOT NULL,
+  starts_at     INTEGER NOT NULL,
+  ends_at       INTEGER NOT NULL,
+  cover_item_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS tags (
@@ -74,9 +82,10 @@ CREATE TABLE IF NOT EXISTS item_tag (
 );
 
 CREATE TABLE IF NOT EXISTS collections (
-  id          TEXT PRIMARY KEY,
-  name        TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT ''
+  id            TEXT PRIMARY KEY,
+  name          TEXT NOT NULL,
+  description   TEXT NOT NULL DEFAULT '',
+  cover_item_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS collection_item (
@@ -138,7 +147,58 @@ func Open(dbPath, root string) (*Store, error) {
 		db.Close()
 		return nil, err
 	}
+	if err := migrate(db); err != nil {
+		db.Close()
+		return nil, err
+	}
 	return &Store{db: db, root: root}, nil
+}
+
+// migrate adds columns introduced after the first prototype schema. SQLite
+// has no "ADD COLUMN IF NOT EXISTS", so each is checked first.
+func migrate(db *sql.DB) error {
+	columns := []struct{ table, column, ddl string }{
+		{"sessions", "cover_item_id", `ALTER TABLE sessions ADD COLUMN cover_item_id TEXT`},
+		{"collections", "cover_item_id", `ALTER TABLE collections ADD COLUMN cover_item_id TEXT`},
+	}
+	for _, c := range columns {
+		ok, err := hasColumn(db, c.table, c.column)
+		if err != nil {
+			return err
+		}
+		if ok {
+			continue
+		}
+		if _, err := db.Exec(c.ddl); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func hasColumn(db *sql.DB, table, column string) (bool, error) {
+	rows, err := db.Query(`PRAGMA table_info(` + table + `)`)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			cid     int
+			name    string
+			typ     string
+			notNull int
+			dflt    any
+			pk      int
+		)
+		if err := rows.Scan(&cid, &name, &typ, &notNull, &dflt, &pk); err != nil {
+			return false, err
+		}
+		if name == column {
+			return true, nil
+		}
+	}
+	return false, rows.Err()
 }
 
 // Close closes the underlying database.

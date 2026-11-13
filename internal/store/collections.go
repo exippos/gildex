@@ -13,10 +13,17 @@ func (s *Store) Collections() ([]model.Collection, error) {
 	rows, err := s.db.Query(`
 		SELECT c.id, c.name, c.description,
 			(SELECT COUNT(*) FROM collection_item ci WHERE ci.collection_id = c.id),
-			COALESCE((SELECT i.thumbnail_path
-				FROM collection_item ci JOIN items i ON i.id = ci.item_id
-				WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
-				ORDER BY ci.position ASC LIMIT 1), '')
+			COALESCE(
+				(SELECT i.thumbnail_path FROM items i
+					WHERE i.id = c.cover_item_id AND i.thumbnail_path <> ''
+						AND EXISTS (SELECT 1 FROM collection_item ci
+							WHERE ci.collection_id = c.id AND ci.item_id = i.id)),
+				(SELECT i.thumbnail_path
+					FROM collection_item ci JOIN items i ON i.id = ci.item_id
+					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
+					ORDER BY ci.position ASC LIMIT 1),
+				''),
+			c.cover_item_id
 		FROM collections c
 		ORDER BY c.name COLLATE NOCASE ASC`)
 	if err != nil {
@@ -26,10 +33,14 @@ func (s *Store) Collections() ([]model.Collection, error) {
 
 	out := []model.Collection{}
 	for rows.Next() {
-		var c model.Collection
-		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.ThumbnailPath); err != nil {
+		var (
+			c     model.Collection
+			cover sql.NullString
+		)
+		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.ThumbnailPath, &cover); err != nil {
 			return nil, err
 		}
+		c.CoverItemID = nullString(cover)
 		out = append(out, c)
 	}
 	return out, rows.Err()
@@ -37,22 +48,33 @@ func (s *Store) Collections() ([]model.Collection, error) {
 
 // GetCollection returns one collection.
 func (s *Store) GetCollection(id string) (*model.Collection, error) {
-	var c model.Collection
+	var (
+		c     model.Collection
+		cover sql.NullString
+	)
 	err := s.db.QueryRow(`
 		SELECT c.id, c.name, c.description,
 			(SELECT COUNT(*) FROM collection_item ci WHERE ci.collection_id = c.id),
-			COALESCE((SELECT i.thumbnail_path
-				FROM collection_item ci JOIN items i ON i.id = ci.item_id
-				WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
-				ORDER BY ci.position ASC LIMIT 1), '')
+			COALESCE(
+				(SELECT i.thumbnail_path FROM items i
+					WHERE i.id = c.cover_item_id AND i.thumbnail_path <> ''
+						AND EXISTS (SELECT 1 FROM collection_item ci
+							WHERE ci.collection_id = c.id AND ci.item_id = i.id)),
+				(SELECT i.thumbnail_path
+					FROM collection_item ci JOIN items i ON i.id = ci.item_id
+					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
+					ORDER BY ci.position ASC LIMIT 1),
+				''),
+			c.cover_item_id
 		FROM collections c WHERE c.id = ?`, id).
-		Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.ThumbnailPath)
+		Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.ThumbnailPath, &cover)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
+	c.CoverItemID = nullString(cover)
 	return &c, nil
 }
 
@@ -71,11 +93,13 @@ func (s *Store) CreateCollection(name, description string) (*model.Collection, e
 }
 
 // CollectionPatch is a partial collection update. Order, when non-nil,
-// rewrites the full ordered membership (D21).
+// rewrites the full ordered membership (D21). CoverItemID.Set with a nil Value
+// clears the user-picked label image.
 type CollectionPatch struct {
 	Name        *string
 	Description *string
 	Order       *[]string
+	CoverItemID NullableString
 }
 
 // UpdateCollection updates name/description and/or the full item order.
@@ -99,6 +123,33 @@ func (s *Store) UpdateCollection(id string, p CollectionPatch) (*model.Collectio
 	if p.Description != nil {
 		sets = append(sets, "description = ?")
 		args = append(args, strings.TrimSpace(*p.Description))
+	}
+	if p.CoverItemID.Set {
+		if p.CoverItemID.Value == nil {
+			sets = append(sets, "cover_item_id = NULL")
+		} else {
+			member := false
+			if p.Order != nil {
+				for _, itemID := range *p.Order {
+					if itemID == *p.CoverItemID.Value {
+						member = true
+						break
+					}
+				}
+			} else {
+				var count int
+				if err := tx.QueryRow(`SELECT COUNT(*) FROM collection_item WHERE collection_id = ? AND item_id = ?`,
+					id, *p.CoverItemID.Value).Scan(&count); err != nil {
+					return nil, err
+				}
+				member = count > 0
+			}
+			if !member {
+				return nil, invalid("cover item is not in this collection")
+			}
+			sets = append(sets, "cover_item_id = ?")
+			args = append(args, *p.CoverItemID.Value)
+		}
 	}
 	if len(sets) > 0 {
 		args = append(args, id)
@@ -131,6 +182,13 @@ func (s *Store) UpdateCollection(id string, p CollectionPatch) (*model.Collectio
 				id, itemID, i); err != nil {
 				return nil, err
 			}
+		}
+		// A reordered membership can drop the current label image.
+		if _, err := tx.Exec(`UPDATE collections SET cover_item_id = NULL
+			WHERE id = ? AND cover_item_id IS NOT NULL
+				AND cover_item_id NOT IN (SELECT item_id FROM collection_item WHERE collection_id = ?)`,
+			id, id); err != nil {
+			return nil, err
 		}
 	}
 
@@ -207,8 +265,17 @@ func addCollectionItemsTx(tx *sql.Tx, collectionID string, itemIDs []string) err
 
 // RemoveCollectionItem removes one item from a collection.
 func (s *Store) RemoveCollectionItem(collectionID, itemID string) error {
-	if _, err := s.db.Exec(`DELETE FROM collection_item WHERE collection_id = ? AND item_id = ?`, collectionID, itemID); err != nil {
+	tx, err := s.db.Begin()
+	if err != nil {
 		return err
 	}
-	return nil
+	defer tx.Rollback()
+	if _, err := tx.Exec(`DELETE FROM collection_item WHERE collection_id = ? AND item_id = ?`, collectionID, itemID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`UPDATE collections SET cover_item_id = NULL WHERE id = ? AND cover_item_id = ?`,
+		collectionID, itemID); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
