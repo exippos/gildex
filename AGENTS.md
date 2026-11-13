@@ -54,3 +54,13 @@ These rules govern how work is divided across models.
   `git log --oneline main..HEAD`, `git diff --stat main..HEAD`, and
   `git rev-parse --short main` (must equal the baseline unless a merge was
   approved).
+
+## UI references
+
+Static HTML mockups (reference only, not app code) live in the design worktree:
+
+- `../gildex-design/design/` — branch `design/ui-references`
+- Catalogue, palette per mockup, and usage notes: `../gildex-design/design/README.md`
+
+Before changing UI, pick one mockup and name it in the task description; port
+its tokens rather than copying its CSS.
