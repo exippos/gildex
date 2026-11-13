@@ -226,6 +226,9 @@ function GroupTile({
   onToggle: () => void
 }) {
   const poster = group.thumb ? thumbUrl(group.thumb) : null
+  const posterStyle = poster
+    ? ({ '--tile-art': `url("${poster}")` } as CSSProperties)
+    : undefined
   const peeked = group.items
     .filter((item) => item.thumbnailPath)
     .slice(0, 2)
@@ -256,9 +259,13 @@ function GroupTile({
         </span>
       )}
 
-      <span className="group-tile-poster">
+      <span className="group-tile-poster" style={posterStyle}>
         {poster ? (
-          <img src={poster} alt="" loading="lazy" draggable={false} />
+          <>
+            <img src={poster} alt="" loading="lazy" draggable={false} />
+            <span className="group-tile-relief is-light" aria-hidden="true" />
+            <span className="group-tile-relief is-shadow" aria-hidden="true" />
+          </>
         ) : (
           <TileFallback kind={group.fallback} />
         )}

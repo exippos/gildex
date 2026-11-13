@@ -236,12 +236,39 @@
   box-shadow: 0 0 0 1px var(--gilt-hi), 0 0 22px var(--accent-glow);
 }
 
-/* The root's own artwork is etched into the metal: a grayscale multiply
-   keeps the plate gold while the image sits in it as a darker relief. */
+/* The root's own artwork is struck into the metal: a faint base tone plus an
+   offset highlight/shadow pair reads as relief rather than a watermark. */
 .group-tile.is-open .group-tile-poster > img {
-  opacity: 0.4;
-  filter: grayscale(1) contrast(1.25) brightness(0.95);
+  opacity: 0.18;
+  filter: grayscale(1) contrast(1.1);
+}
+
+.group-tile-relief {
+  position: absolute;
+  inset: 0;
+  background-image: var(--tile-art);
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms linear;
+  /* keep the label plate clean */
+  -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 34%);
+  mask-image: linear-gradient(to top, transparent 0%, #000 34%);
+}
+
+.group-tile.is-open .group-tile-relief.is-light {
+  filter: grayscale(1) brightness(1.8) contrast(1.6) blur(0.4px);
+  mix-blend-mode: screen;
+  opacity: 0.22;
+  transform: translate(-1px, -1px);
+}
+
+.group-tile.is-open .group-tile-relief.is-shadow {
+  filter: grayscale(1) brightness(0.35) contrast(1.5) blur(0.4px);
   mix-blend-mode: multiply;
+  opacity: 0.42;
+  transform: translate(1px, 1px);
 }
 
 .group-tile.is-open .group-tile-poster > .tile-glyph,
