@@ -27,11 +27,17 @@
 - [X] Collapsible side panels controlls
 - [ ] Session split for AI gen and regular media (based on ai gen metadata)
     - [ ] Left side panel for session view split into AI/regular 
-- [ ] Collection/Session Edit
-    - [ ] Drag items to create collections
-    - [ ] Edit name, remove items from session/collection, add files to session manually
-    - [ ] Set an image as a group item image lable
+### Group items
+- [X] Collection/Session Edit
+    - [X] Drag items to create collections
+    - [X] Edit name, remove items from session/collection, add files to session manually
+    - [X] Set an image as a group item image lable
     - [ ] 
+### Tags
+- [ ] Add "untagged" tag
+- [ ] Make tags lines in right side panel smaller vertically, very compact list "> tag 545" 
+
+
 - [ ] Preview (right side) panel refocus
     - [ ] Focus on filename, triage (rating/type/favorite), metadata (timestamp, resolution), gen param, prompts
 - [ ] Model index search 
