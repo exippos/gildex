@@ -1,6 +1,6 @@
 /* Header — compact ocean chrome, gilt sunburst brand + type nav, inline search.
-   Gallery view controls live in a strip that reveals on hover, so the gallery
-   itself keeps the full remaining height. */
+   Panel controls live on the frame seams, so the gallery keeps the full
+   remaining height. */
 
 .app-header {
   padding: 0;
@@ -158,31 +158,6 @@
   border: 1px solid var(--gilt-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-float);
-}
-
-/* ---- gallery controls, revealed on hover / focus ---- */
-
-.header-reveal {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 15;
-  height: 40px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--hairline);
-  box-shadow: var(--shadow-float);
-  opacity: 0;
-  transform: translateY(-4px);
-  pointer-events: none;
-  transition: opacity 140ms linear, transform 140ms ease;
-}
-
-.app-header:hover .header-reveal,
-.app-header:focus-within .header-reveal {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
 }
 
 .effects-toggle {

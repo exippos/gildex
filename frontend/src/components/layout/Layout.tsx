@@ -24,12 +24,14 @@ function clamp(value: number, min: number, max?: number): number {
 
 // A draggable "gilt seam" handle. direction=+1 grows when dragged right (rail's
 // right edge); direction=-1 shrinks when dragged right (preview's left edge).
+// Clicking the seam (without dragging) collapses the panel it belongs to.
 function ResizeHandle({
   direction,
   width,
   min,
   max,
   onResize,
+  onCollapse,
   label,
 }: {
   direction: 1 | -1
@@ -37,39 +39,78 @@ function ResizeHandle({
   min: number
   max?: number
   onResize: (w: number) => void
+  onCollapse: () => void
   label: string
 }) {
-  const drag = useRef<{ startX: number; startW: number } | null>(null)
+  // `moved` separates a real drag from a click, so releasing after a resize
+  // never collapses the panel.
+  const drag = useRef<{ startX: number; startW: number; moved: boolean } | null>(null)
 
   return (
     <div
-      className="resize-handle"
+      className={`resize-handle${direction === 1 ? ' resize-handle--rail' : ' resize-handle--preview'}`}
       role="separator"
+      tabIndex={0}
       aria-orientation="vertical"
       aria-label={label}
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={Math.round(width)}
+      title="Click to collapse · drag to resize"
       onPointerDown={(event) => {
         event.preventDefault()
-        drag.current = { startX: event.clientX, startW: width }
+        drag.current = { startX: event.clientX, startW: width, moved: false }
         event.currentTarget.setPointerCapture(event.pointerId)
       }}
       onPointerMove={(event) => {
         const d = drag.current
         if (!d) return
-        onResize(clamp(d.startW + direction * (event.clientX - d.startX), min, max))
+        if (Math.abs(event.clientX - d.startX) > 3) d.moved = true
+        if (d.moved) {
+          onResize(clamp(d.startW + direction * (event.clientX - d.startX), min, max))
+        }
       }}
       onPointerUp={() => {
+        const d = drag.current
         drag.current = null
+        if (d && !d.moved) onCollapse()
       }}
       onPointerCancel={() => {
         drag.current = null
       }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        onCollapse()
+      }}
     >
       <span className="resize-rule" aria-hidden="true" />
       <span className="resize-tick" aria-hidden="true" />
+      <span className="resize-chevron" aria-hidden="true" />
     </div>
+  )
+}
+
+// A collapsed panel leaves a thin seam you can click to bring it back.
+function PanelGrip({
+  side,
+  label,
+  onOpen,
+}: {
+  side: 'left' | 'right'
+  label: string
+  onOpen: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className={`panel-grip panel-grip--${side}`}
+      aria-label={label}
+      title={label}
+      onClick={onOpen}
+    >
+      <span className="panel-grip-chevron" aria-hidden="true" />
+    </button>
   )
 }
 
@@ -121,30 +162,33 @@ export function Layout() {
 
   return (
     <div className="app-frame">
-      <Header
-        railOpen={railOpen}
-        previewOpen={previewOpen}
-        onToggleRail={() => setRailOpen((open) => !open)}
-        onTogglePreview={() => setPreviewOpen((open) => !open)}
-      />
+      <Header />
 
       <div className="frame-body">
         {workspace === 'ingest' ? (
           <Ingest />
         ) : (
           <>
-            {showRail && railOpen && (
-              <>
-                <LeftRail style={{ width: railWidth, flexBasis: railWidth }} />
-                <ResizeHandle
-                  direction={1}
-                  width={railWidth}
-                  min={RAIL_MIN}
-                  onResize={setRailWidth}
-                  label="Resize navigation rail"
+            {showRail &&
+              (railOpen ? (
+                <>
+                  <LeftRail style={{ width: railWidth, flexBasis: railWidth }} />
+                  <ResizeHandle
+                    direction={1}
+                    width={railWidth}
+                    min={RAIL_MIN}
+                    onResize={setRailWidth}
+                    onCollapse={() => setRailOpen(false)}
+                    label="Navigation rail seam"
+                  />
+                </>
+              ) : (
+                <PanelGrip
+                  side="left"
+                  label="Open navigation rail"
+                  onOpen={() => setRailOpen(true)}
                 />
-              </>
-            )}
+              ))}
 
             <main className="grid-column">
               <div className="grid-area">
@@ -156,18 +200,26 @@ export function Layout() {
               {workspace === 'gallery' && <BatchToolbar />}
             </main>
 
-            {showPreview && previewOpen && (
-              <>
-                <ResizeHandle
-                  direction={-1}
-                  width={previewWidth}
-                  min={PREVIEW_MIN}
-                  onResize={setPreviewWidth}
-                  label="Resize preview panel"
+            {showPreview &&
+              (previewOpen ? (
+                <>
+                  <ResizeHandle
+                    direction={-1}
+                    width={previewWidth}
+                    min={PREVIEW_MIN}
+                    onResize={setPreviewWidth}
+                    onCollapse={() => setPreviewOpen(false)}
+                    label="Preview seam"
+                  />
+                  <RightPreview style={{ width: previewWidth, flexBasis: previewWidth }} />
+                </>
+              ) : (
+                <PanelGrip
+                  side="right"
+                  label="Open quick preview"
+                  onOpen={() => setPreviewOpen(true)}
                 />
-                <RightPreview style={{ width: previewWidth, flexBasis: previewWidth }} />
-              </>
-            )}
+              ))}
           </>
         )}
       </div>

@@ -1,10 +1,8 @@
-// Fixed header — brand + workspace tabs + catalog search, theme/effects on the
-// right, and (for the gallery) a hover-reveal strip with the view controls.
+// Fixed header — brand + workspace tabs + catalog search, theme/effects on the right.
 import { useStore } from '../../store'
 import { THEMES, THEME_LABELS, type Theme } from '../../theme'
 import type { Workspace } from '../../types'
 import { SearchBar } from '../search/SearchBar'
-import { GridToolbar } from './GridToolbar'
 import './header.css'
 
 const WORKSPACES: ReadonlyArray<{ id: Workspace; label: string }> = [
@@ -13,17 +11,7 @@ const WORKSPACES: ReadonlyArray<{ id: Workspace; label: string }> = [
   { id: 'timeline', label: 'Timeline' },
 ]
 
-export function Header({
-  railOpen,
-  previewOpen,
-  onToggleRail,
-  onTogglePreview,
-}: {
-  railOpen: boolean
-  previewOpen: boolean
-  onToggleRail: () => void
-  onTogglePreview: () => void
-}) {
+export function Header() {
   const workspace = useStore((s) => s.workspace)
   const setWorkspace = useStore((s) => s.setWorkspace)
   const importing = useStore((s) => s.importing)
@@ -137,18 +125,6 @@ export function Header({
           {!effectsOn && <span className="effects-slash" aria-hidden="true" />}
         </button>
       </div>
-
-      {workspace !== 'ingest' && (
-        <div className="header-reveal">
-          <GridToolbar
-            showRail={workspace === 'gallery'}
-            railOpen={railOpen}
-            previewOpen={previewOpen}
-            onToggleRail={onToggleRail}
-            onTogglePreview={onTogglePreview}
-          />
-        </div>
-      )}
     </header>
   )
 }
