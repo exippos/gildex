@@ -74,15 +74,33 @@ select {
   font-variant-caps: small-caps;
 }
 
-/* frosted fixed chrome (blur only on fixed chrome — D14 glass contract) */
+/* frosted fixed chrome: sage-tinted glass + static specular + frost grain.
+   Blur remains on fixed chrome only (header, rail, preview, footer). */
 .chrome {
-  background: var(--surface-glass);
-  backdrop-filter: blur(var(--blur));
-  -webkit-backdrop-filter: blur(var(--blur));
+  position: relative;
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--blur-lg)) saturate(1.25) brightness(1.02);
+  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.25) brightness(1.02);
+  box-shadow: var(--glass-spec);
 }
+
+/* static grain: one rasterized tile, repeated. Never animated. */
+.chrome::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--grain);
+  background-repeat: repeat;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 1;
+}
+
 @supports not (backdrop-filter: blur(1px)) {
   .chrome {
     background: var(--surface);
+    box-shadow: none;
   }
 }
 

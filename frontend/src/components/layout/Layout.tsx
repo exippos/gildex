@@ -13,6 +13,7 @@ import { BatchToolbar } from '../grid/BatchToolbar'
 import { RightPreview } from '../preview/RightPreview'
 import { EmptyState } from '../EmptyState'
 import { Ingest } from '../ingest/Ingest'
+import { Atmosphere } from '../atmosphere/Atmosphere'
 import './layout.css'
 
 const RAIL_MIN = 160
@@ -87,6 +88,7 @@ export function Layout() {
   const loading = useStore((s) => s.loadingItems)
   const cellSize = useStore((s) => s.cellSize)
   const workspace = useStore((s) => s.workspace)
+  const effects = useStore((s) => s.effects)
 
   // Selecting anything should reveal the quick preview even if it was closed.
   useEffect(() => {
@@ -149,6 +151,7 @@ export function Layout() {
               <SearchBar />
               {workspace === 'gallery' && <GridToolbar />}
               <div className="grid-area">
+                {workspace === 'gallery' && effects === 'full' && <Atmosphere />}
                 {workspace === 'timeline' ? <TimelineCanvas /> : <Grid cellSize={cellSize} />}
                 {workspace === 'gallery' && <EmptyState />}
               </div>

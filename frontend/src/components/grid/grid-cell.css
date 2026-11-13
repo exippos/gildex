@@ -22,12 +22,23 @@
   outline-offset: -1px;
 }
 
+/* gradient gilt ring: paint the ramp in the border box, mask out the padding
+   box so only the 2px frame survives (works with border-radius) */
 .grid-cell.is-selected::before {
   content: '';
   position: absolute;
   inset: 0;
-  border: 2px solid var(--gilt);
+  border: 2px solid transparent;
   border-radius: var(--radius-sm);
+  background: var(--gilt-ramp) border-box;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
   z-index: 3;
   pointer-events: none;
 }
@@ -106,12 +117,12 @@
   border-radius: 0;
 }
 
-/* ---- hover: faint frosted tint, no strobing ---- */
+/* ---- hover: light-refracting sheen, opacity-only, no per-cell filters ---- */
 
 .cell-hover {
   position: absolute;
   inset: 0;
-  background: var(--surface-glass);
+  background: var(--sheen);
   opacity: 0;
   transition: opacity 120ms linear;
   pointer-events: none;
@@ -119,7 +130,7 @@
 
 .grid-cell:hover .cell-hover,
 .grid-cell:focus-visible .cell-hover {
-  opacity: 0.38;
+  opacity: 0.9;
 }
 
 /* ---- badges (D22) ---- */
@@ -192,8 +203,10 @@
   left: 0;
   width: 14px;
   height: 14px;
-  border-left: 2px solid var(--gilt);
-  border-top: 2px solid var(--gilt);
+  background-image: var(--gilt-ramp), var(--gilt-ramp);
+  background-size: 14px 2px, 2px 14px;
+  background-position: top left, top left;
+  background-repeat: no-repeat, no-repeat;
   z-index: 3;
   pointer-events: none;
 }
@@ -205,7 +218,9 @@
   top: 4px;
   width: 7px;
   height: 7px;
-  border-left: 1px solid var(--gilt);
-  border-top: 1px solid var(--gilt);
+  background-image: var(--gilt-ramp), var(--gilt-ramp);
+  background-size: 7px 1px, 1px 7px;
+  background-position: top left, top left;
+  background-repeat: no-repeat, no-repeat;
   opacity: 0.7;
 }

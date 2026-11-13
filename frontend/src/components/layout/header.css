@@ -87,7 +87,9 @@
   flex: 1 1 auto;
 }
 
-.theme-toggle {
+.theme-toggle,
+.effects-toggle {
+  position: relative;
   display: grid;
   place-items: center;
   width: 28px;
@@ -99,12 +101,30 @@
   background: transparent;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.effects-toggle:hover {
   color: var(--gilt-bright);
   border: 0;
 }
 
-.theme-toggle svg {
+.theme-toggle svg,
+.effects-toggle svg {
   width: 16px;
   height: 16px;
+}
+
+.effects-toggle.is-on {
+  color: var(--gilt);
+}
+
+/* reduced state: a hairline slash across the faceted mark */
+.effects-slash {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 1px;
+  transform: rotate(-45deg);
+  background: currentColor;
+  opacity: 0.9;
 }

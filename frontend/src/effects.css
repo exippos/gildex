@@ -1,0 +1,52 @@
+/* Effects toggle — the single place to audit the reduced state.
+   Selectors are prefixed with html[data-effects=…] so they win regardless of
+   per-component CSS import order. Full mode owns the material layer; reduced
+   mode falls back to the original flat (pre-prototype) treatments. */
+
+/* ---- reduced: flat matte, no blur, no grain, no sheen, no shader ---- */
+
+html[data-effects='reduced'] .chrome {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-effects='reduced'] .chrome::after {
+  display: none;
+}
+
+/* the animated atmosphere layer is unmounted in React; hide any leftover */
+html[data-effects='reduced'] .atmosphere {
+  display: none;
+}
+
+html[data-effects='reduced'] .grid-cell:hover .cell-hover,
+html[data-effects='reduced'] .grid-cell:focus-visible .cell-hover {
+  background: var(--surface-glass);
+  opacity: 0.38;
+}
+
+html[data-effects='reduced'] .grid-cell.is-selected::before {
+  border: 2px solid var(--gilt);
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+
+html[data-effects='reduced'] .workspace-tab.is-active::after {
+  background: var(--gilt);
+  background-size: auto;
+  transition: none;
+}
+
+/* ---- full: the gallery wall becomes transparent so the atmosphere shows
+   through gutters, margins and the empty state. Cells and all other surfaces
+   stay opaque. ---- */
+
+html[data-effects='full'] .grid-area,
+html[data-effects='full'] .grid-root,
+html[data-effects='full'] .grid-scroll,
+html[data-effects='full'] .grid-canvas,
+html[data-effects='full'] .empty-state {
+  background: transparent;
+}

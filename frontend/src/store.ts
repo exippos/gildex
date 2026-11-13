@@ -34,6 +34,19 @@ interface InspectorTarget {
   ownerLabel?: string
 }
 
+export type EffectsMode = 'full' | 'reduced'
+
+function readEffects(): EffectsMode {
+  try {
+    return localStorage.getItem('gildex-effects') === 'reduced' ? 'reduced' : 'full'
+  } catch {
+    return 'full'
+  }
+}
+
+const initialEffects = readEffects()
+document.documentElement.setAttribute('data-effects', initialEffects)
+
 interface AppState {
   // library / import
   library: LibraryStatus | null
@@ -80,6 +93,10 @@ interface AppState {
 
   // notes cache for the open inspector
   notes: Note[]
+
+  // presentation
+  effects: EffectsMode
+  setEffects: (mode: EffectsMode) => void
 
   // actions
   init: () => Promise<void>
@@ -175,6 +192,17 @@ export const useStore = create<AppState>((set, get) => ({
   collectionPicker: null,
 
   notes: [],
+
+  effects: initialEffects,
+  setEffects: (mode) => {
+    document.documentElement.setAttribute('data-effects', mode)
+    try {
+      localStorage.setItem('gildex-effects', mode)
+    } catch {
+      /* ignore */
+    }
+    set({ effects: mode })
+  },
 
   init: async () => {
     const library = await api.status()

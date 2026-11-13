@@ -1,0 +1,15 @@
+/* Atmosphere: one low-resolution fragment-shader wall behind the gallery grid.
+   Static CSS fallback shows if WebGL is unavailable (canvas paints nothing). */
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 70% at 50% 15%, rgba(198, 161, 91, 0.06), transparent 60%),
+    radial-gradient(120% 90% at 50% 100%, rgba(38, 52, 44, 0.6), transparent 70%),
+    var(--bg);
+}

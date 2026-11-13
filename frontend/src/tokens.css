@@ -23,6 +23,48 @@
   --radius-sm: 2px;
   --radius-md: 4px;
   --blur: 12px;
+  --blur-lg: 22px;
+
+  /* ---- material layer (prototype) ----
+     Gilt is an edge, never a fill: these ramps are for 1-2px rules, ticks,
+     rings and seams only. */
+  --gilt-hi: #efdcb0;
+  --gilt-core: #d4af37;
+  --gilt-lo: #7a5f2c;
+  --gilt-ramp: linear-gradient(
+    135deg,
+    var(--gilt-lo) 0%,
+    var(--gilt-hi) 34%,
+    var(--gilt-core) 48%,
+    var(--gilt) 62%,
+    var(--gilt-lo) 100%
+  );
+  --gilt-edge: linear-gradient(
+    90deg,
+    var(--gilt-lo) 0%,
+    var(--gilt-hi) 40%,
+    var(--gilt-core) 50%,
+    var(--gilt-hi) 60%,
+    var(--gilt-lo) 100%
+  );
+
+  /* frosted chrome: sage-tinted glass, layered over --surface-glass */
+  --glass-tint: linear-gradient(180deg, rgba(38, 52, 44, 0.58) 0%, rgba(22, 32, 27, 0.66) 100%);
+  --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /* static frost grain (rasterized once per 128px tile, never per frame) */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  --grain-opacity: 0.028;
+
+  /* hover specular: clipped diagonal band, opacity-only animation */
+  --sheen: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(239, 220, 176, 0.1) 45%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(198, 161, 91, 0.07) 56%,
+    transparent 68%
+  );
 
   /* local font stacks (Archivo/Marcellus bundled in v1, never fetched) */
   --font-ui: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -43,6 +85,18 @@
   --hairline: #d8d5cc;
   --text: #1c221e;
   --text-muted: #6b726b;
+
+  --glass-tint: linear-gradient(180deg, rgba(255, 255, 255, 0.74) 0%, rgba(244, 243, 238, 0.68) 100%);
+  --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --grain-opacity: 0.018;
+  --sheen: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.42) 45%,
+    rgba(198, 161, 91, 0.12) 52%,
+    rgba(255, 255, 255, 0.25) 58%,
+    transparent 68%
+  );
 }
 
 /* semantic aliases */

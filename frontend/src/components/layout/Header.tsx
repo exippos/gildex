@@ -33,7 +33,10 @@ export function Header() {
   const workspace = useStore((s) => s.workspace)
   const setWorkspace = useStore((s) => s.setWorkspace)
   const importing = useStore((s) => s.importing)
+  const effects = useStore((s) => s.effects)
+  const setEffects = useStore((s) => s.setEffects)
   const isDark = theme === 'dark'
+  const effectsOn = effects === 'full'
 
   return (
     <header className="app-header chrome">
@@ -58,6 +61,33 @@ export function Header() {
       </nav>
 
       <span className="header-spacer" />
+
+      <button
+        type="button"
+        className={`effects-toggle${effectsOn ? ' is-on' : ''}`}
+        onClick={() => setEffects(effectsOn ? 'reduced' : 'full')}
+        aria-pressed={effectsOn}
+        title={effectsOn ? 'Reduce effects' : 'Restore effects'}
+        aria-label={effectsOn ? 'Reduce effects' : 'Restore effects'}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 3 20 9.5 12 21 4 9.5Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M4 9.5h16M12 3l3.2 6.5L12 21 8.8 9.5Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+            opacity="0.7"
+          />
+        </svg>
+        {!effectsOn && <span className="effects-slash" aria-hidden="true" />}
+      </button>
 
       <button
         type="button"
