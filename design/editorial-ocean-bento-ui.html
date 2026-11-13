@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA — Editorial Ocean Bento UI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600&display=swap');
+
+  :root {
+    --bg-canvas: #060B13;
+    --bg-surface: #0B121E;
+    --bg-control: #111B2B;
+    --border-grid: #1A273B;
+    --border-subtle: #23344E;
+    --accent-ocean: #38BDF8;
+    --text-on-accent: #05101C;
+    --status-active: #2DD4BF;
+    --text-primary: #F0F6FC;
+    --text-secondary: #8EA4C0;
+    --text-muted: #4C6382;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Top Navigation Bar */
+  header {
+    height: 64px;
+    border-bottom: 1px solid var(--border-grid);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background-color: var(--bg-canvas);
+    flex-shrink: 0;
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--text-primary);
+  }
+
+  .brand-mark {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--accent-ocean);
+    display: inline-block;
+    position: relative;
+  }
+
+  .brand-mark::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: var(--accent-ocean);
+  }
+
+  nav {
+    display: flex;
+    gap: 24px;
+  }
+
+  nav a {
+    text-decoration: none;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: color 0.15s ease;
+    cursor: pointer;
+  }
+
+  nav a:hover, nav a.active {
+    color: var(--text-primary);
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .search-pill {
+    background: var(--bg-control);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9999px;
+    padding: 7px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 260px;
+  }
+
+  .search-pill input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12px;
+    width: 100%;
+  }
+
+  .search-pill input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .output-badge {
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    border-radius: 9999px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .dot-active {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--status-active);
+    display: inline-block;
+  }
+
+  /* Main Bento Grid */
+  .bento-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 26% 48% 26%;
+    grid-template-rows: 1fr 200px;
+    height: calc(100vh - 64px);
+  }
+
+  .cell {
+    border-right: 1px solid var(--border-grid);
+    border-bottom: 1px solid var(--border-grid);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .cell:nth-child(3), .cell:nth-child(6) {
+    border-right: none;
+  }
+
+  .cell:nth-child(n+4) {
+    border-bottom: none;
+    padding: 22px 28px;
+  }
+
+  .bg-surface {
+    background-color: var(--bg-surface);
+  }
+
+  .bg-canvas {
+    background-color: var(--bg-canvas);
+  }
+
+  /* Section Header */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .section-label .sq {
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent-ocean);
+    display: inline-block;
+  }
+
+  /* Left Inspector */
+  .now-playing-info {
+    margin-bottom: 24px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .hero-title span {
+    font-weight: 200;
+  }
+
+  .artist-meta {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+
+  .codec-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: var(--bg-control);
+    border: 1px solid var(--border-subtle);
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .btn-primary {
+    background-color: var(--accent-ocean);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.15s ease;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  .btn-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 9999px;
+    background: var(--bg-control);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: border-color 0.15s ease;
+  }
+
+  .btn-circle:hover {
+    border-color: var(--accent-ocean);
+  }
+
+  .up-next-card {
+    margin-top: auto;
+    background: var(--bg-control);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .up-next-card:hover {
+    border-color: var(--accent-ocean);
+  }
+
+  .up-next-eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .up-next-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Center Stage */
+  .center-stage {
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  .artwork-frame {
+    width: 100%;
+    max-width: 350px;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: radial-gradient(circle at 30% 25%, #16304B 0%, #091320 65%, #050A12 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px;
+    margin: auto 0;
+    position: relative;
+  }
+
+  .art-ring {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .art-ring::before {
+    content: '';
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+  }
+
+  .art-caption {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .liner-notes-box {
+    width: 100%;
+    max-width: 350px;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    padding: 28px;
+    margin: auto 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .liner-notes-box p {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+
+  .scrubber-wrap {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .scrubber-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .scrubber-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border-subtle);
+    border-radius: 99px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .scrubber-fill {
+    width: 38%;
+    height: 100%;
+    background: var(--accent-ocean);
+    border-radius: 99px;
+  }
+
+  .mode-pills {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .pill-switch {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    border-radius: 9999px;
+    padding: 4px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .pill-switch.active {
+    background: var(--bg-control);
+    border-color: var(--accent-ocean);
+    color: var(--text-primary);
+  }
+
+  /* Right Queue */
+  .queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+  }
+
+  .queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .queue-item:hover {
+    background: var(--bg-control);
+  }
+
+  .queue-item.active {
+    background: var(--bg-control);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .q-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .q-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: transparent;
+    flex-shrink: 0;
+  }
+
+  .queue-item.active .q-dot {
+    background: var(--status-active);
+  }
+
+  .q-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .q-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .q-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 12px;
+  }
+
+  /* Bottom Row */
+  .spotlight-card {
+    flex: 1;
+    background: linear-gradient(135deg, #102033 0%, #09111C 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .spotlight-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 3px;
+  }
+
+  .spotlight-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .index-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+  }
+
+  .index-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border-grid);
+  }
+
+  .index-row:last-child {
+    border-bottom: none;
+  }
+
+  .index-row span:first-child {
+    color: var(--text-secondary);
+  }
+
+  .summary-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: auto;
+    padding-bottom: 8px;
+  }
+
+  .kpi-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .kpi-val {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-primary);
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="nav-left">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <span>AURA</span>
+      </div>
+      <nav>
+        <a class="active">Now Playing</a>
+        <a>Albums</a>
+        <a>Artists</a>
+        <a>Folders</a>
+        <a>Playlists</a>
+      </nav>
+    </div>
+
+    <div class="nav-right">
+      <div class="search-pill">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4C6382" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search tracks, artists...">
+      </div>
+      <div class="output-badge">
+        <span class="dot-active"></span>
+        <span>DAC: USB-C 96KHZ</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="bento-main">
+    <!-- Left Inspector -->
+    <section class="cell bg-surface">
+      <div class="section-label">
+        <span class="sq"></span>
+        <span>Playing Local Lossless</span>
+      </div>
+
+      <div class="now-playing-info">
+        <h1 class="hero-title" id="heroTitle">Nocturne <span>in Blue</span></h1>
+        <div class="artist-meta" id="heroArtist">Nils Frahm — Spaces (2013)</div>
+        <div class="codec-tag" id="heroCodec">FLAC • 24-BIT / 96 KHZ</div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn-primary" id="playPauseBtn">
+          <span id="playIcon">❚❚</span>
+          <span id="playLabel">Pause</span>
+        </button>
+        <button class="btn-circle" id="prevBtn" title="Previous">◀</button>
+        <button class="btn-circle" id="nextBtn" title="Next">▶</button>
+      </div>
+
+      <div class="up-next-card" id="upNextCard">
+        <div>
+          <div class="up-next-eyebrow">Up Next</div>
+          <div class="up-next-title" id="upNextTitle">Over There, It's Summer</div>
+        </div>
+        <div class="q-time tabular" id="upNextDuration">04:12</div>
+      </div>
+    </section>
+
+    <!-- Center Stage -->
+    <section class="cell bg-canvas center-stage">
+      <div class="artwork-frame" id="artView">
+        <div class="art-caption">
+          <span>STUDIO MASTER</span>
+          <span>AURA EDITION</span>
+        </div>
+        <div class="art-ring"></div>
+        <div class="art-caption">
+          <span id="artAlbum">SPACES</span>
+          <span id="artYear">2013</span>
+        </div>
+      </div>
+
+      <div class="liner-notes-box" id="notesView">
+        <div class="section-label"><span class="sq"></span><span>Liner Notes</span></div>
+        <p id="notesText">Recorded live across European concert halls over two years using vintage acoustic pianos and analog tape delays. Mastered directly from two-track stereo reels without dynamic compression.</p>
+      </div>
+
+      <div class="scrubber-wrap">
+        <div class="scrubber-bar-row tabular">
+          <span id="currentTime">03:18</span>
+          <div class="scrubber-track" id="scrubberTrack">
+            <div class="scrubber-fill" id="scrubberFill"></div>
+          </div>
+          <span id="totalTime">08:18</span>
+        </div>
+
+        <div class="mode-pills">
+          <button class="pill-switch active" id="btnCover">Cover Art</button>
+          <button class="pill-switch" id="btnNotes">Liner Notes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Queue -->
+    <section class="cell bg-surface">
+      <div class="section-label">
+        <span class="sq"></span>
+        <span>Play Queue</span>
+      </div>
+      <div class="queue-list" id="queueList"></div>
+    </section>
+
+    <!-- Bottom Left -->
+    <section class="cell bg-canvas">
+      <div class="section-label">
+        <span class="sq"></span>
+        <span>Artist Spotlight</span>
+      </div>
+      <div class="spotlight-card">
+        <div>
+          <div class="spotlight-title">Pelagic Ambient Sessions</div>
+          <div class="spotlight-sub">Nils Frahm, Max Richter, Ólafur Arnalds</div>
+        </div>
+        <button class="btn-circle" title="Open Collection">↗</button>
+      </div>
+    </section>
+
+    <!-- Bottom Center -->
+    <section class="cell bg-surface">
+      <div class="section-label">
+        <span class="sq"></span>
+        <span>Library Index</span>
+      </div>
+      <div class="index-list">
+        <div class="index-row"><span>Albums</span><span class="tabular">412</span></div>
+        <div class="index-row"><span>Artists</span><span class="tabular">186</span></div>
+        <div class="index-row"><span>Lossless FLAC</span><span class="tabular">3,840</span></div>
+        <div class="index-row"><span>Playlists</span><span class="tabular">24</span></div>
+      </div>
+    </section>
+
+    <!-- Bottom Right -->
+    <section class="cell bg-canvas">
+      <div class="section-label">
+        <span class="sq"></span>
+        <span>Audio Format</span>
+      </div>
+      <div class="summary-kpis tabular">
+        <div>
+          <div class="kpi-label">Bitrate</div>
+          <div class="kpi-val" id="kpiBitrate">2,840 kbps</div>
+        </div>
+        <div>
+          <div class="kpi-label">Sample</div>
+          <div class="kpi-val" id="kpiSample">96.0 kHz</div>
+        </div>
+        <div>
+          <div class="kpi-label">Gain</div>
+          <div class="kpi-val">-1.2 dB</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+<script>
+  const tracks = [
+    {
+      titleBold: "Nocturne",
+      titleLight: "in Blue",
+      artist: "Nils Frahm — Spaces (2013)",
+      album: "SPACES",
+      year: "2013",
+      codec: "FLAC • 24-BIT / 96 KHZ",
+      bitrate: "2,840 kbps",
+      sample: "96.0 kHz",
+      duration: "08:18",
+      seconds: 498,
+      notes: "Recorded live across European concert halls over two years using vintage acoustic pianos and analog tape delays. Mastered directly from two-track stereo reels."
+    },
+    {
+      titleBold: "Over There,",
+      titleLight: "It's Summer",
+      artist: "Nils Frahm — Spaces (2013)",
+      album: "SPACES",
+      year: "2013",
+      codec: "FLAC • 24-BIT / 96 KHZ",
+      bitrate: "2,610 kbps",
+      sample: "96.0 kHz",
+      duration: "04:12",
+      seconds: 252,
+      notes: "An intimate upright piano miniature captured with close-ribbon microphones to preserve key mechanical resonance and room warmth."
+    },
+    {
+      titleBold: "Near Light",
+      titleLight: "Sessions",
+      artist: "Ólafur Arnalds — Living Room Songs",
+      album: "LIVING ROOM",
+      year: "2011",
+      codec: "ALAC • 24-BIT / 48 KHZ",
+      bitrate: "1,720 kbps",
+      sample: "48.0 kHz",
+      duration: "03:45",
+      seconds: 225,
+      notes: "Recorded over seven consecutive days in Reykjavik with a string quartet and vintage upright piano in an untreated domestic space."
+    },
+    {
+      titleBold: "On the",
+      titleLight: "Nature of Daylight",
+      artist: "Max Richter — The Blue Notebooks",
+      album: "BLUE NOTEBOOKS",
+      year: "2004",
+      codec: "FLAC • 24-BIT / 192 KHZ",
+      bitrate: "4,920 kbps",
+      sample: "192.0 kHz",
+      duration: "06:11",
+      seconds: 371,
+      notes: "Scored for string quintet, blending slow contrapuntal harmony with subtle analog room ambience."
+    },
+    {
+      titleBold: "Substrata",
+      titleLight: "Drift",
+      artist: "Biosphere — Substrata (1997)",
+      album: "SUBSTRATA",
+      year: "1997",
+      codec: "FLAC • 16-BIT / 44.1 KHZ",
+      bitrate: "890 kbps",
+      sample: "44.1 kHz",
+      duration: "05:34",
+      seconds: 334,
+      notes: "Composed in Tromsø above the Arctic Circle using minimal hardware samplers and field recordings of northern wind."
+    }
+  ];
+
+  let currentIdx = 0;
+  let isPlaying = true;
+  let progressPercent = 38;
+
+  const queueList = document.getElementById('queueList');
+  const searchInput = document.getElementById('searchInput');
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60).toString().padStart(2, '0');
+    const s = Math.floor(sec % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  function renderQueue(filter = '') {
+    queueList.innerHTML = '';
+    tracks.forEach((t, idx) => {
+      const fullName = `${t.titleBold} ${t.titleLight}`;
+      if (filter && !fullName.toLowerCase().includes(filter.toLowerCase()) && !t.artist.toLowerCase().includes(filter.toLowerCase())) {
+        return;
+      }
+      const item = document.createElement('div');
+      item.className = `queue-item ${idx === currentIdx ? 'active' : ''}`;
+      item.innerHTML = `
+        <div class="q-left">
+          <span class="q-dot"></span>
+          <div>
+            <div class="q-title">${fullName}</div>
+            <div class="q-sub">${t.artist.split('—')[0].trim()}</div>
+          </div>
+        </div>
+        <span class="q-time tabular">${t.duration}</span>
+      `;
+      item.onclick = () => selectTrack(idx);
+      queueList.appendChild(item);
+    });
+  }
+
+  function selectTrack(idx) {
+    currentIdx = idx;
+    const t = tracks[idx];
+    const next = tracks[(idx + 1) % tracks.length];
+
+    document.getElementById('heroTitle').innerHTML = `${t.titleBold} <span>${t.titleLight}</span>`;
+    document.getElementById('heroArtist').textContent = t.artist;
+    document.getElementById('heroCodec').textContent = t.codec;
+    document.getElementById('artAlbum').textContent = t.album;
+    document.getElementById('artYear').textContent = t.year;
+    document.getElementById('notesText').textContent = t.notes;
+    document.getElementById('totalTime').textContent = t.duration;
+    document.getElementById('kpiBitrate').textContent = t.bitrate;
+    document.getElementById('kpiSample').textContent = t.sample;
+
+    document.getElementById('upNextTitle').textContent = `${next.titleBold} ${next.titleLight}`;
+    document.getElementById('upNextDuration').textContent = next.duration;
+
+    progressPercent = 12;
+    updateScrubber();
+    renderQueue(searchInput.value);
+  }
+
+  function updateScrubber() {
+    const t = tracks[currentIdx];
+    const elapsed = Math.round((progressPercent / 100) * t.seconds);
+    document.getElementById('scrubberFill').style.width = `${progressPercent}%`;
+    document.getElementById('currentTime').textContent = formatTime(elapsed);
+  }
+
+  document.getElementById('playPauseBtn').onclick = () => {
+    isPlaying = !isPlaying;
+    document.getElementById('playIcon').textContent = isPlaying ? '❚❚' : '▶';
+    document.getElementById('playLabel').textContent = isPlaying ? 'Pause' : 'Play';
+  };
+
+  document.getElementById('nextBtn').onclick = () => selectTrack((currentIdx + 1) % tracks.length);
+  document.getElementById('prevBtn').onclick = () => selectTrack((currentIdx - 1 + tracks.length) % tracks.length);
+  document.getElementById('upNextCard').onclick = () => selectTrack((currentIdx + 1) % tracks.length);
+
+  document.getElementById('scrubberTrack').onclick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    progressPercent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    updateScrubber();
+  };
+
+  document.getElementById('btnCover').onclick = () => {
+    document.getElementById('artView').style.display = 'flex';
+    document.getElementById('notesView').style.display = 'none';
+    document.getElementById('btnCover').classList.add('active');
+    document.getElementById('btnNotes').classList.remove('active');
+  };
+
+  document.getElementById('btnNotes').onclick = () => {
+    document.getElementById('artView').style.display = 'none';
+    document.getElementById('notesView').style.display = 'flex';
+    document.getElementById('btnNotes').classList.add('active');
+    document.getElementById('btnCover').classList.remove('active');
+  };
+
+  searchInput.oninput = (e) => renderQueue(e.target.value);
+
+  renderQueue();
+  updateScrubber();
+</script>
+</body>
+</html>

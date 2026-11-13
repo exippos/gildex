@@ -2,46 +2,50 @@
 
 .tag-picker {
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 8px;
   width: 240px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
+  gap: 8px;
+  padding: 10px;
+  background: var(--control);
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float);
 }
 
 .tag-picker-filter {
   width: 100%;
-  border: 0;
-  border-bottom: 1px solid var(--hairline);
-  border-radius: 0;
-  padding: 3px 0;
-  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  background: var(--surface-inset);
   font-size: 12px;
 }
 
 .tag-picker-filter::placeholder,
 .tag-picker-create input::placeholder {
-  color: var(--text-muted);
-  opacity: 0.75;
+  color: var(--text-faint);
+}
+
+.tag-picker-filter:focus-visible {
+  border-color: var(--gilt);
+  outline: none;
 }
 
 .tag-picker-list {
   max-height: 200px;
   overflow-y: auto;
-  border-top: 1px solid var(--hairline);
-  border-bottom: 1px solid var(--hairline);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .tag-picker-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 2px;
+  gap: 6px;
+  padding: 5px 4px;
   font-size: 12px;
 }
 
@@ -62,7 +66,7 @@
   flex: 0 0 auto;
   padding-right: 4px;
   font-size: 10px;
-  color: var(--text-muted);
+  color: var(--text-faint);
   font-variant-numeric: tabular-nums;
 }
 
@@ -72,7 +76,7 @@
   width: 20px;
   height: 20px;
   padding: 0;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 12px;
@@ -90,25 +94,35 @@
 }
 
 .tag-picker-empty {
-  padding: 8px 2px;
+  padding: 10px 4px;
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 .tag-picker-create {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 
 .tag-picker-create input {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 3px 6px;
+  padding: 5px 8px;
   font-size: 11px;
+  background: var(--surface-inset);
 }
 
 .tag-picker-create button {
   flex: 0 0 auto;
-  padding: 2px 8px;
+  padding: 4px 10px;
+  border-color: var(--gilt-border);
+  background: var(--gilt-dim);
+  color: var(--gilt-bright);
   font-size: 11px;
+}
+
+.tag-picker-create button:hover {
+  border-color: var(--gilt);
+  background: var(--control-hover);
+  color: var(--gilt-bright);
 }

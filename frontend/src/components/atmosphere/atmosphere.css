@@ -1,0 +1,43 @@
+/* Atmosphere: one low-resolution shader wall for the gilded theme and a
+   static themed wash for the others. In every case the layer sits behind the
+   gallery grid; reduced effects hides it entirely (see effects.css). */
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--bg);
+}
+
+[data-theme='gilded'] .atmosphere {
+  background:
+    radial-gradient(90% 70% at 50% 15%, rgba(56, 189, 248, 0.05), transparent 60%),
+    radial-gradient(120% 90% at 50% 100%, rgba(212, 175, 114, 0.05), transparent 70%),
+    var(--bg);
+}
+
+[data-theme='dark-bento'] .atmosphere {
+  background:
+    radial-gradient(100% 80% at 50% 12%, rgba(197, 160, 115, 0.05), transparent 65%),
+    radial-gradient(120% 90% at 50% 100%, rgba(197, 160, 115, 0.03), transparent 70%),
+    var(--bg);
+}
+
+[data-theme='sage'] .atmosphere {
+  background:
+    radial-gradient(90% 70% at 50% 12%, rgba(110, 231, 183, 0.05), transparent 62%),
+    radial-gradient(120% 90% at 50% 100%, rgba(212, 175, 114, 0.04), transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='96' height='96' viewBox='0 0 96 96' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23D4AF72' stroke-opacity='0.05' stroke-width='1'%3E%3Cpath d='M48 0 L96 48 L48 96 L0 48 Z'/%3E%3Ccircle cx='48' cy='48' r='22'/%3E%3Cpath d='M48 16 C56 32, 56 64, 48 80 C40 64, 40 32, 48 16 Z'/%3E%3Cpath d='M16 48 C32 40, 64 40, 80 48 C64 56, 32 56, 16 48 Z'/%3E%3C/g%3E%3C/svg%3E")
+      0 0 / 128px 128px,
+    var(--bg);
+}
+
+[data-theme='copper'] .atmosphere {
+  background:
+    radial-gradient(90% 70% at 50% 10%, rgba(168, 74, 40, 0.06), transparent 62%),
+    radial-gradient(120% 90% at 50% 100%, rgba(43, 122, 88, 0.035), transparent 70%),
+    var(--bg);
+}

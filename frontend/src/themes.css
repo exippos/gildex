@@ -1,0 +1,92 @@
+/* Structural theme layer. Palettes and material values live in tokens.css;
+   this file only covers differences that are shape/markup-bound:
+   brand marks, glyph geometry, nav marks and flat-vs-framed treatments. */
+
+/* ---- brand marks: one SVG per theme, only the active one is shown ---- */
+
+.brand-marks {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+}
+
+.brand-mark {
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: var(--gilt);
+}
+
+.brand-marks .brand-mark {
+  display: none;
+}
+
+.brand-marks .brand-mark--gilded,
+.brand-marks .brand-mark--dark-bento,
+.brand-marks .brand-mark--sage,
+.brand-marks .brand-mark--copper {
+  display: none;
+}
+
+[data-theme='gilded'] .brand-marks .brand-mark--gilded,
+[data-theme='dark-bento'] .brand-marks .brand-mark--dark-bento,
+[data-theme='sage'] .brand-marks .brand-mark--sage,
+[data-theme='copper'] .brand-marks .brand-mark--copper {
+  display: grid;
+}
+
+.brand-mark svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---- dark bento: flat, square glyphs, no gilded ornament ---- */
+
+[data-theme='dark-bento'] .workspace-tab.is-active::after {
+  display: none;
+}
+
+[data-theme='dark-bento'] .cell-tick {
+  display: none;
+}
+
+[data-theme='dark-bento'] .rail-label::before,
+[data-theme='dark-bento'] .rail-nav-item::before,
+[data-theme='dark-bento'] .preview-head::before,
+[data-theme='dark-bento'] .preview-section-label::before,
+[data-theme='dark-bento'] .grid-section::before,
+[data-theme='dark-bento'] .cell-fav,
+[data-theme='dark-bento'] .rating-dot,
+[data-theme='dark-bento'] .workspace-tab.is-busy::before,
+[data-theme='dark-bento'] .empty-ornament {
+  transform: none;
+}
+
+[data-theme='dark-bento'] .cell-fav,
+[data-theme='dark-bento'] .rail-nav-item.is-active::before {
+  box-shadow: none;
+}
+
+/* ---- scandinavian sage: brass nav diamond instead of an underline ---- */
+
+[data-theme='sage'] .workspace-tab.is-active {
+  color: var(--gilt);
+}
+
+[data-theme='sage'] .workspace-tab.is-active::after {
+  left: 50%;
+  right: auto;
+  bottom: 0;
+  width: 5px;
+  height: 5px;
+  transform: translate(-50%, 50%) rotate(45deg);
+  background: var(--gilt);
+}
+
+/* ---- ivory copper: warm paper keeps the gilded geometry ---- */
+
+[data-theme='copper'] .cell-meta {
+  color: #faf7f2;
+}

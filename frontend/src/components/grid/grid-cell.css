@@ -1,4 +1,4 @@
-/* Grid cell — artwork is the only opaque object; no card chrome. */
+/* Grid cell — artwork is the only opaque object; ocean chrome around it. */
 
 .grid-cell {
   position: absolute;
@@ -22,6 +22,7 @@
   outline-offset: -1px;
 }
 
+/* selection: 2px gilt ring */
 .grid-cell.is-selected::before {
   content: '';
   position: absolute;
@@ -48,7 +49,7 @@
   display: grid;
   place-items: center;
   background: var(--surface);
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 .cell-placeholder.is-missing {
@@ -58,7 +59,7 @@
 .cell-placeholder-frame {
   width: 34%;
   height: 34%;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   opacity: 0.8;
 }
@@ -106,12 +107,12 @@
   border-radius: 0;
 }
 
-/* ---- hover: faint frosted tint, no strobing ---- */
+/* ---- hover: cool deep-water lift ---- */
 
 .cell-hover {
   position: absolute;
   inset: 0;
-  background: var(--surface-glass);
+  background: var(--sheen);
   opacity: 0;
   transition: opacity 120ms linear;
   pointer-events: none;
@@ -119,33 +120,35 @@
 
 .grid-cell:hover .cell-hover,
 .grid-cell:focus-visible .cell-hover {
-  opacity: 0.38;
+  opacity: 1;
 }
 
 /* ---- badges (D22) ---- */
 
+/* favorite: the gilded diamond used by the reference queue */
 .cell-fav {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 9px;
+  right: 9px;
   width: 7px;
   height: 7px;
-  background: var(--gilt);
   transform: rotate(45deg);
+  background: var(--gilt);
+  box-shadow: 0 0 8px var(--accent-glow);
   z-index: 2;
 }
 
 .cell-meta {
   position: absolute;
-  left: 6px;
-  bottom: 6px;
+  left: 8px;
+  bottom: 8px;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-glass);
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: var(--scrim);
   pointer-events: none;
 }
 
@@ -176,15 +179,15 @@
   display: block;
   width: 3px;
   height: 3px;
-  border-radius: 50%;
-  background: var(--hairline);
+  transform: rotate(45deg);
+  background: var(--border-strong);
 }
 
 .rating-dot.is-on {
-  background: var(--text-muted);
+  background: var(--gilt);
 }
 
-/* ---- selection: 2px ring (above) + stepped corner tick ---- */
+/* ---- selection ring (above) + corner tick ---- */
 
 .cell-tick {
   position: absolute;
@@ -192,8 +195,10 @@
   left: 0;
   width: 14px;
   height: 14px;
-  border-left: 2px solid var(--gilt);
-  border-top: 2px solid var(--gilt);
+  background-image: linear-gradient(var(--gilt), var(--gilt)), linear-gradient(var(--gilt), var(--gilt));
+  background-size: 14px 2px, 2px 14px;
+  background-position: top left, top left;
+  background-repeat: no-repeat, no-repeat;
   z-index: 3;
   pointer-events: none;
 }
@@ -205,7 +210,9 @@
   top: 4px;
   width: 7px;
   height: 7px;
-  border-left: 1px solid var(--gilt);
-  border-top: 1px solid var(--gilt);
+  background-image: linear-gradient(var(--gilt), var(--gilt)), linear-gradient(var(--gilt), var(--gilt));
+  background-size: 7px 1px, 1px 7px;
+  background-position: top left, top left;
+  background-repeat: no-repeat, no-repeat;
   opacity: 0.7;
 }

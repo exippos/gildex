@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { api } from './api'
 import type { DroppedFile } from './api'
+import { applyTheme, initialTheme, persistTheme, syncThemeUrl, type Theme } from './theme'
 import type {
   Collection,
   FolderNode,
@@ -33,6 +34,19 @@ interface InspectorTarget {
   ownerId: string
   ownerLabel?: string
 }
+
+export type EffectsMode = 'full' | 'reduced'
+
+function readEffects(): EffectsMode {
+  try {
+    return localStorage.getItem('gildex-effects') === 'reduced' ? 'reduced' : 'full'
+  } catch {
+    return 'full'
+  }
+}
+
+const initialEffects = readEffects()
+document.documentElement.setAttribute('data-effects', initialEffects)
 
 interface AppState {
   // library / import
@@ -80,6 +94,12 @@ interface AppState {
 
   // notes cache for the open inspector
   notes: Note[]
+
+  // presentation
+  theme: Theme
+  setTheme: (theme: Theme) => void
+  effects: EffectsMode
+  setEffects: (mode: EffectsMode) => void
 
   // actions
   init: () => Promise<void>
@@ -175,6 +195,25 @@ export const useStore = create<AppState>((set, get) => ({
   collectionPicker: null,
 
   notes: [],
+
+  theme: initialTheme,
+  setTheme: (theme) => {
+    applyTheme(theme)
+    persistTheme(theme)
+    syncThemeUrl(theme)
+    set({ theme })
+  },
+
+  effects: initialEffects,
+  setEffects: (mode) => {
+    document.documentElement.setAttribute('data-effects', mode)
+    try {
+      localStorage.setItem('gildex-effects', mode)
+    } catch {
+      /* ignore */
+    }
+    set({ effects: mode })
+  },
 
   init: async () => {
     const library = await api.status()

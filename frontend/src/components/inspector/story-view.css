@@ -17,8 +17,10 @@
   min-height: 320px;
   padding: 8px;
   background: var(--surface);
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-md);
+  outline: 1px solid var(--gilt-dim);
+  outline-offset: -5px;
 }
 
 .story-media img,
@@ -44,7 +46,8 @@
 }
 
 .story-audio-title {
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-size: 19px;
   color: var(--text-muted);
   text-align: center;
   word-break: break-all;
@@ -74,7 +77,8 @@
 }
 
 .story-missing-title {
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 20px;
   color: var(--text-muted);
 }
 
@@ -107,12 +111,13 @@
 
 .story-label {
   margin: 0;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  padding-bottom: 3px;
-  border-bottom: 1px solid var(--gilt);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gilt);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--gilt-border);
   align-self: flex-start;
 }
 
@@ -175,11 +180,16 @@
 }
 
 .story-primary {
-  border-color: var(--gilt);
-  color: var(--gilt-bright);
+  border-color: var(--gilt-fill-border);
+  background: var(--gilt-fill);
+  color: var(--on-gilt);
+  font-weight: 600;
 }
 .story-primary:hover {
   border-color: var(--gilt-bright);
+  background: var(--gilt-fill);
+  color: var(--on-gilt);
+  filter: brightness(1.06);
 }
 .story-primary:disabled {
   opacity: 0.55;
@@ -203,10 +213,11 @@
   align-self: flex-start;
   padding: 0;
   border: none;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  font-variant-caps: small-caps;
-  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gilt);
 }
 .story-disclosure-btn:hover {
   color: var(--gilt-bright);
@@ -285,10 +296,10 @@
 }
 
 .story-spec-item dt {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  font-variant-caps: small-caps;
-  color: var(--text-muted);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gilt);
 }
 
 .story-spec-item dd {
@@ -316,9 +327,11 @@
 }
 
 .story-control-label {
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
 }
 
 .story-fav {

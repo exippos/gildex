@@ -17,11 +17,13 @@
 
 .notes-title {
   margin: 0;
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 24px;
   font-weight: 400;
-  color: var(--text);
-  padding-bottom: 3px;
-  border-bottom: 1px solid var(--gilt);
+  letter-spacing: 0.01em;
+  color: var(--gilt-bright);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--gilt-border);
 }
 
 .notes-context {
@@ -59,11 +61,14 @@
 }
 
 .notes-chip {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  padding: 0 4px 1px;
-  border-bottom: 1px solid var(--gilt);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gilt);
+  padding: 1px 8px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-pill);
 }
 
 .notes-time {
@@ -114,11 +119,16 @@
 }
 
 .notes-primary {
-  border-color: var(--gilt);
-  color: var(--gilt-bright);
+  border-color: var(--gilt-fill-border);
+  background: var(--gilt-fill);
+  color: var(--on-gilt);
+  font-weight: 600;
 }
 .notes-primary:hover {
   border-color: var(--gilt-bright);
+  background: var(--gilt-fill);
+  color: var(--on-gilt);
+  filter: brightness(1.06);
 }
 .notes-primary:disabled {
   opacity: 0.55;
@@ -151,10 +161,9 @@
 .notes-md h4 {
   margin: 16px 0 8px;
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  font-variant-caps: small-caps;
-  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 17px;
   color: var(--text);
 }
 .notes-md h1 {
@@ -233,10 +242,11 @@
 
 .notes-md th {
   font-family: var(--font-display);
-  font-weight: 400;
-  font-variant-caps: small-caps;
+  font-weight: 600;
+  font-size: 12px;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  text-transform: uppercase;
+  color: var(--gilt);
 }
 
 .notes-md img {
@@ -257,13 +267,14 @@
 
 .notes-form-title {
   margin: 0;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gilt);
   align-self: flex-start;
-  padding-bottom: 3px;
-  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--gilt-border);
 }
 
 .notes-form textarea {

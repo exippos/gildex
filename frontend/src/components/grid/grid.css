@@ -1,4 +1,4 @@
-/* Opaque item wall — no blur here (glass contract D14). */
+/* Opaque item wall — deep ocean canvas (glass contract D14). */
 
 .grid-root {
   position: absolute;
@@ -22,25 +22,28 @@
 .grid-section {
   position: absolute;
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding-top: 8px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 8px 16px;
   overflow: hidden;
   border-bottom: 1px solid var(--hairline);
 }
 
+/* gilded diamond section glyph */
 .grid-section::before {
   content: '';
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  width: 42px;
-  height: 1px;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
   background: var(--gilt);
+  transform: rotate(45deg);
 }
 
 .grid-section-label {
-  font-size: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -50,40 +53,45 @@
 .grid-section-meta {
   display: flex;
   gap: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
   white-space: nowrap;
 }
 
 .grid-section-meta > span + span::before {
   content: '·';
   margin-right: 8px;
-  color: var(--hairline);
+  color: var(--border-subtle);
 }
 
 /* ---- loading / empty ---- */
 
 .grid-loading {
   position: absolute;
-  top: 8px;
-  right: 14px;
+  top: 10px;
+  right: 16px;
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--control);
+  border: 1px solid var(--gilt-border);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gilt);
 }
 
 .grid-loading-tick {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: var(--gilt);
+  transform: rotate(45deg);
 }
 
 .grid-empty {
@@ -93,7 +101,7 @@
   right: 0;
   text-align: center;
   color: var(--text-muted);
-  font-size: 17px;
+  font-size: 14px;
   pointer-events: none;
 }
 
@@ -103,40 +111,57 @@
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   margin: 0;
-  padding: 0 12px 0 6px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  padding: 0 14px 0 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--control);
   color: var(--text);
   text-align: left;
   cursor: pointer;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
+  transition: border-color 120ms linear, background-color 120ms linear;
+}
+
+/* inner Art-Deco hairline, as on the reference's cards */
+.session-card::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--inner-rule);
+  border-radius: 4px;
+  display: var(--inner-rule-display);
+  pointer-events: none;
 }
 
 .session-card:hover {
-  border-color: var(--gilt);
+  border-color: var(--gilt-border);
+  background: var(--control-hover);
   color: var(--text);
 }
 
 .session-card:focus-visible {
-  outline: 1px solid var(--text-muted);
+  outline: 1px solid var(--gilt);
   outline-offset: -1px;
+}
+
+.session-card.is-expanded {
+  border-color: var(--gilt-border);
 }
 
 .session-card-thumb {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   border-radius: var(--radius-sm);
   background: var(--surface-inset);
   overflow: hidden;
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 .session-card-thumb img {
@@ -154,8 +179,8 @@
 .session-card-frame {
   width: 16px;
   height: 16px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
   opacity: 0.8;
 }
 
@@ -186,7 +211,8 @@
 }
 
 .session-card-label {
-  font-size: 15px;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -205,7 +231,7 @@
 .session-card-meta > span + span::before {
   content: '·';
   margin-right: 8px;
-  color: var(--hairline);
+  color: var(--border-subtle);
 }
 
 .session-card-chevron {
@@ -214,8 +240,12 @@
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 6px solid var(--text-muted);
+  border-top: 6px solid var(--text-faint);
   transition: transform 140ms linear;
+}
+
+.session-card:hover .session-card-chevron {
+  border-top-color: var(--gilt);
 }
 
 .session-card.is-expanded .session-card-chevron {

@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GILDEX — compare UI themes</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060b13;
+      --surface: #0b121e;
+      --control: #111b2b;
+      --hairline: #19263a;
+      --border: #24354f;
+      --text: #f3f6fa;
+      --muted: #8fa3be;
+      --faint: #4d627e;
+      --gilt: #d4af72;
+      --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 12px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-height: 52px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--hairline);
+      background: var(--surface);
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gilt);
+      white-space: nowrap;
+    }
+
+    .brand span {
+      color: var(--faint);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    select, input, button {
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--control);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 0 9px;
+    }
+
+    input { width: 190px; text-transform: none; letter-spacing: normal; }
+
+    button {
+      cursor: pointer;
+      color: var(--gilt);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    button:hover { border-color: var(--gilt); color: #e5c58a; }
+
+    @media (max-width: 900px) {
+      input { width: 130px; }
+      .brand span { display: none; }
+    }
+
+    main {
+      min-height: 0;
+      overflow: auto;
+    }
+
+    #stage {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 1px;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      background: var(--hairline);
+    }
+
+    .pane {
+      display: grid;
+      grid-template-rows: 32px minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .pane-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--hairline);
+      background: var(--surface);
+    }
+
+    .pane-head select {
+      flex: 0 1 210px;
+      height: 24px;
+      border-color: transparent;
+      background: transparent;
+      color: var(--gilt);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0 4px;
+    }
+
+    .pane-head select:hover { border-color: var(--border); }
+
+    .pane-head a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .pane-head a:hover { color: var(--gilt); }
+
+    .frame-wrap {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1440px;
+      height: 900px;
+      border: 0;
+      background: var(--bg);
+      transform-origin: top left;
+    }
+
+    footer {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-height: 30px;
+      padding: 0 16px;
+      border-top: 1px solid var(--hairline);
+      color: var(--faint);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    footer code {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    @media (max-width: 900px) {
+      body { grid-template-rows: auto auto auto; }
+      main { overflow: visible; }
+      #stage {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        height: auto;
+      }
+      .pane { grid-template-rows: 32px auto; }
+      .frame-wrap { aspect-ratio: 1440 / 900; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">GILDEX <span>theme compare</span></div>
+    <div class="controls">
+      <button type="button" id="reload">reload all</button>
+      <label>App <input id="base" spellcheck="false" /></label>
+    </div>
+  </header>
+
+  <main>
+    <div id="stage">
+      <section class="pane" data-pane="a">
+        <div class="pane-head">
+          <select id="theme-a" aria-label="Top left theme"></select>
+          <a id="open-a" href="#" target="_blank" rel="noreferrer">open ↗</a>
+        </div>
+        <div class="frame-wrap" id="wrap-a"><iframe id="frame-a" title="Top left theme"></iframe></div>
+      </section>
+      <section class="pane" data-pane="b">
+        <div class="pane-head">
+          <select id="theme-b" aria-label="Top right theme"></select>
+          <a id="open-b" href="#" target="_blank" rel="noreferrer">open ↗</a>
+        </div>
+        <div class="frame-wrap" id="wrap-b"><iframe id="frame-b" title="Top right theme"></iframe></div>
+      </section>
+      <section class="pane" data-pane="c">
+        <div class="pane-head">
+          <select id="theme-c" aria-label="Bottom left theme"></select>
+          <a id="open-c" href="#" target="_blank" rel="noreferrer">open ↗</a>
+        </div>
+        <div class="frame-wrap" id="wrap-c"><iframe id="frame-c" title="Bottom left theme"></iframe></div>
+      </section>
+      <section class="pane" data-pane="d">
+        <div class="pane-head">
+          <select id="theme-d" aria-label="Bottom right theme"></select>
+          <a id="open-d" href="#" target="_blank" rel="noreferrer">open ↗</a>
+        </div>
+        <div class="frame-wrap" id="wrap-d"><iframe id="frame-d" title="Bottom right theme"></iframe></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>Same backend, independent panes · each pane is a 1440×900 viewport</span>
+    <span>URL: <code>?a=gilded&amp;b=dark-bento&amp;c=sage&amp;d=copper&amp;base=http://localhost:8080/</code></span>
+  </footer>
+
+  <script>
+    const THEMES = [
+      ['gilded', 'Gilded ocean'],
+      ['dark-bento', 'Dark bento'],
+      ['sage', 'Scandinavian sage'],
+      ['copper', 'Ivory copper'],
+    ]
+    const IDS = THEMES.map(([id]) => id)
+    const DEFAULT = { a: 'gilded', b: 'dark-bento', c: 'sage', d: 'copper' }
+    const DESIGN_W = 1440
+    const DESIGN_H = 900
+
+    const params = new URLSearchParams(location.search)
+    const panes = ['a', 'b', 'c', 'd'].map((key) => ({
+      key,
+      select: document.getElementById(`theme-${key}`),
+      frame: document.getElementById(`frame-${key}`),
+      wrap: document.getElementById(`wrap-${key}`),
+      open: document.getElementById(`open-${key}`),
+    }))
+
+    for (const [id, label] of THEMES) {
+      for (const pane of panes) {
+        const option = document.createElement('option')
+        option.value = id
+        option.textContent = label
+        pane.select.append(option)
+      }
+    }
+
+    const baseInput = document.getElementById('base')
+    const pick = (value, fallback) => (IDS.includes(value) ? value : fallback)
+
+    let base = params.get('base') || 'http://localhost:8080/'
+    if (!base.endsWith('/')) base += '/'
+    baseInput.value = base
+
+    for (const pane of panes) {
+      pane.select.value = pick(params.get(pane.key), DEFAULT[pane.key])
+    }
+
+    const urlFor = (theme) => {
+      const url = new URL(base)
+      url.searchParams.set('theme', theme)
+      return url.toString()
+    }
+
+    const remember = () => {
+      try {
+        const url = new URL(location.href)
+        for (const pane of panes) url.searchParams.set(pane.key, pane.select.value)
+        url.searchParams.set('base', base)
+        history.replaceState(null, '', url)
+      } catch {
+        /* file:// history may be locked down */
+      }
+    }
+
+    function fitFrame(pane) {
+      const rect = pane.wrap.getBoundingClientRect()
+      if (!rect.width || !rect.height) return
+      const scale = Math.min(rect.width / DESIGN_W, rect.height / DESIGN_H)
+      pane.frame.style.transform = `scale(${scale})`
+      pane.frame.style.left = `${Math.max(0, (rect.width - DESIGN_W * scale) / 2)}px`
+      pane.frame.style.top = `${Math.max(0, (rect.height - DESIGN_H * scale) / 2)}px`
+    }
+
+    function fit() {
+      for (const pane of panes) fitFrame(pane)
+    }
+
+    function renderPane(pane) {
+      pane.open.href = urlFor(pane.select.value)
+      pane.open.title = pane.select.value
+      pane.frame.src = urlFor(pane.select.value)
+    }
+
+    const render = () => {
+      for (const pane of panes) renderPane(pane)
+      remember()
+      requestAnimationFrame(fit)
+    }
+
+    for (const pane of panes) {
+      pane.select.addEventListener('change', () => {
+        renderPane(pane)
+        remember()
+        requestAnimationFrame(fit)
+      })
+      pane.frame.addEventListener('load', () => fitFrame(pane))
+    }
+
+    baseInput.addEventListener('change', () => {
+      base = baseInput.value.trim() || 'http://localhost:8080/'
+      if (!base.endsWith('/')) base += '/'
+      baseInput.value = base
+      render()
+    })
+
+    document.getElementById('reload').addEventListener('click', () => {
+      for (const pane of panes) pane.frame.src = pane.frame.src
+    })
+
+    window.addEventListener('resize', fit)
+    render()
+  </script>
+</body>
+</html>

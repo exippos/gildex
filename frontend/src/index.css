@@ -16,9 +16,14 @@ body {
   color: var(--text);
   font-family: var(--font-ui);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+
+::selection {
+  background: var(--selection);
+  color: var(--text);
 }
 
 button {
@@ -26,14 +31,15 @@ button {
   font-size: inherit;
   color: inherit;
   background: transparent;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 4px 10px;
+  padding: 5px 12px;
   cursor: pointer;
+  transition: color 120ms linear, border-color 120ms linear, background-color 120ms linear;
 }
 button:hover {
-  border-color: var(--gilt);
-  color: var(--gilt-bright);
+  border-color: var(--gilt-border);
+  color: var(--text);
 }
 button:focus-visible,
 input:focus-visible,
@@ -49,37 +55,44 @@ select {
   font-family: inherit;
   font-size: inherit;
   color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--hairline);
+  background: var(--control);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 4px 8px;
+  padding: 6px 10px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
 }
 
+/* thin ocean scrollbar from the reference */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--hairline);
-  border-radius: var(--radius-sm);
+  background: var(--border-subtle);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
+/* Sans base; serif moments are opted into by the component styles. */
 .display {
-  font-family: var(--font-display);
-  letter-spacing: 0.08em;
-  text-transform: lowercase;
-  font-variant-caps: small-caps;
+  font-family: var(--font-ui);
 }
 
-/* frosted fixed chrome (blur only on fixed chrome — D14 glass contract) */
+/* Fixed chrome: flat ocean panel. No blur or grain. */
 .chrome {
-  background: var(--surface-glass);
-  backdrop-filter: blur(var(--blur));
-  -webkit-backdrop-filter: blur(var(--blur));
+  position: relative;
+  background: var(--glass-tint);
+  box-shadow: var(--glass-spec);
 }
+
 @supports not (backdrop-filter: blur(1px)) {
   .chrome {
     background: var(--surface);

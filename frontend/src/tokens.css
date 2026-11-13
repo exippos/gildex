@@ -1,48 +1,286 @@
-/* GILDEX design tokens — transcribe exactly from docs_v2/06-ui-visual-style.md §3.
-   Gilt is an edge, never a fill. Zero network: fonts are local stacks. */
+/* GILDEX design tokens — four UI themes over one shared shell.
+   References: design/gilded-ocean-bento-ui.html (default),
+   design/editorial-matte-bento-ui.html,
+   design/scandinavian-green-gilded-bento-ui.html,
+   design/ivory-copper-bento-ui.html.
+
+   The light/dark mode switch is gone: each theme is a complete, fixed
+   appearance. `data-theme` names the UI theme. Layout and behaviour are
+   shared; only palette, type and material tokens change. */
 
 :root {
-  /* dark ("gilt vault") is default */
-  --bg: #0f1713;
-  --surface: #16201b;
-  --surface-inset: #0e1913;
-  --surface-glass: rgba(22, 32, 27, 0.55);
-  --hairline: #26322b;
-  --text: #e6eae4;
-  --text-muted: #93a099;
-
-  --gilt: #c6a15b;
-  --gilt-bright: #d4af37;
-  --status-final: #5e7a6a;
-  --status-wip: #a97648;
-  --status-draft: #93a099;
-  --danger: #a4574e;
-  --focus: #d4af37;
-
+  /* ---- structure (shared) ---- */
   --space: 4px;
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --blur: 12px;
-
-  /* local font stacks (Archivo/Marcellus bundled in v1, never fetched) */
-  --font-ui: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Marcellus', 'Cinzel', 'Palatino Linotype', Georgia, serif;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+  --blur: 0px;
+  --blur-lg: 0px;
 
   --rail-width: 220px;
   --preview-width: 300px;
-  --header-height: 48px;
+  --header-height: 56px;
   --footer-height: 36px;
+
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Palatino Linotype', serif;
+
+  --glass-spec: none;
+  --grain: none;
+  --grain-opacity: 0;
+  --gilt-ramp: linear-gradient(135deg, var(--gilt-lo) 0%, var(--gilt) 50%, var(--gilt-lo) 100%);
+  --gilt-edge: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-lo) 12%,
+    var(--gilt) 50%,
+    var(--gilt-lo) 88%,
+    transparent 100%
+  );
+
+  /* =====================================================================
+     GILDED OCEAN (default) — deep navy + gilt, Art-Deco framing.
+     ===================================================================== */
+  color-scheme: dark;
+
+  --bg: #060b13; /* app canvas */
+  --surface: #0b121e; /* chrome / panels */
+  --surface-inset: #08101c; /* wells, media beds */
+  --control: #111b2b; /* inputs, pills, cards */
+  --control-hover: #162338;
+  --surface-glass: rgba(11, 18, 30, 0.9);
+  --hairline: #19263a; /* grid rules */
+  --border-subtle: #24354f; /* control borders */
+  --border-strong: #354b6b; /* hover borders */
+
+  --text: #f3f6fa;
+  --text-muted: #8fa3be;
+  --text-faint: #4d627e;
+
+  --gilt: #d4af72;
+  --gilt-bright: #e5c58a;
+  --on-gilt: #060b13;
+  --gilt-border: rgba(212, 175, 114, 0.34);
+  --gilt-dim: rgba(212, 175, 114, 0.14);
+  --ocean: #38bdf8;
+  --ocean-dim: rgba(56, 189, 248, 0.14);
+  --status-final: #2dd4bf;
+  --status-wip: #c99a6a;
+  --status-draft: #8fa3be;
+  --danger: #e06a6a;
+  --focus: #e5c58a;
+
+  --gilt-hi: #f0d6a3;
+  --gilt-core: #d4af72;
+  --gilt-lo: #a17b43;
+  --gilt-fill: linear-gradient(135deg, #e2c185 0%, #c89f5d 100%);
+  --gilt-fill-border: #f0d6a3;
+  --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
+
+  --glass-tint: var(--surface);
+  --sheen: rgba(243, 246, 250, 0.05);
+
+  --selection: rgba(212, 175, 114, 0.26);
+  --accent-glow: rgba(212, 175, 114, 0.55);
+  --scrim: rgba(6, 11, 19, 0.78);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --inner-rule: var(--gilt-dim);
+  --inner-rule-display: block;
+  --header-rule: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-border) 20%,
+    var(--gilt-border) 80%,
+    transparent 100%
+  );
+  --header-rule-display: block;
 }
 
-/* light ("scandinavian daylight") overrides only the neutrals */
-[data-theme='light'] {
-  --bg: #f4f3ee;
-  --surface: #ffffff;
-  --surface-inset: #ece9e1;
-  --surface-glass: rgba(255, 255, 255, 0.6);
-  --hairline: #d8d5cc;
-  --text: #1c221e;
-  --text-muted: #6b726b;
+/* =======================================================================
+   DARK BENTO — charcoal + gold, flat matte surfaces, no framing ornaments.
+   ======================================================================= */
+html[data-theme='dark-bento'] {
+  color-scheme: dark;
+
+  --bg: #090909;
+  --surface: #0f0f0f;
+  --surface-inset: #0b0b0b;
+  --control: #161616;
+  --control-hover: #1c1c1c;
+  --surface-glass: rgba(15, 15, 15, 0.88);
+  --hairline: #222222;
+  --border-subtle: #2a2a2a;
+  --border-strong: #3a3a3a;
+
+  --text: #f5f5f4;
+  --text-muted: #9ca3af;
+  --text-faint: #525252;
+
+  --gilt: #c5a073;
+  --gilt-bright: #d2b187;
+  --on-gilt: #090909;
+  --gilt-border: rgba(197, 160, 115, 0.32);
+  --gilt-dim: rgba(197, 160, 115, 0.12);
+  --ocean: #a8895d;
+  --ocean-dim: rgba(168, 137, 93, 0.12);
+  --status-final: #4ade80;
+  --status-wip: #d08c57;
+  --status-draft: #9ca3af;
+  --danger: #e0655b;
+  --focus: #c5a073;
+
+  --gilt-hi: #e0c9a6;
+  --gilt-core: #c5a073;
+  --gilt-lo: #8a6b45;
+  --gilt-fill: #c5a073;
+  --gilt-fill-border: #c5a073;
+  --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
+
+  --glass-tint: var(--surface);
+  --sheen: rgba(245, 245, 244, 0.06);
+
+  --selection: rgba(197, 160, 115, 0.24);
+  --accent-glow: transparent;
+  --scrim: rgba(9, 9, 9, 0.82);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --inner-rule: var(--border-subtle);
+  --inner-rule-display: none;
+  --header-rule: none;
+  --header-rule-display: none;
+
+  /* editorial matte uses the sans stack for display moments */
+  --font-display: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* =======================================================================
+   SCANDINAVIAN SAGE — forest green + brass, botanical calm.
+   ======================================================================= */
+html[data-theme='sage'] {
+  color-scheme: dark;
+
+  --bg: #0b120f;
+  --surface: #111b17;
+  --surface-inset: #0d1713;
+  --control: #182520;
+  --control-hover: #1e2d27;
+  --surface-glass: rgba(17, 27, 23, 0.9);
+  --hairline: #22322b;
+  --border-subtle: #2d4138;
+  --border-strong: #3b5247;
+
+  --text: #f2f5f0;
+  --text-muted: #9bb0a5;
+  --text-faint: #5c7267;
+
+  --gilt: #d4af72;
+  --gilt-bright: #e6c792;
+  --on-gilt: #0b120f;
+  --gilt-border: rgba(212, 175, 114, 0.34);
+  --gilt-dim: rgba(212, 175, 114, 0.14);
+  --ocean: #6ee7b7;
+  --ocean-dim: rgba(110, 231, 183, 0.14);
+  --status-final: #6ee7b7;
+  --status-wip: #c99a6a;
+  --status-draft: #9bb0a5;
+  --danger: #e06a6a;
+  --focus: #e6c792;
+
+  --gilt-hi: #f0d6a3;
+  --gilt-core: #d4af72;
+  --gilt-lo: #a17b43;
+  --gilt-fill: linear-gradient(135deg, #e6c792 0%, #c9a45f 100%);
+  --gilt-fill-border: #f0d6a3;
+  --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
+
+  --glass-tint: var(--surface);
+  --sheen: rgba(242, 245, 240, 0.05);
+
+  --selection: rgba(212, 175, 114, 0.24);
+  --accent-glow: rgba(212, 175, 114, 0.5);
+  --scrim: rgba(11, 18, 15, 0.82);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --inner-rule: var(--gilt-dim);
+  --inner-rule-display: block;
+  --header-rule: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-border) 20%,
+    var(--gilt-border) 80%,
+    transparent 100%
+  );
+  --header-rule-display: block;
+
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Palatino Linotype', serif;
+}
+
+/* =======================================================================
+   IVORY COPPER — warm light canvas, copper accents, archival paper.
+   ======================================================================= */
+html[data-theme='copper'] {
+  color-scheme: light;
+
+  --bg: #faf7f2;
+  --surface: #f3ede4;
+  --surface-inset: #efe7db;
+  --control: #ebe2d6;
+  --control-hover: #e5d9c8;
+  --surface-glass: rgba(250, 247, 242, 0.9);
+  --hairline: #dfd4c6;
+  --border-subtle: #d2c3b2;
+  --border-strong: #c0ad98;
+
+  --text: #1f1b18;
+  --text-muted: #685d55;
+  --text-faint: #9c8f85;
+
+  --gilt: #a84a28;
+  --gilt-bright: #c4623d;
+  --on-gilt: #faf7f2;
+  --gilt-border: rgba(168, 74, 40, 0.32);
+  --gilt-dim: rgba(168, 74, 40, 0.1);
+  --ocean: #c4623d;
+  --ocean-dim: rgba(196, 98, 61, 0.12);
+  --status-final: #2b7a58;
+  --status-wip: #a97648;
+  --status-draft: #685d55;
+  --danger: #a4574e;
+  --focus: #a84a28;
+
+  --gilt-hi: #d98a68;
+  --gilt-core: #a84a28;
+  --gilt-lo: #85361a;
+  --gilt-fill: linear-gradient(135deg, #c4623d 0%, #a84a28 100%);
+  --gilt-fill-border: #85361a;
+  --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
+
+  --glass-tint: var(--surface);
+  --sheen: rgba(31, 27, 24, 0.04);
+
+  --selection: rgba(168, 74, 40, 0.2);
+  --accent-glow: rgba(168, 74, 40, 0.35);
+  --scrim: rgba(31, 27, 24, 0.8);
+  --shadow-float: 0 10px 30px rgba(74, 47, 29, 0.18);
+  --shadow-modal: 0 24px 64px rgba(74, 47, 29, 0.22);
+  --inner-rule: var(--gilt-dim);
+  --inner-rule-display: block;
+  --header-rule: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-border) 20%,
+    var(--gilt-border) 80%,
+    transparent 100%
+  );
+  --header-rule-display: block;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Palatino Linotype', serif;
 }
 
 /* semantic aliases */

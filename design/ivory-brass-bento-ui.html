@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AURA — Editorial Ivory &amp; Brass Bento UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,500&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-canvas: #F9F6F0;
+    --bg-surface: #F2EDE4;
+    --bg-control: #EAE3D5;
+    --bg-hover: #E2D9C8;
+    --border-grid: #DDD4C4;
+    --border-subtle: #CFC3AF;
+    --accent-brass: #9E7836;
+    --accent-brass-bright: #B88F48;
+    --accent-brass-soft: rgba(158, 120, 54, 0.14);
+    --text-on-accent: #FDFBF7;
+    --status-active: #2E7D5B;
+    --text-primary: #1E1C19;
+    --text-secondary: #5E584E;
+    --text-muted: #8E8678;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  .app-shell {
+    display: grid;
+    grid-template-rows: 64px 1fr;
+    height: 100vh;
+    width: 100vw;
+    border: 1px solid var(--border-grid);
+  }
+
+  /* Top Navigation Bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background-color: var(--bg-canvas);
+    border-bottom: 1px solid var(--border-grid);
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    color: var(--text-primary);
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    transition: color 0.15s ease;
+    position: relative;
+    padding: 4px 0;
+  }
+
+  .nav-links a:hover {
+    color: var(--text-primary);
+  }
+
+  .nav-links a.active {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .nav-links a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background: var(--accent-brass);
+  }
+
+  .nav-center {
+    flex: 0 1 360px;
+  }
+
+  .search-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 36px;
+    padding: 0 14px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9999px;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .search-pill:focus-within {
+    border-color: var(--accent-brass);
+    background-color: #FDFBF7;
+  }
+
+  .search-pill input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    width: 100%;
+  }
+
+  .search-pill input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .output-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 14px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .dot-active {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--status-active);
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 9999px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .icon-btn:hover {
+    color: var(--accent-brass);
+    border-color: var(--accent-brass);
+    background: #FDFBF7;
+  }
+
+  /* Main Bento Workspace */
+  .bento-body {
+    display: grid;
+    grid-template-columns: 26% 48% 26%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .col-left, .col-center, .col-right {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .col-left {
+    background-color: var(--bg-surface);
+    border-right: 1px solid var(--border-grid);
+  }
+
+  .col-center {
+    background-color: var(--bg-canvas);
+    border-right: 1px solid var(--border-grid);
+    position: relative;
+  }
+
+  .col-right {
+    background-color: var(--bg-surface);
+  }
+
+  /* Subtle Art-Deco Sunburst & Arch Watermark in Center Stage */
+  .stage-ornament {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.055;
+    background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%239E7836' stroke-width='1'%3E%3Cpath d='M0 120 A60 60 0 0 1 120 120'/%3E%3Cpath d='M15 120 A45 45 0 0 1 105 120'/%3E%3Cpath d='M30 120 A30 30 0 0 1 90 120'/%3E%3Cline x1='60' y1='60' x2='60' y2='120'/%3E%3Cline x1='60' y1='120' x2='18' y2='78'/%3E%3Cline x1='60' y1='120' x2='102' y2='78'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 120px 120px;
+  }
+
+  /* Section Header */
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .diamond-glyph {
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent-brass);
+    transform: rotate(45deg);
+    display: inline-block;
+  }
+
+  /* Left Column Blocks */
+  .now-playing-block {
+    padding: 28px 26px 24px;
+    border-bottom: 1px solid var(--border-grid);
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-brass);
+    margin-bottom: 14px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+
+  .hero-title .w-bold {
+    font-weight: 600;
+  }
+
+  .hero-title .w-italic {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 40px;
+    color: var(--accent-brass);
+  }
+
+  .hero-artist {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 18px;
+  }
+
+  .codec-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 11px;
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 22px;
+  }
+
+  .transport-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-play-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    height: 40px;
+    padding: 0 22px;
+    background: linear-gradient(135deg, #A9813C 0%, #8C682B 100%);
+    color: var(--text-on-accent);
+    border: 1px solid #7C5B23;
+    border-radius: 7px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-play-primary:hover {
+    filter: brightness(1.06);
+  }
+
+  .btn-play-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-transport {
+    width: 38px;
+    height: 38px;
+    border-radius: 9999px;
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .btn-transport:hover {
+    border-color: var(--accent-brass);
+    color: var(--accent-brass);
+    background-color: #FDFBF7;
+  }
+
+  .up-next-block {
+    padding: 20px 26px;
+    border-bottom: 1px solid var(--border-grid);
+  }
+
+  .up-next-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .up-next-card:hover {
+    border-color: var(--accent-brass);
+  }
+
+  .up-next-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .up-next-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .library-summary-block {
+    padding: 20px 26px;
+    margin-top: auto;
+  }
+
+  .index-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .index-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--border-grid);
+  }
+
+  .index-list li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .index-list span.count {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Center Stage */
+  .stage-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 36px 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .artwork-frame {
+    position: relative;
+    width: min(370px, 64%);
+    aspect-ratio: 1 / 1;
+    padding: 14px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+  }
+
+  /* Gilded Brass Corner Brackets */
+  .corner-bracket {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: var(--accent-brass);
+    border-style: solid;
+    pointer-events: none;
+  }
+
+  .cb-tl { top: 5px; left: 5px; border-width: 1.5px 0 0 1.5px; }
+  .cb-tr { top: 5px; right: 5px; border-width: 1.5px 1.5px 0 0; }
+  .cb-bl { bottom: 5px; left: 5px; border-width: 0 0 1.5px 1.5px; }
+  .cb-br { bottom: 5px; right: 5px; border-width: 0 1.5px 1.5px 0; }
+
+  .album-sleeve {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    border: 1px solid var(--border-subtle);
+    background: radial-gradient(circle at 50% 35%, #FDFBF7 0%, #EFE8DA 65%, #E3D8C5 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 26px 22px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .album-sleeve::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(158, 120, 54, 0.35);
+    pointer-events: none;
+  }
+
+  .sleeve-top-tag {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-brass);
+  }
+
+  .sleeve-emblem {
+    width: 124px;
+    height: 124px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sleeve-title {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+    text-transform: uppercase;
+  }
+
+  .sleeve-sub {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-top: 3px;
+  }
+
+  .liner-notes-view {
+    display: none;
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    border: 1px solid var(--border-subtle);
+    background-color: #FDFBF7;
+    padding: 28px 26px;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .liner-notes-view.active {
+    display: flex;
+  }
+
+  .album-sleeve.hidden {
+    display: none;
+  }
+
+  .liner-heading {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 23px;
+    color: var(--accent-brass);
+    margin-bottom: 10px;
+  }
+
+  .liner-body {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+
+  .liner-credits {
+    border-top: 1px solid var(--border-grid);
+    padding-top: 12px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Scrubber & Mode Switcher */
+  .stage-footer {
+    width: 100%;
+    padding: 16px 36px 22px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .scrubber-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .time-label {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    min-width: 38px;
+  }
+
+  .scrubber-track {
+    flex: 1;
+    height: 4px;
+    background-color: var(--bg-control);
+    border-radius: 9999px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .scrubber-fill {
+    width: 38%;
+    height: 100%;
+    background-color: var(--accent-brass);
+    border-radius: 9999px;
+    position: relative;
+  }
+
+  .scrubber-thumb {
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--accent-brass);
+    border: 2px solid var(--bg-canvas);
+  }
+
+  .stage-pills {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .pill-switch {
+    padding: 5px 14px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .pill-switch.active {
+    background-color: var(--accent-brass-soft);
+    border-color: var(--accent-brass);
+    color: var(--accent-brass);
+  }
+
+  /* Right Column: Spotlight + Queue */
+  .spotlight-block {
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--border-grid);
+  }
+
+  .spotlight-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .spotlight-card:hover {
+    border-color: var(--accent-brass);
+  }
+
+  .spotlight-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    background: linear-gradient(135deg, #EAE3D5 0%, #DFD5C3 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-brass);
+    flex-shrink: 0;
+  }
+
+  .spotlight-meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .spotlight-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+
+  .spotlight-sub {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+  }
+
+  .queue-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 24px;
+    overflow: hidden;
+  }
+
+  .queue-list {
+    list-style: none;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 2px;
+  }
+
+  .queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .queue-item:hover {
+    background-color: var(--bg-control);
+  }
+
+  .queue-item.active {
+    background-color: var(--bg-canvas);
+    border-color: var(--border-subtle);
+  }
+
+  .queue-left {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+  }
+
+  .queue-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: transparent;
+    flex-shrink: 0;
+  }
+
+  .queue-item.active .queue-indicator {
+    background-color: var(--status-active);
+  }
+
+  .queue-track {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .queue-item.active .queue-track {
+    color: var(--accent-brass);
+  }
+
+  .queue-artist {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    margin-top: 1px;
+  }
+
+  .queue-dur {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    margin-left: 10px;
+  }
+
+  .queue-item.active .queue-dur {
+    color: var(--text-secondary);
+  }
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="nav-left">
+        <div class="brand">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9E7836" stroke-width="1.5">
+            <rect x="4" y="4" width="16" height="16" transform="rotate(45 12 12)"/>
+            <circle cx="12" cy="12" r="3.5"/>
+          </svg>
+          <span>AURA</span>
+        </div>
+        <ul class="nav-links">
+          <li><a href="#" class="active">Now Playing</a></li>
+          <li><a href="#">Albums</a></li>
+          <li><a href="#">Artists</a></li>
+          <li><a href="#">Folders</a></li>
+          <li><a href="#">Playlists</a></li>
+        </ul>
+      </div>
+
+      <div class="nav-center">
+        <div class="search-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8678" stroke-width="2">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="20" y1="20" x2="16.2" y2="16.2"/>
+          </svg>
+          <input id="searchInput" type="text" placeholder="Search tracks, artists, albums..." />
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <div class="output-pill">
+          <span class="dot-active"></span>
+          <span>Lossless Output</span>
+        </div>
+        <button class="icon-btn" title="Audio Settings" aria-label="Audio Settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <line x1="4" y1="7" x2="20" y2="7"/>
+            <circle cx="9" cy="7" r="2.5" fill="#F2EDE4"/>
+            <line x1="4" y1="17" x2="20" y2="17"/>
+            <circle cx="15" cy="17" r="2.5" fill="#F2EDE4"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Asymmetric 3-Column Bento Workspace -->
+    <main class="bento-body">
+      <!-- Left Inspector -->
+      <section class="col-left">
+        <div class="now-playing-block">
+          <div class="eyebrow">
+            <span class="dot-active"></span>
+            <span>Playing Local FLAC</span>
+          </div>
+          <h1 class="hero-title" id="heroTitle">
+            <span class="w-bold">Nocturne</span> <span class="w-italic">in Ivory</span>
+          </h1>
+          <p class="hero-artist" id="heroArtist">Nils Frahm — Spaces (2013)</p>
+          <div class="codec-badge" id="codecBadge">FLAC • 24-BIT / 96 KHZ</div>
+
+          <div class="transport-row">
+            <button class="btn-play-primary" id="playPauseBtn">
+              <svg id="playPauseIcon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16"/>
+                <rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              <span id="playPauseText">Pause</span>
+            </button>
+            <button class="btn-transport" id="prevBtn" title="Previous Track" aria-label="Previous Track">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="19 20 9 12 19 4 19 20"/>
+                <line x1="5" y1="19" x2="5" y2="5"/>
+              </svg>
+            </button>
+            <button class="btn-transport" id="nextBtn" title="Next Track" aria-label="Next Track">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 4 15 12 5 20 5 4"/>
+                <line x1="19" y1="5" x2="19" y2="19"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="up-next-block">
+          <div class="section-head">
+            <span class="section-title"><span class="diamond-glyph"></span>Up Next</span>
+          </div>
+          <div class="up-next-card" id="upNextCard">
+            <div>
+              <div class="up-next-title" id="upNextTitle">Says</div>
+              <div class="up-next-sub" id="upNextArtist">Nils Frahm</div>
+            </div>
+            <span class="time-label tabular" id="upNextDur">08:18</span>
+          </div>
+        </div>
+
+        <div class="library-summary-block">
+          <div class="section-head">
+            <span class="section-title"><span class="diamond-glyph"></span>Collection</span>
+          </div>
+          <ul class="index-list">
+            <li><span>Albums</span><span class="count">412</span></li>
+            <li><span>Artists</span><span class="count">186</span></li>
+            <li><span>Lossless Tracks</span><span class="count">3,840</span></li>
+            <li><span>Playlists</span><span class="count">24</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Center Stage -->
+      <section class="col-center">
+        <div class="stage-ornament"></div>
+
+        <div class="stage-main">
+          <div class="artwork-frame">
+            <span class="corner-bracket cb-tl"></span>
+            <span class="corner-bracket cb-tr"></span>
+            <span class="corner-bracket cb-bl"></span>
+            <span class="corner-bracket cb-br"></span>
+
+            <!-- Cover Art View -->
+            <div class="album-sleeve" id="coverArtView">
+              <div class="sleeve-top-tag">Studio Master Edition</div>
+
+              <div class="sleeve-emblem">
+                <svg width="116" height="116" viewBox="0 0 120 120" fill="none" stroke="#9E7836">
+                  <circle cx="60" cy="60" r="52" stroke-width="1"/>
+                  <circle cx="60" cy="60" r="44" stroke-width="0.75" stroke-dasharray="3 3"/>
+                  <rect x="31" y="31" width="58" height="58" transform="rotate(45 60 60)" stroke-width="1"/>
+                  <circle cx="60" cy="60" r="14" stroke-width="1.2"/>
+                  <line x1="60" y1="4" x2="60" y2="20" stroke-width="1"/>
+                  <line x1="60" y1="100" x2="60" y2="116" stroke-width="1"/>
+                  <line x1="4" y1="60" x2="20" y2="60" stroke-width="1"/>
+                  <line x1="100" y1="60" x2="116" y2="60" stroke-width="1"/>
+                </svg>
+              </div>
+
+              <div>
+                <div class="sleeve-title" id="sleeveTitle">Spaces</div>
+                <div class="sleeve-sub" id="sleeveSub">Nils Frahm • Berlin</div>
+              </div>
+            </div>
+
+            <!-- Liner Notes View -->
+            <div class="liner-notes-view" id="linerNotesView">
+              <div>
+                <div class="sleeve-top-tag" style="margin-bottom: 10px;">Editorial Liner Notes</div>
+                <h2 class="liner-heading" id="linerHeading">Recorded Live Across Two Years</h2>
+                <p class="liner-body" id="linerBody">
+                  Captured on vintage ribbon microphones and custom analog tape decks, these performances highlight the natural resonance of acoustic felt pianos paired with warm harmonic synthesizer arpeggios.
+                </p>
+              </div>
+              <div class="liner-credits">
+                <span>Mastering: Durton Studio</span>
+                <span>Pressed: 2013</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-footer">
+          <div class="scrubber-wrap">
+            <span class="time-label" id="currentTime">03:12</span>
+            <div class="scrubber-track" id="scrubberTrack">
+              <div class="scrubber-fill" id="scrubberFill">
+                <span class="scrubber-thumb"></span>
+              </div>
+            </div>
+            <span class="time-label" id="totalTime" style="text-align:right;">08:18</span>
+          </div>
+
+          <div class="stage-pills">
+            <button class="pill-switch active" id="btnCoverMode">Cover Art</button>
+            <button class="pill-switch" id="btnNotesMode">Liner Notes</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Sidebar -->
+      <section class="col-right">
+        <div class="spotlight-block">
+          <div class="section-head">
+            <span class="section-title"><span class="diamond-glyph"></span>Recently Added</span>
+          </div>
+          <div class="spotlight-card" id="spotlightCard">
+            <div class="spotlight-thumb">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="9"/>
+                <circle cx="12" cy="12" r="2.5"/>
+              </svg>
+            </div>
+            <div class="spotlight-meta">
+              <div class="spotlight-title">Late Night Tales</div>
+              <div class="spotlight-sub">18 Tracks • FLAC 24/192</div>
+            </div>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9E7836" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="queue-block">
+          <div class="section-head">
+            <span class="section-title"><span class="diamond-glyph"></span>Play Queue</span>
+            <span class="time-label" style="text-align:right;" id="queueCount">5 Tracks</span>
+          </div>
+          <ul class="queue-list" id="queueList"></ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+  const tracks = [
+    {
+      bold: "Nocturne",
+      italic: "in Ivory",
+      fullTitle: "Nocturne in Ivory",
+      artist: "Nils Frahm",
+      album: "Spaces",
+      year: "2013",
+      codec: "FLAC • 24-BIT / 96 KHZ",
+      duration: "08:18",
+      seconds: 498,
+      notesTitle: "Recorded Live Across Two Years",
+      notesBody: "Captured on vintage ribbon microphones and custom analog tape decks, these performances highlight the natural resonance of acoustic felt pianos paired with warm harmonic synthesizer arpeggios."
+    },
+    {
+      bold: "Says",
+      italic: "in Motion",
+      fullTitle: "Says",
+      artist: "Nils Frahm",
+      album: "Spaces",
+      year: "2013",
+      codec: "FLAC • 24-BIT / 96 KHZ",
+      duration: "08:18",
+      seconds: 498,
+      notesTitle: "Gradual Harmonic Momentum",
+      notesBody: "Built from a single repeating Juno-60 pulse, the arrangement unfolds patiently over eight minutes as layered delays swell into a soaring acoustic crescendo."
+    },
+    {
+      bold: "Over There,",
+      italic: "It's Summer",
+      fullTitle: "Over There, It's Summer",
+      artist: "Nils Frahm",
+      album: "Spaces",
+      year: "2013",
+      codec: "FLAC • 24-BIT / 96 KHZ",
+      duration: "04:12",
+      seconds: 252,
+      notesTitle: "Intimate Upright Piano Study",
+      notesBody: "Recorded close to the hammers so every subtle mechanical click and pedal breath remains audible alongside the warm midrange resonance of the strings."
+    },
+    {
+      bold: "Familiar",
+      italic: "Reflections",
+      fullTitle: "Familiar",
+      artist: "Nils Frahm",
+      album: "Felt",
+      year: "2011",
+      codec: "FLAC • 24-BIT / 48 KHZ",
+      duration: "06:45",
+      seconds: 405,
+      notesTitle: "Late-Night Felt Dampening",
+      notesBody: "Layers of thick woolen felt placed between the hammers and strings soften the attack into a velvety, intimate timbre suited for quiet late-evening listening."
+    },
+    {
+      bold: "For",
+      italic: "Peter",
+      fullTitle: "For",
+      artist: "Nils Frahm",
+      album: "Juno",
+      year: "2011",
+      codec: "FLAC • 24-BIT / 96 KHZ",
+      duration: "05:14",
+      seconds: 314,
+      notesTitle: "Minimalist Analog Counterpoint",
+      notesBody: "A delicate dialogue between muted piano chords and warm analog brass textures, balanced for spacious stereo separation."
+    }
+  ];
+
+  let currentIndex = 0;
+  let isPlaying = true;
+  let progressPercent = 38;
+
+  const queueListEl = document.getElementById('queueList');
+  const searchInput = document.getElementById('searchInput');
+
+  function formatSeconds(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function renderQueue(filter = '') {
+    queueListEl.innerHTML = '';
+    const q = filter.trim().toLowerCase();
+    const filtered = tracks
+      .map((t, idx) => ({ ...t, idx }))
+      .filter(t => t.fullTitle.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+
+    document.getElementById('queueCount').textContent = `${filtered.length} Track${filtered.length === 1 ? '' : 's'}`;
+
+    filtered.forEach(track => {
+      const li = document.createElement('li');
+      li.className = `queue-item ${track.idx === currentIndex ? 'active' : ''}`;
+      li.innerHTML = `
+        <div class="queue-left">
+          <span class="queue-indicator"></span>
+          <div style="min-width:0;">
+            <div class="queue-track">${track.fullTitle}</div>
+            <div class="queue-artist">${track.artist} • ${track.album}</div>
+          </div>
+        </div>
+        <span class="queue-dur">${track.duration}</span>
+      `;
+      li.addEventListener('click', () => loadTrack(track.idx));
+      queueListEl.appendChild(li);
+    });
+  }
+
+  function loadTrack(index) {
+    currentIndex = (index + tracks.length) % tracks.length;
+    const t = tracks[currentIndex];
+    const next = tracks[(currentIndex + 1) % tracks.length];
+
+    document.getElementById('heroTitle').innerHTML = `<span class="w-bold">${t.bold}</span> <span class="w-italic">${t.italic}</span>`;
+    document.getElementById('heroArtist').textContent = `${t.artist} — ${t.album} (${t.year})`;
+    document.getElementById('codecBadge').textContent = t.codec;
+    document.getElementById('sleeveTitle').textContent = t.album;
+    document.getElementById('sleeveSub').textContent = `${t.artist} • Berlin`;
+    document.getElementById('linerHeading').textContent = t.notesTitle;
+    document.getElementById('linerBody').textContent = t.notesBody;
+    document.getElementById('totalTime').textContent = t.duration;
+
+    document.getElementById('upNextTitle').textContent = next.fullTitle;
+    document.getElementById('upNextArtist').textContent = next.artist;
+    document.getElementById('upNextDur').textContent = next.duration;
+
+    updateScrubber(0);
+    renderQueue(searchInput.value);
+  }
+
+  function updateScrubber(pct) {
+    progressPercent = Math.max(0, Math.min(100, pct));
+    document.getElementById('scrubberFill').style.width = `${progressPercent}%`;
+    const elapsed = (progressPercent / 100) * tracks[currentIndex].seconds;
+    document.getElementById('currentTime').textContent = formatSeconds(elapsed);
+  }
+
+  document.getElementById('playPauseBtn').addEventListener('click', () => {
+    isPlaying = !isPlaying;
+    document.getElementById('playPauseText').textContent = isPlaying ? 'Pause' : 'Play';
+    document.getElementById('playPauseIcon').innerHTML = isPlaying
+      ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+      : '<polygon points="6 4 20 12 6 20 6 4"/>';
+  });
+
+  document.getElementById('prevBtn').addEventListener('click', () => loadTrack(currentIndex - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => loadTrack(currentIndex + 1));
+  document.getElementById('upNextCard').addEventListener('click', () => loadTrack(currentIndex + 1));
+
+  document.getElementById('scrubberTrack').addEventListener('click', (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = ((e.clientX - rect.left) / rect.width) * 100;
+    updateScrubber(pct);
+  });
+
+  const btnCover = document.getElementById('btnCoverMode');
+  const btnNotes = document.getElementById('btnNotesMode');
+  const coverView = document.getElementById('coverArtView');
+  const notesView = document.getElementById('linerNotesView');
+
+  btnCover.addEventListener('click', () => {
+    btnCover.classList.add('active');
+    btnNotes.classList.remove('active');
+    coverView.classList.remove('hidden');
+    notesView.classList.remove('active');
+  });
+
+  btnNotes.addEventListener('click', () => {
+    btnNotes.classList.add('active');
+    btnCover.classList.remove('active');
+    coverView.classList.add('hidden');
+    notesView.classList.add('active');
+  });
+
+  searchInput.addEventListener('input', (e) => renderQueue(e.target.value));
+
+  renderQueue();
+</script>
+</body>
+</html>

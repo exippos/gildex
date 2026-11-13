@@ -1,27 +1,59 @@
-/* Header — frosted fixed chrome: brand + workspace tabs left, theme toggle right. */
+/* Header — ocean chrome, gilt sunburst brand + type nav with a gold underline.
+   A second hairline sits just below the header seam. */
 
 .app-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 14px;
+  gap: 32px;
+  padding: 0 20px;
   z-index: 20;
+}
+
+/* double gilt hairline under the header (reference detail) */
+.app-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: var(--header-rule);
+  display: var(--header-rule-display);
+  pointer-events: none;
 }
 
 .app-brand {
   flex: 0 0 auto;
-  font-size: 15px;
-  letter-spacing: 0.14em;
-  color: var(--text);
-  padding-right: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gilt);
   user-select: none;
+}
+
+.brand-mark {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  color: var(--gilt);
+}
+
+.brand-mark svg {
+  width: 22px;
+  height: 22px;
 }
 
 .workspace-tabs {
   display: flex;
   align-items: stretch;
   align-self: stretch;
-  gap: 2px;
+  gap: 24px;
 }
 
 .workspace-tab {
@@ -30,19 +62,21 @@
   align-items: center;
   border: 0;
   border-radius: 0;
-  padding: 0 12px;
+  padding: 0 2px;
   color: var(--text-muted);
-  letter-spacing: 0.02em;
+  font-size: 13px;
+  letter-spacing: 0.01em;
   white-space: nowrap;
+  transition: color 120ms linear;
 }
 
 .workspace-tab::after {
   content: '';
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: 0;
+  right: 0;
   bottom: 0;
-  height: 1px;
+  height: 2px;
   background: transparent;
 }
 
@@ -53,22 +87,21 @@
 
 .workspace-tab.is-active {
   color: var(--text);
+  font-weight: 500;
 }
 
 .workspace-tab.is-active::after {
   background: var(--gilt);
-  opacity: 0.85;
 }
 
 .workspace-tab.is-busy::before {
   content: '';
   position: absolute;
   top: 50%;
-  right: 4px;
+  right: -10px;
   width: 5px;
   height: 5px;
-  transform: translateY(-50%);
-  border-radius: 50%;
+  transform: translateY(-50%) rotate(45deg);
   background: var(--gilt-bright);
   animation: header-pulse 1s ease-in-out infinite;
 }
@@ -87,24 +120,99 @@
   flex: 1 1 auto;
 }
 
-.theme-toggle {
+.effects-toggle {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  background: transparent;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-pill);
+  color: var(--gilt);
+  background: var(--control);
 }
 
-.theme-toggle:hover {
+.effects-toggle:hover {
   color: var(--gilt-bright);
-  border: 0;
+  background: var(--control-hover);
+  border-color: var(--gilt-bright);
 }
 
-.theme-toggle svg {
+.effects-toggle svg {
   width: 16px;
   height: 16px;
+}
+
+.effects-toggle.is-on {
+  color: var(--gilt-bright);
+}
+
+/* ---- theme picker ---- */
+
+.theme-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.theme-picker::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid var(--gilt);
+  border-bottom: 1px solid var(--gilt);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.theme-picker-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 34px;
+  max-width: 200px;
+  padding: 0 30px 0 12px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-pill);
+  background: var(--control);
+  color: var(--gilt);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.theme-picker-select:hover {
+  color: var(--gilt-bright);
+  background: var(--control-hover);
+  border-color: var(--gilt-bright);
+}
+
+.theme-picker-select option {
+  background: var(--surface);
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.theme-picker-select:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* reduced state: a hairline slash across the faceted mark */
+.effects-slash {
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  top: 50%;
+  height: 1px;
+  transform: rotate(-45deg);
+  background: currentColor;
+  opacity: 0.9;
 }

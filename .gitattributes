@@ -1,0 +1,12 @@
+# Normalize text to LF in the repository and on checkout, regardless of the
+# editor/platform. Binary assets are excluded from EOL conversion.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff2 binary
+*.db binary

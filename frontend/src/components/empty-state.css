@@ -15,36 +15,38 @@
 }
 
 .empty-ornament {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 6px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--gilt);
+  transform: rotate(45deg);
+}
+
+.empty-ornament::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--gilt-bright);
 }
 
 .empty-ornament span {
-  display: block;
-  height: 1px;
-  background: var(--gilt);
-  opacity: 0.6;
+  display: none;
 }
 
-.empty-ornament span:nth-child(1) {
-  width: 72px;
-}
-.empty-ornament span:nth-child(2) {
-  width: 46px;
-  opacity: 0.42;
-}
-.empty-ornament span:nth-child(3) {
-  width: 22px;
-  opacity: 0.28;
+.empty-ornament::after {
+  content: none;
 }
 
 .empty-line {
   margin: 0;
-  font-size: 24px;
-  line-height: 1.3;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
   color: var(--text);
 }
 
@@ -80,7 +82,7 @@
 .empty-progress span {
   display: block;
   height: 100%;
-  background: var(--gilt);
+  background: var(--ocean-gilt);
   transition: width 120ms linear;
 }
 
@@ -101,15 +103,21 @@
 
 .empty-form button {
   flex: 0 0 auto;
-  padding: 4px 12px;
-  border-color: var(--gilt);
-  color: var(--text);
-  font-size: 12px;
+  padding: 6px 14px;
+  border-color: var(--gilt-fill-border);
+  background: var(--gilt-fill);
+  color: var(--on-gilt);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .empty-form button:hover {
-  color: var(--gilt-bright);
+  color: var(--on-gilt);
+  background: var(--gilt-fill);
   border-color: var(--gilt-bright);
+  filter: brightness(1.06);
 }
 
 .empty-error {
@@ -121,14 +129,21 @@
 }
 
 .empty-action {
-  margin-top: 6px;
-  border-color: var(--gilt);
-  color: var(--text);
-  font-size: 12px;
-  padding: 4px 14px;
+  margin-top: 8px;
+  border: 1px solid var(--gilt-fill-border);
+  border-radius: var(--radius-sm);
+  background: var(--gilt-fill);
+  color: var(--on-gilt);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 18px;
 }
 
 .empty-action:hover {
-  color: var(--gilt-bright);
+  background: var(--gilt-fill);
   border-color: var(--gilt-bright);
+  color: var(--on-gilt);
+  filter: brightness(1.06);
 }

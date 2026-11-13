@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA — Editorial Ivory & Copper Bento UI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,600&family=Inter:wght@200;300;400;500;600&display=swap');
+
+  :root {
+    --bg-canvas: #FAF7F2;
+    --bg-surface: #F3EDE4;
+    --bg-control: #EBE2D6;
+    --border-grid: #DFD4C6;
+    --border-subtle: #D2C3B2;
+    --accent-copper: #A84A28;
+    --accent-copper-deep: #85361A;
+    --accent-copper-warm: #C4623D;
+    --accent-copper-soft: rgba(168, 74, 40, 0.08);
+    --text-on-accent: #FAF7F2;
+    --status-active: #2B7A58;
+    --text-primary: #1F1B18;
+    --text-secondary: #685D55;
+    --text-muted: #9C8F85;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* App Shell */
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    background: var(--bg-canvas);
+  }
+
+  /* Top Navigation Bar */
+  .topbar {
+    height: 64px;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border-grid);
+    background: var(--bg-canvas);
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .brand-mark {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .nav-link {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.15s ease;
+    position: relative;
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+  }
+
+  .nav-link.active {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -21px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-copper);
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .search-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-control);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9999px;
+    padding: 0 14px;
+    height: 34px;
+    width: 260px;
+    transition: border-color 0.15s ease;
+  }
+
+  .search-pill:focus-within {
+    border-color: var(--accent-copper);
+  }
+
+  .search-pill svg {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .search-pill input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    width: 100%;
+  }
+
+  .search-pill input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .output-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 9999px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--status-active);
+    flex-shrink: 0;
+  }
+
+  /* Main Bento Grid */
+  .bento-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 26% 48% 26%;
+    grid-template-rows: 1fr 164px;
+    min-height: 0;
+  }
+
+  .bento-cell {
+    border-right: 1px solid var(--border-grid);
+    border-bottom: 1px solid var(--border-grid);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .bento-cell:nth-child(3n) {
+    border-right: none;
+  }
+
+  .bento-cell.bottom-row {
+    border-bottom: none;
+    padding: 20px 24px;
+    background: var(--bg-surface);
+  }
+
+  /* Section Headers */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text-primary);
+  }
+
+  .diamond-glyph {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-copper);
+    transform: rotate(45deg);
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .eyebrow {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  /* Left Column: Now Playing Inspector */
+  .inspector-cell {
+    background: var(--bg-surface);
+    justify-content: space-between;
+  }
+
+  .now-playing-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+
+  .hero-title .bold-part {
+    font-weight: 600;
+  }
+
+  .hero-title .italic-part {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 40px;
+    color: var(--accent-copper);
+  }
+
+  .hero-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .codec-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--accent-copper);
+    margin-bottom: 22px;
+  }
+
+  /* Transport Controls */
+  .transport-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 20px;
+    border-radius: 6px;
+    border: 1px solid var(--accent-copper-deep);
+    background: linear-gradient(135deg, var(--accent-copper-warm) 0%, var(--accent-copper) 100%);
+    color: var(--text-on-accent);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.92;
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 9999px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .btn-circle:hover {
+    border-color: var(--accent-copper);
+    color: var(--accent-copper);
+  }
+
+  .btn-circle.liked {
+    color: var(--accent-copper);
+    border-color: var(--accent-copper);
+    background: var(--accent-copper-soft);
+  }
+
+  /* Up Next Card with Art-Deco Double Hairline */
+  .up-next-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 14px 16px;
+    position: relative;
+  }
+
+  .up-next-card::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(168, 74, 40, 0.2);
+    border-radius: 3px;
+    pointer-events: none;
+  }
+
+  .up-next-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  .up-next-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .up-next-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* Center Stage */
+  .stage-cell {
+    background: var(--bg-canvas);
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle Art-Deco Copper Arch Ornament in Background */
+  .stage-ornament {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.45;
+  }
+
+  .stage-frame-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .artwork-stage {
+    position: relative;
+    width: min(350px, 46vh);
+    height: min(350px, 46vh);
+    padding: 12px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    border-radius: 4px;
+  }
+
+  /* Copper Corner Brackets */
+  .corner-bracket {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: var(--accent-copper);
+    border-style: solid;
+    pointer-events: none;
+  }
+
+  .corner-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+  .corner-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+  .corner-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+  .corner-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+  .album-sleeve {
+    width: 100%;
+    height: 100%;
+    border-radius: 2px;
+    border: 1px solid var(--border-subtle);
+    background: linear-gradient(155deg, #2C1D18 0%, #4A271B 52%, #1D1411 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: #FAF7F2;
+  }
+
+  .sleeve-deco-ring {
+    position: absolute;
+    width: 230px;
+    height: 230px;
+    border-radius: 50%;
+    border: 1px solid rgba(224, 152, 120, 0.35);
+    pointer-events: none;
+  }
+
+  .sleeve-deco-ring-inner {
+    position: absolute;
+    width: 196px;
+    height: 196px;
+    border-radius: 50%;
+    border: 1px dashed rgba(224, 152, 120, 0.25);
+    pointer-events: none;
+  }
+
+  .sleeve-label-top {
+    font-size: 9px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: #E5A587;
+    margin-bottom: 14px;
+    z-index: 1;
+  }
+
+  .sleeve-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    line-height: 1.15;
+    color: #FAF7F2;
+    z-index: 1;
+  }
+
+  .sleeve-divider {
+    width: 36px;
+    height: 1px;
+    background: #D98A68;
+    margin: 14px 0;
+    z-index: 1;
+  }
+
+  .sleeve-artist {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #E2C8BC;
+    z-index: 1;
+  }
+
+  /* Liner Notes View */
+  .liner-notes-view {
+    display: none;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    padding: 24px;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
+  }
+
+  .liner-notes-view.active {
+    display: flex;
+  }
+
+  .album-sleeve.hidden {
+    display: none;
+  }
+
+  .liner-heading {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--accent-copper);
+    margin-bottom: 10px;
+  }
+
+  .liner-body {
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .liner-credits {
+    border-top: 1px solid var(--border-grid);
+    padding-top: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Scrubber & Stage Switcher */
+  .stage-footer {
+    width: 100%;
+    max-width: 480px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .scrubber-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .scrubber-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg-control);
+    border-radius: 9999px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .scrubber-fill {
+    height: 100%;
+    width: 38%;
+    background: var(--accent-copper);
+    border-radius: 9999px;
+    position: relative;
+  }
+
+  .scrubber-knob {
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-copper);
+    border: 2px solid var(--bg-canvas);
+  }
+
+  .mode-pills {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .mode-pill {
+    padding: 5px 14px;
+    border-radius: 9999px;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mode-pill.active {
+    background: var(--accent-copper-soft);
+    border-color: var(--accent-copper);
+    color: var(--accent-copper);
+    font-weight: 600;
+  }
+
+  /* Right Column: Featured & Queue */
+  .queue-cell {
+    background: var(--bg-surface);
+    padding: 0;
+  }
+
+  .featured-box {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-grid);
+  }
+
+  .featured-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .featured-card:hover {
+    border-color: var(--accent-copper);
+  }
+
+  .featured-thumb {
+    width: 42px;
+    height: 42px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #6E311B, #B85A3A);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FAF7F2;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .queue-box {
+    flex: 1;
+    padding: 18px 24px;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .queue-item:hover {
+    background: var(--bg-control);
+  }
+
+  .queue-item.active {
+    background: var(--bg-canvas);
+    border-color: var(--border-subtle);
+  }
+
+  .queue-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .queue-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: transparent;
+    flex-shrink: 0;
+  }
+
+  .queue-item.active .queue-indicator {
+    background: var(--status-active);
+  }
+
+  .queue-track-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .queue-item.active .queue-track-title {
+    color: var(--accent-copper);
+  }
+
+  .queue-track-artist {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+  }
+
+  .queue-duration {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-left: 12px;
+  }
+
+  /* Bottom Bento Row */
+  .spotlight-card {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 12px 16px;
+  }
+
+  .spotlight-info h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+
+  .spotlight-info p {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .index-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+    margin-top: 2px;
+  }
+
+  .index-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-grid);
+    font-size: 12.5px;
+  }
+
+  .index-label {
+    color: var(--text-secondary);
+  }
+
+  .index-count {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Bottom Right: Audio Edition Summary (Clean, Non-Telemetry) */
+  .edition-summary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 12px 18px;
+  }
+
+  .edition-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .edition-value {
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--text-primary);
+  }
+
+  .edition-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border-grid);
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- Top Navigation -->
+  <header class="topbar">
+    <div class="nav-left">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="4" width="16" height="16" transform="rotate(45 12 12)" stroke="#A84A28" stroke-width="1.4"/>
+            <circle cx="12" cy="12" r="3" fill="#A84A28"/>
+          </svg>
+        </div>
+        <span>AURA</span>
+      </div>
+      <nav class="nav-links">
+        <button class="nav-link active">Now Playing</button>
+        <button class="nav-link">Albums</button>
+        <button class="nav-link">Artists</button>
+        <button class="nav-link">Folders</button>
+        <button class="nav-link">Playlists</button>
+      </nav>
+    </div>
+
+    <div class="nav-right">
+      <div class="search-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M20 20l-3.5-3.5"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search tracks, artists, albums...">
+      </div>
+      <div class="output-badge">
+        <span class="status-dot"></span>
+        <span>LOSSLESS DAC</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Bento Grid -->
+  <main class="bento-main">
+    <!-- Left Inspector -->
+    <section class="bento-cell inspector-cell">
+      <div>
+        <div class="now-playing-eyebrow">
+          <span class="diamond-glyph"></span>
+          <span class="eyebrow">Now Playing</span>
+        </div>
+
+        <h1 class="hero-title" id="heroTitle">
+          <span class="bold-part">Autumn</span> <span class="italic-part">Reverie</span>
+        </h1>
+        <p class="hero-meta" id="heroMeta">Clara Lindqvist &bull; Copper Sessions (2025)</p>
+
+        <div class="codec-pill" id="codecBadge">FLAC &bull; 24-BIT / 96 KHZ</div>
+
+        <div class="transport-bar">
+          <button class="btn-primary" id="playPauseBtn">
+            <span id="playIcon">&#10074;&#10074;</span>
+            <span id="playLabel">Pause</span>
+          </button>
+          <button class="btn-circle" id="prevBtn" title="Previous Track">&#9664;</button>
+          <button class="btn-circle" id="nextBtn" title="Next Track">&#9654;</button>
+          <button class="btn-circle" id="likeBtn" title="Favorite">&#9825;</button>
+        </div>
+      </div>
+
+      <div class="up-next-card">
+        <span class="eyebrow">Up Next</span>
+        <div class="up-next-row">
+          <div>
+            <div class="up-next-title" id="upNextTitle">Solstice in Terracotta</div>
+            <div class="up-next-sub" id="upNextSub">Clara Lindqvist &bull; 04:48</div>
+          </div>
+          <span style="color: var(--accent-copper); font-size: 13px;">&#8594;</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Center Gallery Stage -->
+    <section class="bento-cell stage-cell">
+      <!-- Subtle Art-Deco Sunburst Arch Watermark -->
+      <div class="stage-ornament">
+        <svg width="520" height="420" viewBox="0 0 520 420" fill="none">
+          <circle cx="260" cy="210" r="195" stroke="#A84A28" stroke-width="0.75" stroke-opacity="0.22"/>
+          <circle cx="260" cy="210" r="165" stroke="#A84A28" stroke-width="0.75" stroke-opacity="0.16"/>
+          <line x1="30" y1="210" x2="490" y2="210" stroke="#A84A28" stroke-width="0.75" stroke-opacity="0.18"/>
+          <line x1="260" y1="10" x2="260" y2="410" stroke="#A84A28" stroke-width="0.75" stroke-opacity="0.18"/>
+          <rect x="122" y="72" width="276" height="276" transform="rotate(45 260 210)" stroke="#A84A28" stroke-width="0.75" stroke-opacity="0.16"/>
+        </svg>
+      </div>
+
+      <div class="stage-frame-wrap">
+        <div class="artwork-stage">
+          <span class="corner-bracket corner-tl"></span>
+          <span class="corner-bracket corner-tr"></span>
+          <span class="corner-bracket corner-bl"></span>
+          <span class="corner-bracket corner-br"></span>
+
+          <!-- Cover Art View -->
+          <div class="album-sleeve" id="coverArtView">
+            <div class="sleeve-deco-ring"></div>
+            <div class="sleeve-deco-ring-inner"></div>
+            <div class="sleeve-label-top">Master Archival Pressing</div>
+            <div class="sleeve-title" id="sleeveTitle">COPPER<br>SESSIONS</div>
+            <div class="sleeve-divider"></div>
+            <div class="sleeve-artist" id="sleeveArtist">Clara Lindqvist</div>
+          </div>
+
+          <!-- Liner Notes View -->
+          <div class="liner-notes-view" id="linerNotesView">
+            <div class="liner-heading">Studio &amp; Pressing Notes</div>
+            <p class="liner-body" id="linerBody">
+              Recorded live to half-inch analog tape in Stockholm using vintage ribbon microphones and custom copper-wound preamplifiers. Mastered without dynamic compression to preserve room warmth and natural decay.
+            </p>
+            <div class="liner-credits">
+              <span>Studio: Atlantis Metronome</span>
+              <span>Cat. No. AU-042</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-footer">
+        <div class="scrubber-row">
+          <span class="tabular" id="currentTime">01:54</span>
+          <div class="scrubber-track" id="scrubberTrack">
+            <div class="scrubber-fill" id="scrubberFill">
+              <div class="scrubber-knob"></div>
+            </div>
+          </div>
+          <span class="tabular" id="totalTime">05:12</span>
+        </div>
+
+        <div class="mode-pills">
+          <button class="mode-pill active" id="btnCoverMode">Cover Art</button>
+          <button class="mode-pill" id="btnNotesMode">Liner Notes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Sidebar: Featured & Queue -->
+    <section class="bento-cell queue-cell">
+      <div class="featured-box">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="diamond-glyph"></span>
+            <span>Recently Added</span>
+          </div>
+          <span class="eyebrow">2025</span>
+        </div>
+        <div class="featured-card" id="featuredCard">
+          <div class="featured-thumb">I</div>
+          <div>
+            <div style="font-size: 13px; font-weight: 500; color: var(--text-primary);">Afternoon in Siena</div>
+            <div style="font-size: 11.5px; color: var(--text-secondary);">8 Tracks &bull; FLAC 24/96</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="queue-box">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="diamond-glyph"></span>
+            <span>Play Queue</span>
+          </div>
+          <span class="eyebrow tabular" id="queueCount">5 Tracks</span>
+        </div>
+
+        <div class="queue-list" id="queueList"></div>
+      </div>
+    </section>
+
+    <!-- Bottom Left: Artist Spotlight -->
+    <section class="bento-cell bottom-row">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="diamond-glyph"></span>
+          <span>Artist Spotlight</span>
+        </div>
+        <span class="eyebrow">Chamber Jazz</span>
+      </div>
+      <div class="spotlight-card">
+        <div class="spotlight-info">
+          <h4>Nordic Acoustic Quartet</h4>
+          <p>4 Albums &bull; 32 Lossless Tracks</p>
+        </div>
+        <button class="btn-circle" title="Open Artist">&#8599;</button>
+      </div>
+    </section>
+
+    <!-- Bottom Center: Library Directory -->
+    <section class="bento-cell bottom-row">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="diamond-glyph"></span>
+          <span>Local Collection</span>
+        </div>
+        <span class="eyebrow">Indexed</span>
+      </div>
+      <div class="index-grid">
+        <div class="index-row">
+          <span class="index-label">Albums</span>
+          <span class="index-count tabular">412</span>
+        </div>
+        <div class="index-row">
+          <span class="index-label">Artists</span>
+          <span class="index-count tabular">186</span>
+        </div>
+        <div class="index-row">
+          <span class="index-label">Lossless FLAC</span>
+          <span class="index-count tabular">3,840</span>
+        </div>
+        <div class="index-row">
+          <span class="index-label">Playlists</span>
+          <span class="index-count tabular">24</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Right: Clean Format Info (No Heavy Telemetry) -->
+    <section class="bento-cell bottom-row">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="diamond-glyph"></span>
+          <span>Edition Details</span>
+        </div>
+        <span class="eyebrow" style="color: var(--status-active);">Bit-Perfect</span>
+      </div>
+      <div class="edition-summary">
+        <div class="edition-stat">
+          <span class="eyebrow">Bit Depth</span>
+          <span class="edition-value tabular" id="statBitDepth">24-Bit</span>
+        </div>
+        <div class="edition-divider"></div>
+        <div class="edition-stat">
+          <span class="eyebrow">Sample Rate</span>
+          <span class="edition-value tabular" id="statSampleRate">96.0 kHz</span>
+        </div>
+        <div class="edition-divider"></div>
+        <div class="edition-stat">
+          <span class="eyebrow">Format</span>
+          <span class="edition-value" id="statFormat">FLAC</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  const tracks = [
+    {
+      boldTitle: "Autumn",
+      italicTitle: "Reverie",
+      fullTitle: "Autumn Reverie",
+      artist: "Clara Lindqvist",
+      album: "Copper Sessions (2025)",
+      sleeveTitle: "COPPER<br>SESSIONS",
+      duration: "05:12",
+      seconds: 312,
+      codec: "FLAC • 24-BIT / 96 KHZ",
+      bitDepth: "24-Bit",
+      sampleRate: "96.0 kHz",
+      format: "FLAC",
+      notes: "Recorded live to half-inch analog tape in Stockholm using vintage ribbon microphones and custom copper-wound preamplifiers. Mastered without dynamic compression to preserve room warmth."
+    },
+    {
+      boldTitle: "Solstice",
+      italicTitle: "in Terracotta",
+      fullTitle: "Solstice in Terracotta",
+      artist: "Clara Lindqvist",
+      album: "Copper Sessions (2025)",
+      sleeveTitle: "COPPER<br>SESSIONS",
+      duration: "04:48",
+      seconds: 288,
+      codec: "FLAC • 24-BIT / 96 KHZ",
+      bitDepth: "24-Bit",
+      sampleRate: "96.0 kHz",
+      format: "FLAC",
+      notes: "Features solo upright bass and felt piano recorded at dusk. Warm room reflections were captured with a single stereo pair placed twelve feet from the ensemble."
+    },
+    {
+      boldTitle: "Warm",
+      italicTitle: "Patina",
+      fullTitle: "Warm Patina",
+      artist: "Henrik Vestergaard",
+      album: "Ochre & Cedar (2024)",
+      sleeveTitle: "OCHRE &<br>CEDAR",
+      duration: "06:04",
+      seconds: 364,
+      codec: "ALAC • 24-BIT / 192 KHZ",
+      bitDepth: "24-Bit",
+      sampleRate: "192.0 kHz",
+      format: "ALAC",
+      notes: "An intimate cello and acoustic guitar duet tracked in Copenhagen. High-resolution 192 kHz transfer directly from the original master console."
+    },
+    {
+      boldTitle: "Evening",
+      italicTitle: "in Siena",
+      fullTitle: "Evening in Siena",
+      artist: "Elena Conti",
+      album: "Afternoon in Siena (2025)",
+      sleeveTitle: "AFTERNOON<br>IN SIENA",
+      duration: "03:55",
+      seconds: 235,
+      codec: "FLAC • 24-BIT / 88.2 KHZ",
+      bitDepth: "24-Bit",
+      sampleRate: "88.2 kHz",
+      format: "FLAC",
+      notes: "Classical nylon-string guitar study inspired by Tuscan terracotta architecture at sunset. Captured with zero artificial reverb."
+    },
+    {
+      boldTitle: "Quiet",
+      italicTitle: "Hearth",
+      fullTitle: "Quiet Hearth",
+      artist: "Nordic Acoustic Quartet",
+      album: "Winter Folio (2023)",
+      sleeveTitle: "WINTER<br>FOLIO",
+      duration: "04:30",
+      seconds: 270,
+      codec: "WAV • 16-BIT / 44.1 KHZ",
+      bitDepth: "16-Bit",
+      sampleRate: "44.1 kHz",
+      format: "WAV",
+      notes: "Minimalist chamber arrangement for muted trumpet, Rhodes piano, and brushed percussion."
+    }
+  ];
+
+  let currentIndex = 0;
+  let isPlaying = true;
+  let progressPercent = 38;
+
+  const queueListEl = document.getElementById('queueList');
+  const searchInput = document.getElementById('searchInput');
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function renderQueue(filter = '') {
+    const query = filter.trim().toLowerCase();
+    const filtered = tracks
+      .map((t, idx) => ({ ...t, originalIndex: idx }))
+      .filter(t =>
+        t.fullTitle.toLowerCase().includes(query) ||
+        t.artist.toLowerCase().includes(query) ||
+        t.album.toLowerCase().includes(query)
+      );
+
+    document.getElementById('queueCount').textContent = `${filtered.length} Tracks`;
+    queueListEl.innerHTML = '';
+
+    filtered.forEach(track => {
+      const item = document.createElement('div');
+      item.className = 'queue-item' + (track.originalIndex === currentIndex ? ' active' : '');
+      item.innerHTML = `
+        <div class="queue-item-left">
+          <span class="queue-indicator"></span>
+          <div style="min-width:0;">
+            <div class="queue-track-title">${track.fullTitle}</div>
+            <div class="queue-track-artist">${track.artist}</div>
+          </div>
+        </div>
+        <span class="queue-duration tabular">${track.duration}</span>
+      `;
+      item.addEventListener('click', () => loadTrack(track.originalIndex));
+      queueListEl.appendChild(item);
+    });
+  }
+
+  function loadTrack(index) {
+    currentIndex = (index + tracks.length) % tracks.length;
+    const track = tracks[currentIndex];
+    const nextTrack = tracks[(currentIndex + 1) % tracks.length];
+
+    document.getElementById('heroTitle').innerHTML =
+      `<span class="bold-part">${track.boldTitle}</span> <span class="italic-part">${track.italicTitle}</span>`;
+    document.getElementById('heroMeta').textContent = `${track.artist} • ${track.album}`;
+    document.getElementById('codecBadge').textContent = track.codec;
+
+    document.getElementById('upNextTitle').textContent = nextTrack.fullTitle;
+    document.getElementById('upNextSub').textContent = `${nextTrack.artist} • ${nextTrack.duration}`;
+
+    document.getElementById('sleeveTitle').innerHTML = track.sleeveTitle;
+    document.getElementById('sleeveArtist').textContent = track.artist;
+    document.getElementById('linerBody').textContent = track.notes;
+
+    document.getElementById('statBitDepth').textContent = track.bitDepth;
+    document.getElementById('statSampleRate').textContent = track.sampleRate;
+    document.getElementById('statFormat').textContent = track.format;
+
+    progressPercent = 12;
+    updateScrubberUI();
+    renderQueue(searchInput.value);
+  }
+
+  function updateScrubberUI() {
+    const track = tracks[currentIndex];
+    const elapsed = (progressPercent / 100) * track.seconds;
+    document.getElementById('scrubberFill').style.width = `${progressPercent}%`;
+    document.getElementById('currentTime').textContent = formatTime(elapsed);
+    document.getElementById('totalTime').textContent = track.duration;
+  }
+
+  document.getElementById('playPauseBtn').addEventListener('click', () => {
+    isPlaying = !isPlaying;
+    document.getElementById('playIcon').innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9654;';
+    document.getElementById('playLabel').textContent = isPlaying ? 'Pause' : 'Play';
+  });
+
+  document.getElementById('prevBtn').addEventListener('click', () => loadTrack(currentIndex - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => loadTrack(currentIndex + 1));
+
+  document.getElementById('likeBtn').addEventListener('click', function() {
+    this.classList.toggle('liked');
+    this.innerHTML = this.classList.contains('liked') ? '&#9829;' : '&#9825;';
+  });
+
+  document.getElementById('scrubberTrack').addEventListener('click', function(e) {
+    const rect = this.getBoundingClientRect();
+    progressPercent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    updateScrubberUI();
+  });
+
+  document.getElementById('btnCoverMode').addEventListener('click', function() {
+    this.classList.add('active');
+    document.getElementById('btnNotesMode').classList.remove('active');
+    document.getElementById('coverArtView').classList.remove('hidden');
+    document.getElementById('linerNotesView').classList.remove('active');
+  });
+
+  document.getElementById('btnNotesMode').addEventListener('click', function() {
+    this.classList.add('active');
+    document.getElementById('btnCoverMode').classList.remove('active');
+    document.getElementById('coverArtView').classList.add('hidden');
+    document.getElementById('linerNotesView').classList.add('active');
+  });
+
+  document.getElementById('featuredCard').addEventListener('click', () => loadTrack(3));
+  searchInput.addEventListener('input', (e) => renderQueue(e.target.value));
+
+  document.querySelectorAll('.nav-link').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  renderQueue();
+  updateScrubberUI();
+</script>
+</body>
+</html>

@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AURA — Gilded Ocean Bento UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-canvas: #060B13;
+    --bg-surface: #0B121E;
+    --bg-control: #111B2B;
+    --bg-hover: #162338;
+    --border-grid: #19263A;
+    --border-subtle: #24354F;
+    --border-gilded: rgba(212, 175, 114, 0.34);
+    --accent-gold: #D4AF72;
+    --accent-gold-bright: #E5C58A;
+    --accent-gold-dim: rgba(212, 175, 114, 0.14);
+    --accent-ocean: #38BDF8;
+    --text-on-accent: #060B13;
+    --status-active: #2DD4BF;
+    --text-primary: #F3F6FA;
+    --text-secondary: #8FA3BE;
+    --text-muted: #4D627E;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Subtle Art-Deco Oceanic Background Ornamentation */
+  .deco-ocean-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .deco-ocean-bg svg {
+    width: 100%;
+    height: 100%;
+    opacity: 0.045;
+  }
+
+  /* Top Navigation Bar */
+  header {
+    height: 64px;
+    border-bottom: 1px solid var(--border-grid);
+    background: var(--bg-canvas);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Subtle Art-Deco double hairline accent under header */
+  header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -3px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 114, 0.25) 20%, rgba(212, 175, 114, 0.25) 80%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    color: var(--accent-gold);
+  }
+
+  .brand-mark {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+  }
+
+  nav {
+    display: flex;
+    gap: 24px;
+  }
+
+  nav button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    padding: 6px 0;
+    position: relative;
+    transition: color 0.15s ease;
+  }
+
+  nav button:hover {
+    color: var(--text-primary);
+  }
+
+  nav button.active {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  nav button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -19px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-gold);
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .search-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-control);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9999px;
+    padding: 7px 14px;
+    width: 260px;
+    transition: border-color 0.15s ease;
+  }
+
+  .search-pill:focus-within {
+    border-color: var(--accent-gold);
+  }
+
+  .search-pill svg {
+    width: 14px;
+    height: 14px;
+    color: var(--accent-gold);
+    flex-shrink: 0;
+  }
+
+  .search-pill input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    width: 100%;
+  }
+
+  .search-pill input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-gilded);
+    border-radius: 9999px;
+    padding: 6px 13px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--accent-gold);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--status-active);
+    box-shadow: 0 0 8px rgba(45, 212, 191, 0.5);
+  }
+
+  /* Main Bento Grid */
+  .bento-shell {
+    flex: 1;
+    display: grid;
+    grid-template-rows: 1fr 220px;
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .workspace-row {
+    display: grid;
+    grid-template-columns: 28% 44% 28%;
+    border-bottom: 1px solid var(--border-grid);
+    min-height: 0;
+  }
+
+  .bottom-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    min-height: 0;
+  }
+
+  .pane {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    position: relative;
+  }
+
+  .pane-border-r {
+    border-right: 1px solid var(--border-grid);
+  }
+
+  .pane-surface {
+    background: var(--bg-surface);
+  }
+
+  /* Section Header with Art-Deco Diamond Glyph */
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .section-glyph {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-gold);
+    transform: rotate(45deg);
+    display: inline-block;
+  }
+
+  .section-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* Left Pane: Now Playing */
+  .left-inspector {
+    justify-content: space-between;
+    background: var(--bg-surface);
+  }
+
+  .eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .eyebrow::after {
+    content: '';
+    height: 1px;
+    width: 28px;
+    background: var(--border-gilded);
+  }
+
+  .hero-title {
+    font-size: 36px;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .hero-title strong {
+    font-weight: 600;
+  }
+
+  .hero-title span {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 40px;
+    color: var(--accent-gold-bright);
+  }
+
+  .hero-artist {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .transport-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #E2C185 0%, #C89F5D 100%);
+    color: var(--text-on-accent);
+    border: 1px solid #F0D6A3;
+    border-radius: 6px;
+    height: 38px;
+    padding: 0 20px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.06);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 9999px;
+    background: var(--bg-control);
+    border: 1px solid var(--border-gilded);
+    color: var(--accent-gold);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .btn-circle:hover {
+    border-color: var(--accent-gold-bright);
+    background: var(--bg-hover);
+  }
+
+  .btn-circle.liked {
+    color: var(--status-active);
+    border-color: rgba(45, 212, 191, 0.45);
+  }
+
+  .up-next-card {
+    background: var(--bg-control);
+    border: 1px solid var(--border-gilded);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  /* Art-Deco corner ticks on Up Next card */
+  .up-next-card::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(212, 175, 114, 0.12);
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  .up-next-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 4px;
+  }
+
+  .up-next-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .up-next-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Center Stage */
+  .center-stage {
+    background: var(--bg-canvas);
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stage-view {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Art-Deco Double Gilded Frame for Album Sleeve */
+  .album-frame-outer {
+    height: 100%;
+    max-height: 332px;
+    aspect-ratio: 1 / 1;
+    padding: 7px;
+    border: 1px solid var(--border-gilded);
+    border-radius: 8px;
+    background: rgba(11, 18, 30, 0.65);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Art-Deco corner brackets */
+  .deco-corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--accent-gold);
+    border-style: solid;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .deco-corner.tl { top: -2px; left: -2px; border-width: 2px 0 0 2px; border-top-left-radius: 4px; }
+  .deco-corner.tr { top: -2px; right: -2px; border-width: 2px 2px 0 0; border-top-right-radius: 4px; }
+  .deco-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 2px 2px; border-bottom-left-radius: 4px; }
+  .deco-corner.br { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; border-bottom-right-radius: 4px; }
+
+  .album-frame {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    border: 1px solid var(--border-subtle);
+    background: #08101C;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .album-art-graphic {
+    width: 100%;
+    height: 100%;
+    transition: background 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px;
+    position: relative;
+  }
+
+  .art-deco-inner-border {
+    position: absolute;
+    inset: 10px;
+    border: 1px solid rgba(212, 175, 114, 0.28);
+    pointer-events: none;
+  }
+
+  .art-rings {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+
+  .art-rings svg {
+    width: 82%;
+    height: 82%;
+    opacity: 0.72;
+  }
+
+  .art-caption {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+  }
+
+  .art-center-title {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .art-center-title h3 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .art-center-title p {
+    font-size: 9.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-top: 6px;
+  }
+
+  .liner-notes-box {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-gilded);
+    border-radius: 8px;
+    padding: 26px;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+  }
+
+  .liner-notes-box.visible {
+    display: flex;
+  }
+
+  .liner-notes-box h4 {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+  }
+
+  .liner-notes-box p {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+
+  .stage-controls {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .scrubber-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .scrubber-track {
+    flex: 1;
+    height: 3px;
+    background: var(--bg-hover);
+    border-radius: 9999px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .scrubber-fill {
+    width: 42%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-ocean) 0%, var(--accent-gold) 100%);
+    border-radius: 9999px;
+    position: relative;
+  }
+
+  .scrubber-fill::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: -3.5px;
+    width: 10px;
+    height: 10px;
+    transform: rotate(45deg);
+    background: var(--accent-gold-bright);
+    border: 1.5px solid var(--bg-canvas);
+  }
+
+  .mode-pills {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .mode-pill {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9999px;
+    padding: 5px 15px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mode-pill.active {
+    background: var(--accent-gold-dim);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold-bright);
+  }
+
+  /* Right Pane: Queue */
+  .right-queue {
+    background: var(--bg-surface);
+  }
+
+  .queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .queue-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .queue-row:hover {
+    background: var(--bg-control);
+  }
+
+  .queue-row.active {
+    background: var(--bg-control);
+    border-color: var(--border-gilded);
+  }
+
+  .queue-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .queue-dot {
+    width: 6px;
+    height: 6px;
+    transform: rotate(45deg);
+    background: var(--border-subtle);
+    flex-shrink: 0;
+  }
+
+  .queue-row.active .queue-dot {
+    background: var(--accent-gold);
+    box-shadow: 0 0 8px rgba(212, 175, 114, 0.55);
+  }
+
+  .queue-info {
+    min-width: 0;
+  }
+
+  .queue-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .queue-sub {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .queue-dur {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-left: 12px;
+  }
+
+  /* Bottom Row Cards */
+  .spotlight-card {
+    flex: 1;
+    background: linear-gradient(145deg, #0D1829 0%, #070D17 100%);
+    border: 1px solid var(--border-gilded);
+    border-radius: 6px;
+    padding: 18px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .spotlight-card::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(212, 175, 114, 0.14);
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  .spotlight-text h4 {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .spotlight-text p {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .index-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+  }
+
+  .index-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border-grid);
+    font-size: 13px;
+  }
+
+  .index-row:last-child {
+    border-bottom: none;
+  }
+
+  .index-row span:first-child {
+    color: var(--text-secondary);
+  }
+
+  .index-row span:last-child {
+    color: var(--accent-gold-bright);
+    font-weight: 500;
+  }
+
+  .output-summary {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+  }
+
+  .output-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .metric-box {
+    background: var(--bg-control);
+    border: 1px solid var(--border-subtle);
+    border-top: 2px solid var(--accent-gold);
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .metric-val {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-primary);
+  }
+
+  .output-note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-grid);
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 9999px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <div class="nav-left">
+      <div class="brand">
+        <div class="brand-mark">
+          <!-- Art-Deco Sunburst / Compass Emblem -->
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.3">
+            <polygon points="12,2 22,12 12,22 2,12" />
+            <circle cx="12" cy="12" r="4.5" />
+            <line x1="12" y1="2" x2="12" y2="7.5" />
+            <line x1="12" y1="16.5" x2="12" y2="22" />
+            <line x1="2" y1="12" x2="7.5" y2="12" />
+            <line x1="16.5" y1="12" x2="22" y2="12" />
+          </svg>
+        </div>
+        <span>AURA</span>
+      </div>
+      <nav id="topNav">
+        <button class="active" data-tab="Now Playing">Now Playing</button>
+        <button data-tab="Albums">Albums</button>
+        <button data-tab="Artists">Artists</button>
+        <button data-tab="Folders">Folders</button>
+        <button data-tab="Playlists">Playlists</button>
+      </nav>
+    </div>
+
+    <div class="nav-right">
+      <div class="search-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search tracks, artists, albums..." />
+      </div>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span>24-BIT / 96 KHZ</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Bento Grid -->
+  <main class="bento-shell">
+
+    <!-- Upper Asymmetric Workspace -->
+    <section class="workspace-row">
+
+      <!-- Left Inspector (28%) -->
+      <div class="pane pane-border-r left-inspector">
+        <div>
+          <div class="eyebrow" id="trackCodec">FLAC &bull; LOSSLESS</div>
+          <h1 class="hero-title" id="heroTitle"><strong>Nocturne</strong> <span>in Blue</span></h1>
+          <p class="hero-artist" id="heroArtist">Nils Frahm &mdash; Spaces (2013)</p>
+
+          <div class="transport-bar">
+            <button class="btn-primary" id="playPauseBtn">
+              <span id="playIcon">&#9646;&#9646;</span>
+              <span id="playLabel">Pause</span>
+            </button>
+            <button class="btn-circle" id="prevBtn" title="Previous Track">&#9664;</button>
+            <button class="btn-circle" id="nextBtn" title="Next Track">&#9654;</button>
+            <button class="btn-circle" id="likeBtn" title="Favorite">&#9825;</button>
+          </div>
+        </div>
+
+        <div class="up-next-card">
+          <div>
+            <div class="up-next-label">Up Next</div>
+            <div class="up-next-title" id="upNextTitle">Over There, It's Summer</div>
+            <div class="up-next-sub" id="upNextArtist">Nils Frahm</div>
+          </div>
+          <span class="queue-dur tabular" id="upNextDur">04:12</span>
+        </div>
+      </div>
+
+      <!-- Center Stage (44%) -->
+      <div class="pane pane-border-r center-stage">
+
+        <!-- Whisper-light Art-Deco Oceanic Scallop & Compass Watermark -->
+        <div class="deco-ocean-bg" aria-hidden="true">
+          <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <pattern id="decoWaves" x="0" y="0" width="120" height="60" patternUnits="userSpaceOnUse">
+                <!-- Art-Deco Scallop / Ocean Fan Arcs -->
+                <path d="M 0 60 A 60 60 0 0 1 120 60" fill="none" stroke="#D4AF72" stroke-width="1" />
+                <path d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="#38BDF8" stroke-width="0.8" />
+                <path d="M 30 60 A 30 30 0 0 1 90 60" fill="none" stroke="#D4AF72" stroke-width="0.8" />
+                <path d="M -60 30 A 60 60 0 0 1 60 30" fill="none" stroke="#D4AF72" stroke-width="1" />
+                <path d="M 60 30 A 60 60 0 0 1 180 30" fill="none" stroke="#D4AF72" stroke-width="1" />
+                <line x1="60" y1="0" x2="60" y2="60" stroke="#D4AF72" stroke-width="0.5" stroke-dasharray="2 4" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#decoWaves)" />
+          </svg>
+        </div>
+
+        <div class="stage-view">
+          <!-- Cover Art View with Gilded Art-Deco Frame -->
+          <div class="album-frame-outer" id="coverArtView">
+            <span class="deco-corner tl"></span>
+            <span class="deco-corner tr"></span>
+            <span class="deco-corner bl"></span>
+            <span class="deco-corner br"></span>
+
+            <div class="album-frame">
+              <div class="album-art-graphic" id="albumGraphic" style="background: radial-gradient(circle at 50% 42%, #132946 0%, #070E1A 78%);">
+                <div class="art-deco-inner-border"></div>
+                <div class="art-rings">
+                  <svg viewBox="0 0 240 240">
+                    <!-- Gilded Astrolabe & Oceanic Wave Rings -->
+                    <circle cx="120" cy="120" r="102" fill="none" stroke="#D4AF72" stroke-width="0.75" stroke-opacity="0.6" />
+                    <circle cx="120" cy="120" r="94" fill="none" stroke="#38BDF8" stroke-width="0.5" stroke-opacity="0.35" stroke-dasharray="3 4" />
+                    <polygon points="120,18 222,120 120,222 18,120" fill="none" stroke="#D4AF72" stroke-width="0.65" stroke-opacity="0.45" />
+                    <circle cx="120" cy="120" r="68" fill="none" stroke="#D4AF72" stroke-width="0.7" stroke-opacity="0.5" />
+                    <!-- Subtle Oceanic Horizon Waves -->
+                    <path d="M 38 148 Q 79 138, 120 148 T 202 148" fill="none" stroke="#D4AF72" stroke-width="0.7" stroke-opacity="0.45" />
+                    <path d="M 48 158 Q 84 150, 120 158 T 192 158" fill="none" stroke="#38BDF8" stroke-width="0.6" stroke-opacity="0.4" />
+                  </svg>
+                </div>
+                <div class="art-caption">
+                  <span>MASTER EDITION</span>
+                  <span id="artYear">2013</span>
+                </div>
+                <div class="art-center-title">
+                  <h3 id="artAlbum">SPACES</h3>
+                  <p id="artSubtitle">PELAGIC PRESSING</p>
+                </div>
+                <div class="art-caption">
+                  <span>SIDE A</span>
+                  <span>STEREO</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Liner Notes View -->
+          <div class="liner-notes-box" id="linerNotesView">
+            <h4>Editorial Liner Notes</h4>
+            <p id="linerNotesText">
+              Recorded across two years of live performances in intimate acoustic halls, pairing close-mic'd upright felt piano with warm analog tape delay and subtle pelagic room resonance.
+            </p>
+          </div>
+        </div>
+
+        <div class="stage-controls">
+          <div class="scrubber-row tabular">
+            <span id="timeElapsed">03:42</span>
+            <div class="scrubber-track" id="scrubberTrack">
+              <div class="scrubber-fill" id="scrubberFill"></div>
+            </div>
+            <span id="timeTotal">08:18</span>
+          </div>
+
+          <div class="mode-pills">
+            <button class="mode-pill active" id="btnCoverMode">Cover Art</button>
+            <button class="mode-pill" id="btnNotesMode">Liner Notes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Queue (28%) -->
+      <div class="pane right-queue">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-glyph"></span>
+            <span>Play Queue</span>
+          </div>
+          <span class="section-meta tabular" id="queueCount">5 Tracks</span>
+        </div>
+
+        <div class="queue-list" id="queueList"></div>
+      </div>
+
+    </section>
+
+    <!-- Bottom Bento Row -->
+    <section class="bottom-row">
+
+      <!-- Bottom Left: Curated Spotlight -->
+      <div class="pane pane-border-r pane-surface">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-glyph"></span>
+            <span>Curated Collection</span>
+          </div>
+          <span class="section-meta">Lossless</span>
+        </div>
+        <div class="spotlight-card">
+          <div class="spotlight-text">
+            <h4>Nocturne &amp; Saltwater</h4>
+            <p>Nils Frahm, Max Richter, Olafur Arnalds</p>
+          </div>
+          <button class="btn-circle" id="playSpotlightBtn" title="Play Collection">&#8599;</button>
+        </div>
+      </div>
+
+      <!-- Bottom Center: Library Index -->
+      <div class="pane pane-border-r pane-surface">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-glyph"></span>
+            <span>Library Index</span>
+          </div>
+          <span class="section-meta">Local SSD</span>
+        </div>
+        <div class="index-list tabular">
+          <div class="index-row"><span>Albums</span><span>412</span></div>
+          <div class="index-row"><span>Artists</span><span>186</span></div>
+          <div class="index-row"><span>Lossless Tracks</span><span>3,840</span></div>
+          <div class="index-row"><span>Playlists</span><span>24</span></div>
+        </div>
+      </div>
+
+      <!-- Bottom Right: Simple Playback Summary -->
+      <div class="pane pane-surface">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-glyph"></span>
+            <span>Audio Output</span>
+          </div>
+          <span class="section-meta" style="color: var(--status-active);">Active</span>
+        </div>
+        <div class="output-summary">
+          <div class="output-metrics tabular">
+            <div class="metric-box">
+              <div class="metric-label">Format</div>
+              <div class="metric-val" id="metaFormat">FLAC</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Sample</div>
+              <div class="metric-val" id="metaSample">96 kHz</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Bit Depth</div>
+              <div class="metric-val" id="metaDepth">24-Bit</div>
+            </div>
+          </div>
+          <div class="output-note">
+            <span>Output Device</span>
+            <span style="color: var(--accent-gold);">USB-C Studio DAC</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+<script>
+  const tracks = [
+    {
+      titleBold: "Nocturne",
+      titleLight: "in Blue",
+      plainTitle: "Nocturne in Blue",
+      artist: "Nils Frahm",
+      album: "Spaces",
+      year: "2013",
+      duration: "08:18",
+      seconds: 498,
+      codec: "FLAC • LOSSLESS",
+      format: "FLAC",
+      sample: "96 kHz",
+      depth: "24-Bit",
+      gradient: "radial-gradient(circle at 50% 42%, #132946 0%, #070E1A 78%)",
+      notes: "Recorded across two years of live performances in intimate acoustic halls, pairing close-mic'd upright felt piano with warm analog tape delay and subtle pelagic room resonance."
+    },
+    {
+      titleBold: "Over There,",
+      titleLight: "It's Summer",
+      plainTitle: "Over There, It's Summer",
+      artist: "Nils Frahm",
+      album: "Spaces",
+      year: "2013",
+      duration: "04:12",
+      seconds: 252,
+      codec: "FLAC • LOSSLESS",
+      format: "FLAC",
+      sample: "96 kHz",
+      depth: "24-Bit",
+      gradient: "radial-gradient(circle at 50% 42%, #11304C 0%, #060C17 78%)",
+      notes: "A delicate solo piano miniature captured on a portable reel-to-reel deck, preserving the mechanical breath of the dampers and subtle room air."
+    },
+    {
+      titleBold: "On the",
+      titleLight: "Nature of Daylight",
+      plainTitle: "On the Nature of Daylight",
+      artist: "Max Richter",
+      album: "The Blue Notebooks",
+      year: "2004",
+      duration: "06:11",
+      seconds: 371,
+      codec: "ALAC • LOSSLESS",
+      format: "ALAC",
+      sample: "48 kHz",
+      depth: "24-Bit",
+      gradient: "radial-gradient(circle at 50% 42%, #142B47 0%, #070D19 78%)",
+      notes: "Scored for string quintet in deep abyssal registers, unfolding through slow, overlapping harmonic tides."
+    },
+    {
+      titleBold: "Near",
+      titleLight: "Light",
+      plainTitle: "Near Light",
+      artist: "Olafur Arnalds",
+      album: "Living Room Songs",
+      year: "2011",
+      duration: "03:26",
+      seconds: 206,
+      codec: "FLAC • LOSSLESS",
+      format: "FLAC",
+      sample: "88.2 kHz",
+      depth: "24-Bit",
+      gradient: "radial-gradient(circle at 50% 42%, #102D48 0%, #060B15 78%)",
+      notes: "Recorded in Reykjavik overlooking the North Atlantic, blending chamber strings with gentle, shimmering electronic pulses."
+    },
+    {
+      titleBold: "Says",
+      titleLight: "Live",
+      plainTitle: "Says",
+      artist: "Nils Frahm",
+      album: "Spaces",
+      year: "2013",
+      duration: "08:18",
+      seconds: 498,
+      codec: "WAV • UNCOMPRESSED",
+      format: "WAV",
+      sample: "192 kHz",
+      depth: "24-Bit",
+      gradient: "radial-gradient(circle at 50% 42%, #16314F 0%, #070E1A 78%)",
+      notes: "Built around a repeating Juno-60 arpeggio that swells gradually from a quiet whisper into a resonant cathedral of analog sound."
+    }
+  ];
+
+  let currentIndex = 0;
+  let isPlaying = true;
+  let progressPercent = 42;
+
+  const queueList = document.getElementById("queueList");
+  const searchInput = document.getElementById("searchInput");
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function renderQueue(filter = "") {
+    const q = filter.toLowerCase().trim();
+    const filtered = tracks
+      .map((t, idx) => ({ ...t, idx }))
+      .filter(t =>
+        t.plainTitle.toLowerCase().includes(q) ||
+        t.artist.toLowerCase().includes(q) ||
+        t.album.toLowerCase().includes(q)
+      );
+
+    document.getElementById("queueCount").textContent = `${filtered.length} Track${filtered.length === 1 ? '' : 's'}`;
+
+    queueList.innerHTML = filtered.map(t => `
+      <div class="queue-row ${t.idx === currentIndex ? 'active' : ''}" data-index="${t.idx}">
+        <div class="queue-left">
+          <span class="queue-dot"></span>
+          <div class="queue-info">
+            <div class="queue-title">${t.plainTitle}</div>
+            <div class="queue-sub">${t.artist} &bull; ${t.album}</div>
+          </div>
+        </div>
+        <span class="queue-dur tabular">${t.duration}</span>
+      </div>
+    `).join("");
+
+    document.querySelectorAll(".queue-row").forEach(row => {
+      row.addEventListener("click", () => {
+        loadTrack(Number(row.dataset.index));
+      });
+    });
+  }
+
+  function loadTrack(index) {
+    currentIndex = (index + tracks.length) % tracks.length;
+    const t = tracks[currentIndex];
+    const next = tracks[(currentIndex + 1) % tracks.length];
+
+    document.getElementById("trackCodec").textContent = t.codec;
+    document.getElementById("heroTitle").innerHTML = `<strong>${t.titleBold}</strong> <span>${t.titleLight}</span>`;
+    document.getElementById("heroArtist").textContent = `${t.artist} — ${t.album} (${t.year})`;
+
+    document.getElementById("upNextTitle").textContent = next.plainTitle;
+    document.getElementById("upNextArtist").textContent = next.artist;
+    document.getElementById("upNextDur").textContent = next.duration;
+
+    document.getElementById("albumGraphic").style.background = t.gradient;
+    document.getElementById("artYear").textContent = t.year;
+    document.getElementById("artAlbum").textContent = t.album.toUpperCase();
+    document.getElementById("linerNotesText").textContent = t.notes;
+
+    document.getElementById("metaFormat").textContent = t.format;
+    document.getElementById("metaSample").textContent = t.sample;
+    document.getElementById("metaDepth").textContent = t.depth;
+
+    progressPercent = 18;
+    updateScrubber();
+    renderQueue(searchInput.value);
+  }
+
+  function updateScrubber() {
+    const t = tracks[currentIndex];
+    document.getElementById("scrubberFill").style.width = `${progressPercent}%`;
+    document.getElementById("timeTotal").textContent = t.duration;
+    document.getElementById("timeElapsed").textContent = formatTime((progressPercent / 100) * t.seconds);
+  }
+
+  document.getElementById("playPauseBtn").addEventListener("click", () => {
+    isPlaying = !isPlaying;
+    document.getElementById("playIcon").innerHTML = isPlaying ? "&#9646;&#9646;" : "&#9654;";
+    document.getElementById("playLabel").textContent = isPlaying ? "Pause" : "Play";
+  });
+
+  document.getElementById("prevBtn").addEventListener("click", () => loadTrack(currentIndex - 1));
+  document.getElementById("nextBtn").addEventListener("click", () => loadTrack(currentIndex + 1));
+  document.getElementById("playSpotlightBtn").addEventListener("click", () => loadTrack(2));
+
+  const likeBtn = document.getElementById("likeBtn");
+  likeBtn.addEventListener("click", () => {
+    likeBtn.classList.toggle("liked");
+    likeBtn.innerHTML = likeBtn.classList.contains("liked") ? "&#9829;" : "&#9825;";
+  });
+
+  document.getElementById("scrubberTrack").addEventListener("click", (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    progressPercent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    updateScrubber();
+  });
+
+  const btnCoverMode = document.getElementById("btnCoverMode");
+  const btnNotesMode = document.getElementById("btnNotesMode");
+  const coverArtView = document.getElementById("coverArtView");
+  const linerNotesView = document.getElementById("linerNotesView");
+
+  btnCoverMode.addEventListener("click", () => {
+    btnCoverMode.classList.add("active");
+    btnNotesMode.classList.remove("active");
+    coverArtView.style.display = "flex";
+    linerNotesView.classList.remove("visible");
+  });
+
+  btnNotesMode.addEventListener("click", () => {
+    btnNotesMode.classList.add("active");
+    btnCoverMode.classList.remove("active");
+    coverArtView.style.display = "none";
+    linerNotesView.classList.add("visible");
+  });
+
+  searchInput.addEventListener("input", (e) => renderQueue(e.target.value));
+
+  document.querySelectorAll("#topNav button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#topNav button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  });
+
+  renderQueue();
+  updateScrubber();
+</script>
+</body>
+</html>
