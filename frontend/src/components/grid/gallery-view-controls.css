@@ -1,19 +1,9 @@
-/* Floating gallery item controls — pinned to the grid's top-right corner. */
+/* Gallery item controls — a thin bar above the grid canvas. */
 
 .gallery-view-controls {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  z-index: 30;
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: calc(100% - 32px);
-  padding: 6px 10px;
-  border: 1px solid var(--gilt-border);
-  border-radius: var(--radius-pill);
-  background: var(--control);
-  box-shadow: var(--shadow-float);
   white-space: nowrap;
 }
 

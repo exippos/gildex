@@ -191,11 +191,15 @@ export function Layout() {
               ))}
 
             <main className="grid-column">
+              {workspace === 'gallery' && (
+                <div className="grid-view-bar">
+                  <GalleryViewControls />
+                </div>
+              )}
               <div className="grid-area">
                 {workspace === 'gallery' && effects === 'full' && <Atmosphere />}
                 {workspace === 'timeline' ? <TimelineCanvas /> : <Grid cellSize={cellSize} />}
                 {workspace === 'gallery' && <EmptyState />}
-                {workspace === 'gallery' && <GalleryViewControls />}
               </div>
               {workspace === 'gallery' && <BatchToolbar />}
             </main>

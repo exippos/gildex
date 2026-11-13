@@ -40,6 +40,18 @@
   background: var(--bg);
 }
 
+/* thin static bar above the grid canvas — zoom/sort controls live here */
+.grid-view-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 34px;
+  padding: 0 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--hairline);
+}
+
 /* ---- resizable panel seams ---- */
 
 .resize-handle {
