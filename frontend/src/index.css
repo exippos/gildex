@@ -16,9 +16,14 @@ body {
   color: var(--text);
   font-family: var(--font-ui);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+
+::selection {
+  background: rgba(197, 160, 115, 0.28);
+  color: var(--text);
 }
 
 button {
@@ -26,14 +31,15 @@ button {
   font-size: inherit;
   color: inherit;
   background: transparent;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 4px 10px;
+  padding: 5px 12px;
   cursor: pointer;
+  transition: color 120ms linear, border-color 120ms linear, background-color 120ms linear;
 }
 button:hover {
-  border-color: var(--gilt);
-  color: var(--gilt-bright);
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 button:focus-visible,
 input:focus-visible,
@@ -49,58 +55,47 @@ select {
   font-family: inherit;
   font-size: inherit;
   color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--hairline);
+  background: var(--control);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 4px 8px;
+  padding: 6px 10px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--hairline);
-  border-radius: var(--radius-sm);
+  background: var(--border-subtle);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
+/* Editorial sans label. Component classes own weight, size, tracking and
+   case; this keeps the former display face on the UI stack. */
 .display {
-  font-family: var(--font-display);
-  letter-spacing: 0.08em;
-  text-transform: lowercase;
-  font-variant-caps: small-caps;
+  font-family: var(--font-ui);
 }
 
-/* frosted fixed chrome: sage-tinted glass + static specular + frost grain.
-   Blur remains on fixed chrome only (header, rail, preview, footer). */
+/* Fixed chrome: matte panel, flat fill. No blur or grain (editorial matte). */
 .chrome {
   position: relative;
   background: var(--glass-tint);
-  backdrop-filter: blur(var(--blur-lg)) saturate(1.25) brightness(1.02);
-  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.25) brightness(1.02);
   box-shadow: var(--glass-spec);
-}
-
-/* static grain: one rasterized tile, repeated. Never animated. */
-.chrome::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: var(--grain);
-  background-repeat: repeat;
-  opacity: var(--grain-opacity);
-  mix-blend-mode: overlay;
-  pointer-events: none;
-  z-index: 1;
 }
 
 @supports not (backdrop-filter: blur(1px)) {
   .chrome {
     background: var(--surface);
-    box-shadow: none;
   }
 }
 

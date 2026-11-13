@@ -1,4 +1,4 @@
-/* Browse frame geometry. Blur lives on .chrome only (header, rail, preview, footer). */
+/* Browse frame geometry. Matte chrome only (header, rail, preview, footer). */
 
 .app-frame {
   display: grid;
@@ -25,10 +25,12 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 12px;
+  padding: 0 16px;
   border-top: 1px solid var(--hairline);
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 /* ---- center column ---- */
@@ -54,28 +56,31 @@
 .footer-toggles {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   height: 100%;
 }
 
 .footer-toggles button {
-  border: 0;
-  border-radius: 0;
-  padding: 2px 8px;
-  color: var(--text-muted);
-  font-size: 11px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  color: var(--text-faint);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   line-height: 1.4;
-  border-bottom: 1px solid transparent;
 }
 
 .footer-toggles button:hover {
-  color: var(--gilt-bright);
-  border-bottom-color: var(--gilt);
+  color: var(--text);
+  border-color: var(--border-subtle);
+  background: var(--control);
 }
 
 .footer-toggles button.is-active {
   color: var(--text);
-  border-bottom-color: var(--gilt);
+  background: var(--control);
+  border-color: var(--border-subtle);
 }
 
 .footer-count {
@@ -107,9 +112,8 @@
   bottom: 0;
   left: 3px;
   width: 1px;
-  background: var(--gilt);
-  opacity: 0.25;
-  transition: opacity 120ms linear;
+  background: var(--hairline);
+  transition: background-color 120ms linear;
 }
 
 .resize-tick {
@@ -130,7 +134,7 @@
   content: '';
   height: 1px;
   background: var(--gilt);
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .resize-tick::before {
@@ -143,7 +147,7 @@
 
 .resize-handle:hover .resize-rule,
 .resize-handle:active .resize-rule {
-  opacity: 0.9;
+  background: var(--gilt);
 }
 
 .resize-handle:hover .resize-tick::before,

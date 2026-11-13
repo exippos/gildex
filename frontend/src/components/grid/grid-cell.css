@@ -1,4 +1,4 @@
-/* Grid cell — artwork is the only opaque object; no card chrome. */
+/* Grid cell — artwork is the only opaque object; matte chrome around it. */
 
 .grid-cell {
   position: absolute;
@@ -22,23 +22,13 @@
   outline-offset: -1px;
 }
 
-/* gradient gilt ring: paint the ramp in the border box, mask out the padding
-   box so only the 2px frame survives (works with border-radius) */
+/* selection: clean 2px gold ring */
 .grid-cell.is-selected::before {
   content: '';
   position: absolute;
   inset: 0;
-  border: 2px solid transparent;
+  border: 2px solid var(--gilt);
   border-radius: var(--radius-sm);
-  background: var(--gilt-ramp) border-box;
-  -webkit-mask:
-    linear-gradient(#000 0 0) padding-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) padding-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
   z-index: 3;
   pointer-events: none;
 }
@@ -59,7 +49,7 @@
   display: grid;
   place-items: center;
   background: var(--surface);
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 .cell-placeholder.is-missing {
@@ -69,7 +59,7 @@
 .cell-placeholder-frame {
   width: 34%;
   height: 34%;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   opacity: 0.8;
 }
@@ -117,7 +107,7 @@
   border-radius: 0;
 }
 
-/* ---- hover: light-refracting sheen, opacity-only, no per-cell filters ---- */
+/* ---- hover: neutral lift (matte, no specular) ---- */
 
 .cell-hover {
   position: absolute;
@@ -130,33 +120,32 @@
 
 .grid-cell:hover .cell-hover,
 .grid-cell:focus-visible .cell-hover {
-  opacity: 0.9;
+  opacity: 1;
 }
 
 /* ---- badges (D22) ---- */
 
 .cell-fav {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 7px;
-  height: 7px;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
   background: var(--gilt);
-  transform: rotate(45deg);
   z-index: 2;
 }
 
 .cell-meta {
   position: absolute;
-  left: 6px;
-  bottom: 6px;
+  left: 8px;
+  bottom: 8px;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-glass);
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: rgba(9, 9, 9, 0.74);
   pointer-events: none;
 }
 
@@ -188,14 +177,14 @@
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: var(--hairline);
+  background: var(--border-strong);
 }
 
 .rating-dot.is-on {
-  background: var(--text-muted);
+  background: var(--gilt);
 }
 
-/* ---- selection: 2px ring (above) + stepped corner tick ---- */
+/* ---- selection: 2px ring (above) + corner tick ---- */
 
 .cell-tick {
   position: absolute;
@@ -203,7 +192,7 @@
   left: 0;
   width: 14px;
   height: 14px;
-  background-image: var(--gilt-ramp), var(--gilt-ramp);
+  background-image: linear-gradient(var(--gilt), var(--gilt)), linear-gradient(var(--gilt), var(--gilt));
   background-size: 14px 2px, 2px 14px;
   background-position: top left, top left;
   background-repeat: no-repeat, no-repeat;
@@ -218,7 +207,7 @@
   top: 4px;
   width: 7px;
   height: 7px;
-  background-image: var(--gilt-ramp), var(--gilt-ramp);
+  background-image: linear-gradient(var(--gilt), var(--gilt)), linear-gradient(var(--gilt), var(--gilt));
   background-size: 7px 1px, 1px 7px;
   background-position: top left, top left;
   background-repeat: no-repeat, no-repeat;

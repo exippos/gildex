@@ -178,7 +178,11 @@ export function Ingest() {
                 }
               }}
             />
-            <button type="button" onClick={submitRoot}>
+            <button
+              type="button"
+              className={library.rootSet ? '' : 'is-primary'}
+              onClick={submitRoot}
+            >
               {library.rootSet ? 'Relocate' : 'Set root'}
             </button>
           </div>
@@ -207,7 +211,12 @@ export function Ingest() {
                 }
               }}
             />
-            <button type="button" onClick={submitImport} disabled={!library.rootSet || importing}>
+            <button
+              type="button"
+              className="is-primary"
+              onClick={submitImport}
+              disabled={!library.rootSet || importing}
+            >
               {importing ? 'Importing…' : 'Import'}
             </button>
           </div>

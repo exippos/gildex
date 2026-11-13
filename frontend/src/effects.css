@@ -22,8 +22,8 @@ html[data-effects='reduced'] .atmosphere {
 
 html[data-effects='reduced'] .grid-cell:hover .cell-hover,
 html[data-effects='reduced'] .grid-cell:focus-visible .cell-hover {
-  background: var(--surface-glass);
-  opacity: 0.38;
+  background: var(--sheen);
+  opacity: 1;
 }
 
 html[data-effects='reduced'] .grid-cell.is-selected::before {

@@ -1,57 +1,53 @@
-/* Grid toolbar — surface tabs + grid size/sort controls, under the search bar. */
+/* Grid toolbar — surface pills + grid size/sort controls. */
 
 .grid-toolbar {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 14px;
-  height: 40px;
+  padding: 0 16px;
+  height: 44px;
   border-bottom: 1px solid var(--hairline);
   background: var(--bg);
 }
 
 .surface-tabs {
   display: flex;
-  align-items: stretch;
-  gap: 2px;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
 
+/* mode pill from the reference mockup */
 .surface-tab {
-  position: relative;
   display: flex;
   align-items: center;
-  border: 0;
-  border-radius: 0;
-  padding: 0 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  padding: 5px 14px;
+  background: transparent;
   color: var(--text-muted);
-  letter-spacing: 0.02em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   white-space: nowrap;
+  transition: color 120ms linear, border-color 120ms linear, background-color 120ms linear;
 }
 
 .surface-tab::after {
-  content: '';
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 0;
-  height: 1px;
-  background: transparent;
+  display: none;
 }
 
 .surface-tab:hover {
   color: var(--text);
-  border-color: transparent;
+  border-color: var(--border-strong);
 }
 
 .surface-tab.is-active {
   color: var(--text);
-}
-
-.surface-tab.is-active::after {
-  background: var(--gilt);
-  opacity: 0.85;
+  background: var(--control);
+  border-color: var(--border-strong);
 }
 
 .toolbar-spacer {
@@ -62,14 +58,15 @@
 .sort-control {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .control-label {
   font-size: 10px;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-faint);
   white-space: nowrap;
 }
 
@@ -86,7 +83,7 @@
 
 .sort-control select {
   border: 0;
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--border-subtle);
   border-radius: 0;
   background: transparent;
   color: var(--text-muted);
@@ -108,11 +105,11 @@
 .sort-dir {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
   color: var(--text-muted);
   background: transparent;
   font-size: 13px;
@@ -120,8 +117,9 @@
 }
 
 .sort-dir:hover {
-  color: var(--gilt-bright);
-  border: 0;
+  color: var(--text);
+  border-color: var(--border-subtle);
+  background: var(--control);
 }
 
 .sort-dir[aria-pressed='true'] {

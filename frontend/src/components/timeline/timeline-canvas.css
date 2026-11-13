@@ -127,13 +127,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
-  font-size: 14px;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 13px;
   line-height: 1;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  color: var(--text-muted);
-  border: 1px solid var(--hairline);
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
+  border: 1px solid var(--border-subtle);
 }
 
 .timeline-stack-count {
@@ -141,12 +141,12 @@
   top: -6px;
   right: -6px;
   z-index: 10;
-  padding: 0 4px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
+  padding: 0 5px;
+  background: var(--control);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
   font-size: 10px;
-  line-height: 14px;
+  line-height: 15px;
   font-variant-numeric: tabular-nums;
   color: var(--text);
   pointer-events: none;
@@ -178,34 +178,35 @@
 
 .timeline-controls {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 10px;
+  right: 10px;
   z-index: 3;
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 0 2px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
+  padding: 2px;
+  background: var(--control);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
 }
 
 .timeline-controls button {
   border: 0;
-  border-radius: 0;
-  padding: 1px 6px;
-  min-width: 18px;
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  min-width: 20px;
   font-size: 11px;
   line-height: 1.4;
   color: var(--text-muted);
 }
 
 .timeline-controls button:hover {
-  color: var(--gilt-bright);
+  color: var(--text);
+  background: var(--control-hover);
 }
 
 .timeline-controls button + button {
-  border-left: 1px solid var(--hairline);
+  border-left: 1px solid var(--border-subtle);
 }
 
 /* ---- empty ---- */

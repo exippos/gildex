@@ -6,10 +6,8 @@
   overflow-y: auto;
   display: flex;
   justify-content: center;
-  padding: 40px 32px;
-  background:
-    radial-gradient(1200px 600px at 50% -10%, rgba(38, 52, 44, 0.55), transparent 70%),
-    var(--bg);
+  padding: 48px 32px;
+  background: var(--bg);
 }
 
 .ingest-inner {
@@ -21,30 +19,32 @@
 }
 
 .ingest-title {
-  margin: 0;
-  font-size: 26px;
-  line-height: 1.2;
+  margin: 0 0 4px;
+  font-size: 30px;
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   color: var(--text);
+  text-transform: capitalize;
 }
 
 .ingest-card {
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 16px;
-  background: var(--surface);
+  padding: 20px;
+  background: var(--control);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  box-shadow: inset 0 1px 0 rgba(198, 161, 91, 0.16), var(--glass-spec);
+  gap: 8px;
 }
 
 .ingest-heading {
   margin: 0;
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .ingest-hint {
@@ -63,21 +63,37 @@
 .ingest-form input {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 5px 8px;
+  padding: 6px 10px;
   font-size: 12px;
+  background: var(--surface-inset);
 }
 
 .ingest-form button {
   flex: 0 0 auto;
-  padding: 4px 12px;
-  border-color: var(--gilt);
+  padding: 6px 14px;
+  border-color: var(--border-subtle);
   color: var(--text);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .ingest-form button:hover:not(:disabled) {
-  color: var(--gilt-bright);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.ingest-form button.is-primary {
+  border-color: var(--gilt);
+  background: var(--gilt);
+  color: var(--on-gilt);
+}
+
+.ingest-form button.is-primary:hover:not(:disabled) {
+  background: var(--gilt-bright);
   border-color: var(--gilt-bright);
+  color: var(--on-gilt);
 }
 
 .ingest-form input:disabled,
@@ -123,35 +139,33 @@
 }
 
 .ingest-drop {
-  border: 1px dashed var(--hairline);
+  border: 1px dashed var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 20px 16px;
+  padding: 28px 16px;
   text-align: center;
   background: var(--surface-inset);
-  background-image: radial-gradient(120% 80% at 50% 0%, rgba(198, 161, 91, 0.06), transparent 70%);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  transition: border-color 120ms linear, background 120ms linear;
+  gap: 6px;
+  transition: border-color 120ms linear, background-color 120ms linear;
 }
 
 .ingest-drop-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 300;
   color: var(--text-muted);
 }
 
 .ingest-drop-hint {
   margin: 0;
   font-size: 12px;
-  color: var(--text-muted);
-  opacity: 0.8;
+  color: var(--text-faint);
 }
 
 .ingest-drop.is-over {
-  border-color: var(--gilt-bright);
-  background: var(--surface);
-  background-image: radial-gradient(120% 80% at 50% 0%, rgba(198, 161, 91, 0.12), transparent 70%);
+  border-color: var(--gilt);
+  background: var(--control);
 }
 
 .ingest-drop.is-over .ingest-drop-title {

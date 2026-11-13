@@ -15,8 +15,8 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--bg);
-  opacity: 0.82;
+  background: #000;
+  opacity: 0.72;
 }
 
 .col-overlay--picker {
@@ -32,9 +32,10 @@
   max-height: calc(100vh - 64px);
   background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
 }
 
 .col-panel--picker {
@@ -53,8 +54,9 @@
 
 .col-title {
   margin: 0;
-  font-size: 17px;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 200;
+  letter-spacing: -0.01em;
   color: var(--text);
 }
 
@@ -95,8 +97,10 @@
 }
 
 .col-label {
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
   align-self: flex-start;
 }
@@ -232,10 +236,14 @@
 
 .col-primary {
   border-color: var(--gilt);
-  color: var(--gilt-bright);
+  background: var(--gilt);
+  color: var(--on-gilt);
+  font-weight: 600;
 }
 .col-primary:hover {
   border-color: var(--gilt-bright);
+  background: var(--gilt-bright);
+  color: var(--on-gilt);
 }
 .col-primary:disabled {
   opacity: 0.5;
@@ -287,11 +295,12 @@
   background: transparent;
 }
 .col-picker-row:hover {
-  border-color: var(--hairline);
-  color: var(--gilt-bright);
+  border-color: var(--border-subtle);
+  background: var(--control);
+  color: var(--text);
 }
 .col-picker-row:hover .col-picker-count {
-  color: var(--gilt-bright);
+  color: var(--text);
 }
 
 .col-picker-name {

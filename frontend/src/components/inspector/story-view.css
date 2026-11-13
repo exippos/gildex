@@ -17,7 +17,7 @@
   min-height: 320px;
   padding: 8px;
   background: var(--surface);
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
 }
 
@@ -107,11 +107,12 @@
 
 .story-label {
   margin: 0;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  padding-bottom: 3px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--gilt);
   align-self: flex-start;
 }
@@ -176,10 +177,14 @@
 
 .story-primary {
   border-color: var(--gilt);
-  color: var(--gilt-bright);
+  background: var(--gilt);
+  color: var(--on-gilt);
+  font-weight: 600;
 }
 .story-primary:hover {
   border-color: var(--gilt-bright);
+  background: var(--gilt-bright);
+  color: var(--on-gilt);
 }
 .story-primary:disabled {
   opacity: 0.55;
@@ -203,9 +208,10 @@
   align-self: flex-start;
   padding: 0;
   border: none;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  font-variant-caps: small-caps;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 .story-disclosure-btn:hover {
@@ -285,10 +291,10 @@
 }
 
 .story-spec-item dt {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  font-variant-caps: small-caps;
-  color: var(--text-muted);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .story-spec-item dd {
@@ -316,9 +322,11 @@
 }
 
 .story-control-label {
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
 }
 
 .story-fav {

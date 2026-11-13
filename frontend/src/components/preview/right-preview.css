@@ -1,4 +1,5 @@
-/* Right preview — frosted fixed chrome; the gilt seam is drawn by the resize handle. */
+/* Right preview — matte fixed chrome; the gilt seam is drawn by the resize
+   handle. Sections use editorial labels and control-panel cards. */
 
 .right-preview {
   position: relative;
@@ -15,13 +16,25 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  height: 30px;
-  padding: 0 14px;
+  gap: 8px;
+  height: 34px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--hairline);
 }
 
+.preview-head::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  background: var(--gilt);
+}
+
 .preview-kicker {
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 
@@ -40,7 +53,7 @@
   gap: 10px;
   background: var(--bg);
   border-bottom: 1px solid var(--hairline);
-  padding: 10px;
+  padding: 12px;
 }
 
 .preview-media img,
@@ -49,6 +62,7 @@
   max-width: 100%;
   max-height: 320px;
   object-fit: contain;
+  border-radius: var(--radius-sm);
 }
 
 .preview-media video {
@@ -56,7 +70,7 @@
 }
 
 .preview-media.is-audio {
-  padding: 24px 14px;
+  padding: 24px 16px;
 }
 
 .preview-media audio {
@@ -64,8 +78,10 @@
 }
 
 .preview-audio-label {
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .preview-missing {
@@ -76,21 +92,21 @@
 
 .preview-danger-tick {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 12px;
+  left: 12px;
   width: 3px;
   height: 16px;
   background: var(--danger);
 }
 
 .preview-missing .display {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 /* ---- sections ---- */
 
 .preview-section {
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -99,13 +115,27 @@
 }
 
 .preview-lead {
-  padding-top: 14px;
+  padding-top: 16px;
 }
 
 .preview-section-label {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.preview-section-label::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  background: var(--gilt);
 }
 
 .preview-filename {
@@ -115,42 +145,44 @@
 }
 
 .preview-sub {
-  margin-top: 2px;
+  margin-top: 3px;
   font-size: 11px;
   color: var(--text-muted);
   line-height: 1.5;
 }
 
 .preview-title {
-  font-size: 19px;
+  font-size: 20px;
+  font-weight: 200;
+  letter-spacing: -0.01em;
   color: var(--text);
   margin: 0;
-  line-height: 1.25;
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
 .preview-description {
   margin: 8px 0 4px;
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--text-muted);
 }
 
 .preview-prompt-box {
   margin: 0 0 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--hairline);
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
   border-left: 2px solid var(--gilt);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--control);
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--text);
   overflow-wrap: anywhere;
 }
 
 .preview-negative-box {
-  border-left-color: var(--hairline);
+  border-left-color: var(--border-strong);
   background: transparent;
   font-size: 11px;
   line-height: 1.5;
@@ -159,18 +191,19 @@
 
 .preview-neg-label {
   display: inline-block;
-  margin-right: 5px;
-  padding-right: 5px;
-  border-right: 1px solid var(--hairline);
+  margin-right: 6px;
+  padding-right: 6px;
+  border-right: 1px solid var(--border-subtle);
   font-size: 9px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .preview-params {
   font-size: 10px;
-  line-height: 1.6;
-  color: var(--text-muted);
+  line-height: 1.7;
+  color: var(--text-faint);
   letter-spacing: 0.02em;
   overflow-wrap: anywhere;
 }
@@ -178,14 +211,14 @@
 .preview-meta {
   display: grid;
   grid-template-columns: 84px 1fr;
-  gap: 2px 8px;
+  gap: 4px 8px;
   margin: 0;
   font-size: 11px;
 }
 
 .preview-meta dt {
-  color: var(--text-muted);
-  letter-spacing: 0.03em;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
 }
 
 .preview-meta dd {
@@ -199,25 +232,29 @@
 .preview-fav {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
+  gap: 7px;
+  padding: 4px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
   color: var(--text-muted);
   font-size: 11px;
 }
 
+.preview-fav:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
 .preview-fav.is-on {
   border-color: var(--gilt);
-  color: var(--text);
+  color: var(--gilt);
 }
 
 .preview-fav-mark {
   width: 6px;
   height: 6px;
-  transform: rotate(45deg);
   background: transparent;
-  border: 1px solid var(--text-muted);
+  border: 1px solid var(--text-faint);
 }
 
 .preview-fav.is-on .preview-fav-mark {
@@ -227,31 +264,36 @@
 
 .preview-control-label {
   display: inline-block;
-  min-width: 42px;
+  min-width: 48px;
   font-size: 10px;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 .preview-rating {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .preview-rating-dots {
   display: flex;
-  gap: 4px;
+  gap: 5px;
 }
 
 .preview-rating-dot {
   width: 14px;
   height: 14px;
   padding: 0;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: 50%;
   background: transparent;
+}
+
+.preview-rating-dot:hover {
+  border-color: var(--gilt);
 }
 
 .preview-rating-dot.is-on {
@@ -262,66 +304,74 @@
 .preview-status {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .preview-status-row {
   display: flex;
-  gap: 2px;
+  gap: 4px;
 }
 
 .preview-status-button {
-  padding: 1px 7px;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  border-radius: 0;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   color: var(--text-muted);
 }
 
 .preview-status-button:hover {
-  border-bottom-color: var(--hairline);
+  border-color: var(--border-subtle);
+  background: var(--control);
+  color: var(--text);
+}
+
+.preview-status-button.is-active {
+  background: var(--control);
+  border-color: var(--border-subtle);
 }
 
 .preview-status-button.is-active[data-status='draft'] {
   color: var(--status-draft);
-  border-bottom-color: var(--status-draft);
 }
 
 .preview-status-button.is-active[data-status='wip'] {
   color: var(--status-wip);
-  border-bottom-color: var(--status-wip);
 }
 
 .preview-status-button.is-active[data-status='final'] {
   color: var(--status-final);
-  border-bottom-color: var(--status-final);
 }
 
 .preview-actions {
-  padding-top: 10px;
+  padding-top: 12px;
 }
 
+/* primary action: solid gold, the one filled accent in the panel */
 .preview-inspect {
   width: 100%;
-  padding: 5px 10px;
-  border: 1px solid var(--hairline);
+  padding: 9px 12px;
+  border: 1px solid var(--gilt);
   border-radius: var(--radius-sm);
+  background: var(--gilt);
+  color: var(--on-gilt);
   font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .preview-inspect:hover {
-  border-color: var(--gilt);
-  color: var(--gilt-bright);
+  background: var(--gilt-bright);
+  border-color: var(--gilt-bright);
+  color: var(--on-gilt);
 }
 
 /* ---- thumbnail strip / grid ---- */
 
 .preview-strip {
   display: flex;
-  gap: 4px;
+  gap: 5px;
   overflow-x: auto;
   padding-bottom: 2px;
 }
@@ -329,7 +379,7 @@
 .preview-thumb-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 5px;
 }
 
 .preview-thumb {
@@ -338,7 +388,7 @@
   width: 52px;
   height: 52px;
   padding: 0;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--surface);
@@ -364,7 +414,7 @@
 .preview-empty-line {
   grid-column: 1 / -1;
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 /* ---- minimal folder/tag line ---- */

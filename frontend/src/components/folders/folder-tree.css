@@ -6,7 +6,7 @@
   flex: 1 1 auto;
   min-height: 0;
   margin: 4px 12px 12px;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--surface-inset);
   overflow: hidden;
@@ -31,13 +31,13 @@
 }
 
 .folder-row:hover {
-  background: var(--surface);
+  background: var(--control);
 }
 
 /* vertical guide + indentation for nested levels; aligns under the chevron */
 .folder-children {
   margin-left: 7px;
-  border-left: 1px solid var(--hairline);
+  border-left: 1px solid var(--border-subtle);
   padding-left: 8px;
 }
 
@@ -80,7 +80,7 @@
   flex: 0 0 auto;
   width: 13px;
   height: 13px;
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 .folder-row:hover .folder-icon {

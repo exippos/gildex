@@ -17,10 +17,11 @@
 
 .notes-title {
   margin: 0;
-  font-size: 17px;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 200;
+  letter-spacing: -0.01em;
   color: var(--text);
-  padding-bottom: 3px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--gilt);
 }
 
@@ -59,11 +60,14 @@
 }
 
 .notes-chip {
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  padding: 0 4px 1px;
-  border-bottom: 1px solid var(--gilt);
+  padding: 1px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
 }
 
 .notes-time {
@@ -115,10 +119,14 @@
 
 .notes-primary {
   border-color: var(--gilt);
-  color: var(--gilt-bright);
+  background: var(--gilt);
+  color: var(--on-gilt);
+  font-weight: 600;
 }
 .notes-primary:hover {
   border-color: var(--gilt-bright);
+  background: var(--gilt-bright);
+  color: var(--on-gilt);
 }
 .notes-primary:disabled {
   opacity: 0.55;
@@ -150,11 +158,10 @@
 .notes-md h3,
 .notes-md h4 {
   margin: 16px 0 8px;
-  font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  font-variant-caps: small-caps;
-  font-size: 15px;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  font-size: 14px;
   color: var(--text);
 }
 .notes-md h1 {
@@ -232,10 +239,11 @@
 }
 
 .notes-md th {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-variant-caps: small-caps;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 11px;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 
@@ -257,13 +265,14 @@
 
 .notes-form-title {
   margin: 0;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
   align-self: flex-start;
-  padding-bottom: 3px;
-  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .notes-form textarea {

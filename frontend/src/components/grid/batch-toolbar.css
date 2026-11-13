@@ -1,4 +1,4 @@
-/* Floating batch toolbar (D24). Opaque, flat, anchored above the footer. */
+/* Floating batch toolbar (D24). Matte control panel above the footer. */
 
 .batch-toolbar {
   position: absolute;
@@ -11,56 +11,58 @@
   justify-content: center;
   align-items: center;
   gap: 2px;
+  width: max-content;
   max-width: calc(100% - 24px);
-  padding: 5px 8px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  background: var(--control);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   font-size: 11px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .batch-count {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 6px 0 2px;
+  gap: 7px;
+  padding: 0 8px 0 2px;
   color: var(--text);
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
 .batch-count-tick {
-  width: 2px;
-  height: 10px;
+  width: 5px;
+  height: 5px;
   background: var(--gilt);
 }
 
 .batch-divider {
   width: 1px;
   height: 16px;
-  margin: 0 3px;
-  background: var(--hairline);
+  margin: 0 4px;
+  background: var(--border-subtle);
 }
 
 .batch-button {
-  padding: 3px 8px;
+  padding: 4px 10px;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   color: var(--text-muted);
   font-size: 11px;
   white-space: nowrap;
 }
 
 .batch-button:hover {
-  color: var(--gilt-bright);
+  color: var(--text);
   border: 0;
-  background: transparent;
+  background: var(--control-hover);
 }
 
 .batch-button.is-open {
   color: var(--text);
-  border-bottom: 1px solid var(--gilt);
-  border-radius: 0;
+  background: var(--control-hover);
+  border: 0;
 }
 
 .batch-button.is-danger:hover {
@@ -68,30 +70,31 @@
 }
 
 .batch-clear {
-  color: var(--text-muted);
-  opacity: 0.8;
+  color: var(--text-faint);
 }
 
 /* ---- popovers ---- */
 
 .batch-popover {
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 8px;
-  min-width: 150px;
-  padding: 8px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
+  min-width: 156px;
+  padding: 10px;
+  background: var(--control);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .batch-popover-label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 10px;
-  letter-spacing: 0.1em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-faint);
 }
 
 .batch-rate-row {
@@ -103,7 +106,7 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 11px;
@@ -116,17 +119,20 @@
 
 .batch-popover-link {
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
   padding: 0;
   border: 0;
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--border-subtle);
   border-radius: 0;
   font-size: 10px;
-  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .batch-popover-link:hover {
   border-bottom-color: var(--gilt);
+  color: var(--text);
 }
 
 .batch-status {
@@ -138,7 +144,7 @@
   align-items: center;
   gap: 7px;
   width: 100%;
-  padding: 4px 6px;
+  padding: 5px 7px;
   border: 0;
   border-radius: var(--radius-sm);
   text-align: left;
@@ -148,7 +154,7 @@
 
 .batch-status-option:hover {
   color: var(--text);
-  background: var(--bg);
+  background: var(--control-hover);
   border: 0;
 }
 

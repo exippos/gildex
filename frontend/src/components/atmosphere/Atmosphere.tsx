@@ -49,15 +49,15 @@ void main() {
   float r = length(p);
   float band = smoothstep(0.75, 0.0, abs(r - (0.42 + field * 0.10)));
 
-  vec3 sage = mix(vec3(0.086, 0.125, 0.106), vec3(0.145, 0.196, 0.165), field);
-  vec3 gilt = mix(vec3(0.478, 0.396, 0.216), vec3(0.839, 0.741, 0.502), field);
-  vec3 light = mix(vec3(0.957, 0.953, 0.933), vec3(0.878, 0.855, 0.804), field);
+  vec3 ink = mix(vec3(0.035, 0.035, 0.035), vec3(0.061, 0.061, 0.061), field);
+  vec3 gilt = mix(vec3(0.353, 0.275, 0.161), vec3(0.765, 0.639, 0.463), field);
+  vec3 light = mix(vec3(0.976, 0.965, 0.945), vec3(0.941, 0.918, 0.878), field);
 
-  vec3 base = mix(sage, light, u_theme);
-  vec3 col = mix(base, gilt, band * (0.16 + 0.06 * u_theme));
+  vec3 base = mix(ink, light, u_theme);
+  vec3 col = mix(base, gilt, band * (0.08 + 0.03 * u_theme));
 
   float vignette = smoothstep(1.05, 0.25, r);
-  col *= mix(0.86, 1.0, vignette);
+  col *= mix(0.9, 1.0, vignette);
 
   gl_FragColor = vec4(col, 1.0);
 }

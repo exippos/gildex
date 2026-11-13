@@ -15,47 +15,36 @@
 }
 
 .empty-ornament {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 6px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--gilt);
+}
+
+.empty-ornament::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  background: var(--gilt);
 }
 
 .empty-ornament span {
-  display: block;
-  height: 1px;
-  background: var(--gilt-edge);
-  opacity: 0.6;
-}
-
-.empty-ornament span:nth-child(1) {
-  width: 72px;
-}
-.empty-ornament span:nth-child(2) {
-  width: 46px;
-  opacity: 0.42;
-}
-.empty-ornament span:nth-child(3) {
-  width: 22px;
-  opacity: 0.28;
+  display: none;
 }
 
 .empty-ornament::after {
-  content: '';
-  display: block;
-  width: 4px;
-  height: 4px;
-  margin-top: 8px;
-  transform: rotate(45deg);
-  background: var(--gilt-ramp);
-  opacity: 0.7;
+  content: none;
 }
 
 .empty-line {
   margin: 0;
-  font-size: 24px;
-  line-height: 1.3;
+  font-size: 30px;
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   color: var(--text);
 }
 
@@ -112,14 +101,19 @@
 
 .empty-form button {
   flex: 0 0 auto;
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-color: var(--gilt);
-  color: var(--text);
-  font-size: 12px;
+  background: var(--gilt);
+  color: var(--on-gilt);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .empty-form button:hover {
-  color: var(--gilt-bright);
+  color: var(--on-gilt);
+  background: var(--gilt-bright);
   border-color: var(--gilt-bright);
 }
 
@@ -132,14 +126,20 @@
 }
 
 .empty-action {
-  margin-top: 6px;
-  border-color: var(--gilt);
-  color: var(--text);
-  font-size: 12px;
-  padding: 4px 14px;
+  margin-top: 8px;
+  border: 1px solid var(--gilt);
+  border-radius: var(--radius-sm);
+  background: var(--gilt);
+  color: var(--on-gilt);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 18px;
 }
 
 .empty-action:hover {
-  color: var(--gilt-bright);
+  background: var(--gilt-bright);
   border-color: var(--gilt-bright);
+  color: var(--on-gilt);
 }

@@ -1,102 +1,117 @@
-/* GILDEX design tokens — transcribe exactly from docs_v2/06-ui-visual-style.md §3.
-   Gilt is an edge, never a fill. Zero network: fonts are local stacks. */
+/* GILDEX design tokens — "editorial matte" variation.
+   Reference: design/editorial-matte-bento-ui.html (charcoal + gold, matte
+   surfaces, pill controls, editorial sans). Layout is unchanged; only the
+   material, palette and type treatment are reworked. Zero network: fonts are
+   local stacks. */
 
 :root {
-  /* dark ("gilt vault") is default */
-  --bg: #0f1713;
-  --surface: #16201b;
-  --surface-inset: #0e1913;
-  --surface-glass: rgba(22, 32, 27, 0.55);
-  --hairline: #26322b;
-  --text: #e6eae4;
-  --text-muted: #93a099;
+  color-scheme: dark;
 
-  --gilt: #c6a15b;
-  --gilt-bright: #d4af37;
-  --status-final: #5e7a6a;
-  --status-wip: #a97648;
-  --status-draft: #93a099;
-  --danger: #a4574e;
-  --focus: #d4af37;
+  /* dark ("matte charcoal") is default */
+  --bg: #090909; /* app canvas */
+  --surface: #0f0f0f; /* chrome / panels */
+  --surface-inset: #0b0b0b; /* wells, media beds */
+  --control: #161616; /* inputs, pills, cards */
+  --control-hover: #1c1c1c;
+  --surface-glass: rgba(15, 15, 15, 0.86);
+  --hairline: #222222; /* grid rules */
+  --border-subtle: #2a2a2a; /* control borders */
+  --border-strong: #3a3a3a; /* hover borders */
+
+  --text: #f5f5f4;
+  --text-muted: #9ca3af;
+  --text-faint: #525252;
+
+  --gilt: #c5a073;
+  --gilt-bright: #d2b187;
+  --on-gilt: #090909;
+  --status-final: #4ade80;
+  --status-wip: #d08c57;
+  --status-draft: #9ca3af;
+  --danger: #e0655b;
+  --focus: #c5a073;
 
   --space: 4px;
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --blur: 12px;
-  --blur-lg: 22px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+  --blur: 0px;
+  --blur-lg: 0px;
 
-  /* ---- material layer (prototype) ----
-     Gilt is an edge, never a fill: these ramps are for 1-2px rules, ticks,
-     rings and seams only. */
-  --gilt-hi: #efdcb0;
-  --gilt-core: #d4af37;
-  --gilt-lo: #7a5f2c;
-  --gilt-ramp: linear-gradient(
-    135deg,
-    var(--gilt-lo) 0%,
-    var(--gilt-hi) 34%,
-    var(--gilt-core) 48%,
-    var(--gilt) 62%,
-    var(--gilt-lo) 100%
-  );
+  /* ---- material layer ----
+     Matte variation: no blur, no grain, no specular. The gold ramp survives
+     only for thin rules, ticks and rings. */
+  --gilt-hi: #e0c9a6;
+  --gilt-core: #c5a073;
+  --gilt-lo: #8a6b45;
+  --gilt-ramp: linear-gradient(135deg, var(--gilt-lo) 0%, var(--gilt) 50%, var(--gilt-lo) 100%);
   --gilt-edge: linear-gradient(
     90deg,
-    var(--gilt-lo) 0%,
-    var(--gilt-hi) 40%,
-    var(--gilt-core) 50%,
-    var(--gilt-hi) 60%,
-    var(--gilt-lo) 100%
+    transparent 0%,
+    var(--gilt-lo) 12%,
+    var(--gilt) 50%,
+    var(--gilt-lo) 88%,
+    transparent 100%
   );
 
-  /* frosted chrome: sage-tinted glass, layered over --surface-glass */
-  --glass-tint: linear-gradient(180deg, rgba(38, 52, 44, 0.58) 0%, rgba(22, 32, 27, 0.66) 100%);
-  --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* flat tinted chrome: the matte replacement for frosted glass */
+  --glass-tint: var(--surface);
+  --glass-spec: none;
 
-  /* static frost grain (rasterized once per 128px tile, never per frame) */
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  --grain-opacity: 0.028;
+  /* static frost grain — disabled in the matte variation */
+  --grain: none;
+  --grain-opacity: 0;
 
-  /* hover specular: clipped diagonal band, opacity-only animation */
-  --sheen: linear-gradient(
-    115deg,
-    transparent 32%,
-    rgba(239, 220, 176, 0.1) 45%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(198, 161, 91, 0.07) 56%,
-    transparent 68%
-  );
+  /* hover wash: neutral lift, no specular band */
+  --sheen: rgba(245, 245, 244, 0.06);
 
-  /* local font stacks (Archivo/Marcellus bundled in v1, never fetched) */
-  --font-ui: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Marcellus', 'Cinzel', 'Palatino Linotype', Georgia, serif;
+  /* local font stacks (system-first; Inter when present) */
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --rail-width: 220px;
   --preview-width: 300px;
-  --header-height: 48px;
+  --header-height: 56px;
   --footer-height: 36px;
 }
 
-/* light ("scandinavian daylight") overrides only the neutrals */
+/* light ("ivory matte") overrides the neutrals; gold and statuses stay warm */
 [data-theme='light'] {
-  --bg: #f4f3ee;
-  --surface: #ffffff;
-  --surface-inset: #ece9e1;
-  --surface-glass: rgba(255, 255, 255, 0.6);
-  --hairline: #d8d5cc;
-  --text: #1c221e;
-  --text-muted: #6b726b;
+  color-scheme: light;
 
-  --glass-tint: linear-gradient(180deg, rgba(255, 255, 255, 0.74) 0%, rgba(244, 243, 238, 0.68) 100%);
-  --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  --grain-opacity: 0.018;
-  --sheen: linear-gradient(
-    115deg,
-    transparent 32%,
-    rgba(255, 255, 255, 0.42) 45%,
-    rgba(198, 161, 91, 0.12) 52%,
-    rgba(255, 255, 255, 0.25) 58%,
-    transparent 68%
-  );
+  --bg: #f6f3ed;
+  --surface: #fffdf9;
+  --surface-inset: #f0ece4;
+  --control: #f1ede5;
+  --control-hover: #eae5db;
+  --surface-glass: rgba(255, 253, 249, 0.88);
+  --hairline: #e0dbd1;
+  --border-subtle: #d5cfc4;
+  --border-strong: #c2bbae;
+
+  --text: #171614;
+  --text-muted: #6f6b63;
+  --text-faint: #9a948a;
+
+  --gilt: #9e7836;
+  --gilt-bright: #7f5f25;
+  --on-gilt: #fffdf9;
+  --status-final: #3f7d5c;
+  --status-wip: #a97648;
+  --status-draft: #6f6b63;
+  --danger: #a4574e;
+  --focus: #9e7836;
+
+  --gilt-hi: #c9a05a;
+  --gilt-core: #9e7836;
+  --gilt-lo: #7d5c26;
+
+  --glass-tint: var(--surface);
+  --glass-spec: none;
+  --grain: none;
+  --grain-opacity: 0;
+  --sheen: rgba(23, 22, 20, 0.05);
 }
 
 /* semantic aliases */
