@@ -1,12 +1,18 @@
-/* Header — ocean chrome, gilt sunburst brand + type nav with a gold underline.
-   A second hairline sits just below the header seam. */
+/* Header — compact ocean chrome, gilt sunburst brand + type nav, inline search.
+   Gallery view controls live in a strip that reveals on hover, so the gallery
+   itself keeps the full remaining height. */
 
 .app-header {
+  padding: 0;
+  z-index: 20;
+}
+
+.header-main {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 20px;
+  height: 100%;
   padding: 0 20px;
-  z-index: 20;
 }
 
 /* double gilt hairline under the header (reference detail) */
@@ -118,6 +124,65 @@
 
 .header-spacer {
   flex: 1 1 auto;
+}
+
+/* ---- inline catalog search ---- */
+
+.header-search {
+  position: relative;
+  flex: 1 1 260px;
+  min-width: 120px;
+  max-width: 560px;
+}
+
+.header-search .search-bar,
+.header-search .search-bar.has-chips {
+  padding: 0;
+  background: transparent;
+}
+
+.header-search .search-line {
+  height: 32px;
+  max-width: none;
+}
+
+/* active tag chips drop below the header instead of growing it */
+.header-search .search-chips {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float);
+}
+
+/* ---- gallery controls, revealed on hover / focus ---- */
+
+.header-reveal {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  height: 40px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--hairline);
+  box-shadow: var(--shadow-float);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 140ms linear, transform 140ms ease;
+}
+
+.app-header:hover .header-reveal,
+.app-header:focus-within .header-reveal {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .effects-toggle {

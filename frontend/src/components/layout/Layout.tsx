@@ -1,12 +1,9 @@
-// The browse frame: header + resizable left rail + opaque grid (search bar and
-// toolbar) + resizable preview + footer. Owns only local frame state (panel
-// widths, visibility).
+// The browse frame: header + resizable left rail + opaque grid + resizable
+// preview. Owns only local frame state (panel widths, visibility).
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../store'
 import { Header } from './Header'
 import { LeftRail } from './LeftRail'
-import { SearchBar } from '../search/SearchBar'
-import { GridToolbar } from './GridToolbar'
 import { Grid } from '../grid/Grid'
 import { TimelineCanvas } from '../timeline/TimelineCanvas'
 import { BatchToolbar } from '../grid/BatchToolbar'
@@ -83,9 +80,6 @@ export function Layout() {
 
   const previewItemId = useStore((s) => s.previewItemId)
   const selection = useStore((s) => s.selection)
-  const itemsTotal = useStore((s) => s.itemsTotal)
-  const items = useStore((s) => s.items)
-  const loading = useStore((s) => s.loadingItems)
   const cellSize = useStore((s) => s.cellSize)
   const workspace = useStore((s) => s.workspace)
   const effects = useStore((s) => s.effects)
@@ -121,13 +115,17 @@ export function Layout() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const shown = !loading && items.length < itemsTotal
   const showRail = workspace === 'gallery'
   const showPreview = workspace !== 'ingest'
 
   return (
     <div className="app-frame">
-      <Header />
+      <Header
+        railOpen={railOpen}
+        previewOpen={previewOpen}
+        onToggleRail={() => setRailOpen((open) => !open)}
+        onTogglePreview={() => setPreviewOpen((open) => !open)}
+      />
 
       <div className="frame-body">
         {workspace === 'ingest' ? (
@@ -148,8 +146,6 @@ export function Layout() {
             )}
 
             <main className="grid-column">
-              <SearchBar />
-              {workspace === 'gallery' && <GridToolbar />}
               <div className="grid-area">
                 {workspace === 'gallery' && effects === 'full' && <Atmosphere />}
                 {workspace === 'timeline' ? <TimelineCanvas /> : <Grid cellSize={cellSize} />}
@@ -173,36 +169,6 @@ export function Layout() {
           </>
         )}
       </div>
-
-      <footer className="app-footer chrome">
-        <div className="footer-count" aria-live="polite">
-          {loading ? 'loading' : `${itemsTotal} ${itemsTotal === 1 ? 'item' : 'items'}`}
-          {shown ? ` · ${items.length} shown` : ''}
-        </div>
-
-        <div className="footer-toggles">
-          {showRail && (
-            <button
-              type="button"
-              className={railOpen ? 'is-active' : ''}
-              aria-pressed={railOpen}
-              onClick={() => setRailOpen((open) => !open)}
-            >
-              rail
-            </button>
-          )}
-          {showPreview && (
-            <button
-              type="button"
-              className={previewOpen ? 'is-active' : ''}
-              aria-pressed={previewOpen}
-              onClick={() => setPreviewOpen((open) => !open)}
-            >
-              preview
-            </button>
-          )}
-        </div>
-      </footer>
     </div>
   )
 }

@@ -1,9 +1,9 @@
-/* Browse frame geometry. Matte ocean chrome only (header, rail, preview,
-   footer). The gilt seams are the only decorative joints. */
+/* Browse frame geometry. Matte ocean chrome only (header, rail, preview).
+   The gilt seams are the only decorative joints. */
 
 .app-frame {
   display: grid;
-  grid-template-rows: var(--header-height) minmax(0, 1fr) var(--footer-height);
+  grid-template-rows: var(--header-height) minmax(0, 1fr);
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
@@ -16,22 +16,10 @@
   overflow: hidden;
 }
 
-/* ---- header / footer hairline seams ---- */
+/* ---- header hairline seam ---- */
 
 .app-header {
   border-bottom: 1px solid var(--hairline);
-}
-
-.app-footer {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 0 16px;
-  border-top: 1px solid var(--hairline);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-faint);
 }
 
 /* ---- center column ---- */
@@ -50,49 +38,6 @@
   flex: 1 1 auto;
   min-height: 0;
   background: var(--bg);
-}
-
-/* ---- footer controls ---- */
-
-.footer-toggles {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 100%;
-}
-
-.footer-toggles button {
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  padding: 3px 10px;
-  color: var(--text-muted);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  line-height: 1.4;
-}
-
-.footer-toggles button:hover {
-  color: var(--gilt-bright);
-  border-color: var(--gilt-border);
-  background: var(--control);
-}
-
-.footer-toggles button.is-active {
-  color: var(--gilt-bright);
-  background: var(--gilt-dim);
-  border-color: var(--gilt-border);
-}
-
-.footer-count {
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 16px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ---- resizable panel seams ---- */
