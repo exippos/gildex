@@ -31,8 +31,9 @@ These rules govern how work is divided across models.
 
 `main` is the stable baseline. Prototypes never land on it by accident.
 
-- **Layout.** `main` is checked out read-only at `../gildex-main` (worktree).
-  Prototype work happens in this checkout; never edit `../gildex-main`.
+- **Layout.** One checkout. Prototype work happens on a `prototype/*` branch;
+  `main` is the untouched baseline (`stable-pre-ui` tag marks the pre-UI
+  commit) and is only reached by an explicitly approved merge.
 - **Branches.** One branch per experiment, cut from `main`
   (`prototype/<area>-vN`). Don't chain experiments unless the new one
   explicitly builds on the previous branch.
@@ -57,10 +58,14 @@ These rules govern how work is divided across models.
 
 ## UI references
 
-Static HTML mockups (reference only, not app code) live in the design worktree:
+Static HTML mockups (reference only, not app code) live in the `design/` folder
+at the repository root — no separate checkout:
 
-- `../gildex-design/design/` — branch `design/ui-references`
-- Catalogue, palette per mockup, and usage notes: `../gildex-design/design/README.md`
+- `design/` — README plus the six `*-bento-ui.html` mockups and `refs/`
+- Catalogue, palette per mockup, and usage notes: `design/README.md`
+
+`design/` is local-only: git ignores it via `.git/info/exclude` so it stays
+visible on every branch. The versioned copy is branch `design/ui-references`.
 
 Before changing UI, pick one mockup and name it in the task description; port
 its tokens rather than copying its CSS.
