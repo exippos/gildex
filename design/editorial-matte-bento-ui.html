@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURA — Editorial Matte Bento UI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #090909;
+      --bg-surface: #0F0F0F;
+      --bg-control: #161616;
+      --border-grid: #222222;
+      --border-subtle: #2A2A2A;
+      --accent-gold: #C5A073;
+      --accent-gold-hover: #D2B187;
+      --text-on-accent: #090909;
+      --status-active: #4ADE80;
+      --text-primary: #F5F5F4;
+      --text-secondary: #9CA3AF;
+      --text-muted: #525252;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* Main Full-Viewport Bento Shell */
+    .app-shell {
+      display: grid;
+      grid-template-rows: 64px 1fr;
+      height: 100vh;
+      width: 100vw;
+      background-color: var(--bg-canvas);
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border-grid);
+      background-color: var(--bg-canvas);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .brand-mark {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--accent-gold);
+      display: grid;
+      place-items: center;
+    }
+
+    .brand-mark::after {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background-color: var(--accent-gold);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-link {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      padding: 6px 0;
+      transition: color 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-link.active {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .search-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--bg-control);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9999px;
+      padding: 7px 16px;
+      width: 260px;
+    }
+
+    .search-pill svg {
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .search-pill input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 12px;
+      width: 100%;
+    }
+
+    .search-pill input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .output-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9999px;
+      padding: 7px 14px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .dot-emerald {
+      width: 5px;
+      height: 5px;
+      border-radius: 9999px;
+      background-color: var(--status-active);
+      flex-shrink: 0;
+    }
+
+    /* Bento Body Grid */
+    .bento-body {
+      display: grid;
+      grid-template-rows: 1fr 220px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    /* Upper 3-Column Workspace */
+    .workspace-upper {
+      display: grid;
+      grid-template-columns: 26% 48% 26%;
+      border-bottom: 1px solid var(--border-grid);
+      min-height: 0;
+    }
+
+    .pane {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .pane-left {
+      background-color: var(--bg-surface);
+      border-right: 1px solid var(--border-grid);
+      justify-content: space-between;
+    }
+
+    .pane-center {
+      background-color: var(--bg-canvas);
+      border-right: 1px solid var(--border-grid);
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 32px;
+    }
+
+    .pane-right {
+      background-color: var(--bg-surface);
+      padding: 0;
+    }
+
+    /* Section Header Pattern */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #E5E5E5;
+    }
+
+    .gold-square {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent-gold);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .eyebrow {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #A3A3A3;
+    }
+
+    /* Left Inspector: Editorial Now Playing */
+    .track-hero {
+      margin-top: 8px;
+    }
+
+    .hero-title {
+      font-size: 36px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-top: 10px;
+      margin-bottom: 10px;
+      font-weight: 200;
+    }
+
+    .hero-title strong {
+      font-weight: 600;
+    }
+
+    .hero-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    /* Transport Controls */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: var(--accent-gold);
+      color: var(--text-on-accent);
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-gold-hover);
+    }
+
+    .btn-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      background-color: var(--bg-control);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .btn-circle:hover {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    .btn-circle.liked {
+      color: var(--accent-gold);
+      border-color: var(--accent-gold);
+    }
+
+    /* Up Next Card */
+    .up-next-card {
+      background-color: var(--bg-control);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .up-next-card:hover {
+      border-color: #3A3A3A;
+    }
+
+    .up-next-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .up-next-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .up-next-artist {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Center Stage Artwork & Scrubber */
+    .stage-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .artwork-frame {
+      width: min(320px, 44vh);
+      height: min(320px, 44vh);
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: radial-gradient(circle at 30% 25%, #231F1B 0%, #121212 58%, #090909 100%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    /* Minimal geometric vinyl / acoustic art inside sleeve */
+    .sleeve-rings {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .sleeve-rings svg {
+      width: 82%;
+      height: 82%;
+      opacity: 0.75;
+    }
+
+    .sleeve-meta-top,
+    .sleeve-meta-bottom {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sleeve-caption {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-gold);
+    }
+
+    .stage-bottom {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .scrubber-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .scrubber-bar {
+      flex: 1;
+      height: 3px;
+      background-color: var(--bg-control);
+      border-radius: 9999px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .scrubber-fill {
+      width: 42%;
+      height: 100%;
+      background-color: var(--accent-gold);
+      border-radius: 9999px;
+      position: relative;
+    }
+
+    .scrubber-thumb {
+      width: 9px;
+      height: 9px;
+      border-radius: 9999px;
+      background-color: var(--accent-gold);
+      position: absolute;
+      right: -4px;
+      top: -3px;
+    }
+
+    .mode-pills {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .mode-pill {
+      background-color: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      border-radius: 9999px;
+      padding: 5px 14px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mode-pill.active,
+    .mode-pill:hover {
+      background-color: var(--bg-control);
+      color: var(--text-primary);
+      border-color: #3A3A3A;
+    }
+
+    .lyrics-panel {
+      display: none;
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.8;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .lyrics-panel.visible {
+      display: block;
+    }
+
+    .lyrics-panel p.highlight {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* Right Sidebar: Featured + Simple Queue */
+    .right-featured {
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--border-grid);
+    }
+
+    .featured-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background-color: var(--bg-control);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .featured-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      background: linear-gradient(135deg, #2B241D 0%, #121212 100%);
+      display: grid;
+      place-items: center;
+      color: var(--accent-gold);
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .featured-meta h4 {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .featured-meta p {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .right-queue {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .queue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .queue-item:hover {
+      background-color: var(--bg-control);
+    }
+
+    .queue-item.active {
+      background-color: var(--bg-control);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .queue-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .dot-gold {
+      width: 5px;
+      height: 5px;
+      border-radius: 9999px;
+      background-color: var(--accent-gold);
+      flex-shrink: 0;
+    }
+
+    .dot-placeholder {
+      width: 5px;
+      height: 5px;
+      flex-shrink: 0;
+    }
+
+    .queue-track {
+      font-size: 13px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-item:not(.active) .queue-track {
+      color: var(--text-secondary);
+    }
+
+    .queue-artist {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .queue-dur {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 12px;
+    }
+
+    /* Bottom 3-Column Bento Strip */
+    .workspace-lower {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      background-color: var(--bg-surface);
+    }
+
+    .lower-cell {
+      padding: 22px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .lower-cell:not(:last-child) {
+      border-right: 1px solid var(--border-grid);
+    }
+
+    /* Cell 1: Curated Collection Card */
+    .spotlight-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--bg-control);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+
+    .spotlight-text h3 {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .spotlight-text p {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Cell 2: Clean Library Index */
+    .index-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .index-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1A1A1A;
+    }
+
+    .index-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .index-count {
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    /* Cell 3: Minimal Listening Summary (No Telemetry) */
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .stat-block {
+      background-color: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text-primary);
+    }
+
+    .summary-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .summary-note span {
+      color: var(--accent-gold);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <span>AURA</span>
+        </div>
+        <nav class="nav-links" aria-label="Primary Navigation">
+          <button class="nav-link active" data-tab="Now Playing">Now Playing</button>
+          <button class="nav-link" data-tab="Albums">Albums</button>
+          <button class="nav-link" data-tab="Artists">Artists</button>
+          <button class="nav-link" data-tab="Folders">Folders</button>
+          <button class="nav-link" data-tab="Playlists">Playlists</button>
+        </nav>
+      </div>
+
+      <div class="topbar-right">
+        <div class="search-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20L16.5 16.5"></path>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search tracks, artists, albums..." />
+        </div>
+        <div class="output-badge">
+          <span class="dot-emerald"></span>
+          <span>Lossless Active</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Bento Grid -->
+    <main class="bento-body">
+      <!-- Upper 3-Column Row -->
+      <section class="workspace-upper">
+        <!-- Left Inspector -->
+        <aside class="pane pane-left">
+          <div>
+            <div class="section-header">
+              <div class="section-title">
+                <span class="gold-square"></span>
+                <span>Now Playing</span>
+              </div>
+              <span class="eyebrow">FLAC • 24-BIT</span>
+            </div>
+
+            <div class="track-hero">
+              <h1 class="hero-title" id="heroTitle"><strong>Nocturne</strong> in Blue</h1>
+              <p class="hero-subtitle" id="heroArtist">Nils Frahm — Spaces (2013)</p>
+            </div>
+
+            <div class="controls-row">
+              <button class="btn-primary" id="playPauseBtn">
+                <span id="playIcon">❚❚</span>
+                <span id="playLabel">Pause</span>
+              </button>
+              <button class="btn-circle" id="prevBtn" title="Previous Track" aria-label="Previous Track">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/>
+                </svg>
+              </button>
+              <button class="btn-circle" id="nextBtn" title="Next Track" aria-label="Next Track">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                </svg>
+              </button>
+              <button class="btn-circle" id="likeBtn" title="Favorite" aria-label="Favorite">
+                ♥
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-header" style="margin-bottom: 10px;">
+              <span class="eyebrow">Up Next</span>
+              <span class="eyebrow tabular" id="upNextDur">04:12</span>
+            </div>
+            <div class="up-next-card" id="upNextCard">
+              <div class="up-next-info">
+                <span class="up-next-title" id="upNextTitle">Over There, It's Summer</span>
+                <span class="up-next-artist" id="upNextArtist">Nils Frahm</span>
+              </div>
+              <span style="color: var(--accent-gold); font-size: 14px;">→</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Center Stage -->
+        <section class="pane pane-center">
+          <div class="stage-top">
+            <span class="eyebrow" id="stageViewLabel">Cover Art</span>
+            <span class="eyebrow">Master Edition</span>
+          </div>
+
+          <!-- Artwork View -->
+          <div class="artwork-frame" id="artworkView">
+            <div class="sleeve-meta-top">
+              <span class="sleeve-caption">AURA ARCHIVE</span>
+              <span class="eyebrow">01 / 04</span>
+            </div>
+
+            <div class="sleeve-rings">
+              <svg viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="88" stroke="#2A2A2A" stroke-width="1"/>
+                <circle cx="100" cy="100" r="68" stroke="#C5A073" stroke-opacity="0.45" stroke-width="1"/>
+                <circle cx="100" cy="100" r="48" stroke="#2A2A2A" stroke-width="1"/>
+                <circle cx="100" cy="100" r="24" stroke="#C5A073" stroke-width="1"/>
+                <circle cx="100" cy="100" r="3" fill="#C5A073"/>
+              </svg>
+            </div>
+
+            <div class="sleeve-meta-bottom">
+              <span class="eyebrow" id="sleeveAlbum">SPACES</span>
+              <span class="eyebrow">STEREO</span>
+            </div>
+          </div>
+
+          <!-- Liner Notes / Lyrics Alternate View -->
+          <div class="lyrics-panel" id="notesView">
+            <p class="eyebrow" style="margin-bottom: 14px; color: var(--accent-gold);">Editorial Liner Notes</p>
+            <p class="highlight">Recorded live across intimate European halls using vintage tape machines and acoustic felt pianos.</p>
+            <p style="margin-top: 12px;">Every subtle keystroke, pedal resonance, and room reflection is preserved without dynamic compression.</p>
+          </div>
+
+          <div class="stage-bottom">
+            <div class="scrubber-wrap">
+              <span class="tabular" id="elapsedTime">03:42</span>
+              <div class="scrubber-bar" id="scrubberBar">
+                <div class="scrubber-fill" id="scrubberFill">
+                  <div class="scrubber-thumb"></div>
+                </div>
+              </div>
+              <span class="tabular" id="totalTime">08:18</span>
+            </div>
+
+            <div class="mode-pills">
+              <button class="mode-pill active" data-view="artwork">Cover Art</button>
+              <button class="mode-pill" data-view="notes">Liner Notes</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Sidebar -->
+        <aside class="pane pane-right">
+          <div class="right-featured">
+            <div class="section-header" style="margin-bottom: 12px;">
+              <div class="section-title">
+                <span class="gold-square"></span>
+                <span>Recently Added</span>
+              </div>
+              <span class="eyebrow">View All</span>
+            </div>
+            <div class="featured-card">
+              <div class="featured-thumb">LP</div>
+              <div class="featured-meta">
+                <h4>Late Night Tales</h4>
+                <p>18 Tracks • Lossless Album</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="right-queue">
+            <div class="section-header" style="margin-bottom: 12px;">
+              <div class="section-title">
+                <span class="gold-square"></span>
+                <span>Play Queue</span>
+              </div>
+              <span class="eyebrow tabular">4 Tracks</span>
+            </div>
+
+            <div class="queue-list" id="queueList">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- Lower 3-Column Bento Row -->
+      <section class="workspace-lower">
+        <!-- Bottom Left -->
+        <div class="lower-cell">
+          <div class="section-header" style="margin-bottom: 0;">
+            <div class="section-title">
+              <span class="gold-square"></span>
+              <span>Curated Collection</span>
+            </div>
+            <span class="eyebrow">Playlist</span>
+          </div>
+
+          <div class="spotlight-box">
+            <div class="spotlight-text">
+              <h3>Berlin Ambient Sessions</h3>
+              <p>Nils Frahm, Max Richter, Ólafur Arnalds</p>
+            </div>
+            <button class="btn-circle" aria-label="Open Collection">→</button>
+          </div>
+        </div>
+
+        <!-- Bottom Center -->
+        <div class="lower-cell">
+          <div class="section-header" style="margin-bottom: 10px;">
+            <div class="section-title">
+              <span class="gold-square"></span>
+              <span>Library Index</span>
+            </div>
+            <span class="eyebrow">Local Collection</span>
+          </div>
+
+          <div class="index-list">
+            <div class="index-row">
+              <span>Albums</span>
+              <span class="index-count tabular">412</span>
+            </div>
+            <div class="index-row">
+              <span>Artists</span>
+              <span class="index-count tabular">186</span>
+            </div>
+            <div class="index-row">
+              <span>Lossless Tracks</span>
+              <span class="index-count tabular">3,840</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Right: Simple Listening Summary -->
+        <div class="lower-cell">
+          <div class="section-header" style="margin-bottom: 10px;">
+            <div class="section-title">
+              <span class="gold-square"></span>
+              <span>Listening Summary</span>
+            </div>
+            <span class="eyebrow">This Week</span>
+          </div>
+
+          <div class="summary-stats">
+            <div class="stat-block">
+              <div class="stat-label">Hours</div>
+              <div class="stat-value tabular">14.5</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-label">Albums</div>
+              <div class="stat-value tabular">19</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-label">Favorites</div>
+              <div class="stat-value tabular">64</div>
+            </div>
+          </div>
+
+          <div class="summary-note">
+            <div>Most Played: <span>Modern Classical</span></div>
+            <div class="eyebrow">Quiet Mode</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const tracks = [
+      {
+        boldTitle: "Nocturne",
+        lightTitle: "in Blue",
+        fullTitle: "Nocturne in Blue",
+        artist: "Nils Frahm",
+        album: "Spaces (2013)",
+        sleeve: "SPACES",
+        duration: "08:18",
+        elapsed: "03:42",
+        progress: 45
+      },
+      {
+        boldTitle: "Over There,",
+        lightTitle: "It's Summer",
+        fullTitle: "Over There, It's Summer",
+        artist: "Nils Frahm",
+        album: "Spaces (2013)",
+        sleeve: "SPACES",
+        duration: "04:12",
+        elapsed: "01:15",
+        progress: 30
+      },
+      {
+        boldTitle: "Familiar",
+        lightTitle: "Echoes",
+        fullTitle: "Familiar Echoes",
+        artist: "Nils Frahm",
+        album: "Felt (2011)",
+        sleeve: "FELT",
+        duration: "06:45",
+        elapsed: "02:10",
+        progress: 32
+      },
+      {
+        boldTitle: "On the Nature",
+        lightTitle: "of Daylight",
+        fullTitle: "On the Nature of Daylight",
+        artist: "Max Richter",
+        album: "The Blue Notebooks (2004)",
+        sleeve: "BLUE NOTEBOOKS",
+        duration: "06:11",
+        elapsed: "04:05",
+        progress: 66
+      }
+    ];
+
+    let currentIndex = 0;
+    let isPlaying = true;
+
+    const queueListEl = document.getElementById("queueList");
+    const heroTitleEl = document.getElementById("heroTitle");
+    const heroArtistEl = document.getElementById("heroArtist");
+    const sleeveAlbumEl = document.getElementById("sleeveAlbum");
+    const elapsedTimeEl = document.getElementById("elapsedTime");
+    const totalTimeEl = document.getElementById("totalTime");
+    const scrubberFillEl = document.getElementById("scrubberFill");
+    const upNextTitleEl = document.getElementById("upNextTitle");
+    const upNextArtistEl = document.getElementById("upNextArtist");
+    const upNextDurEl = document.getElementById("upNextDur");
+
+    function renderQueue(filter = "") {
+      queueListEl.innerHTML = "";
+      tracks.forEach((track, idx) => {
+        if (
+          filter &&
+          !track.fullTitle.toLowerCase().includes(filter.toLowerCase()) &&
+          !track.artist.toLowerCase().includes(filter.toLowerCase())
+        ) {
+          return;
+        }
+
+        const item = document.createElement("div");
+        item.className = "queue-item" + (idx === currentIndex ? " active" : "");
+        item.innerHTML = `
+          <div class="queue-left">
+            <span class="${idx === currentIndex ? "dot-gold" : "dot-placeholder"}"></span>
+            <div>
+              <div class="queue-track">${track.fullTitle}</div>
+              <div class="queue-artist">${track.artist}</div>
+            </div>
+          </div>
+          <span class="queue-dur tabular">${track.duration}</span>
+        `;
+        item.addEventListener("click", () => selectTrack(idx));
+        queueListEl.appendChild(item);
+      });
+    }
+
+    function selectTrack(idx) {
+      currentIndex = (idx + tracks.length) % tracks.length;
+      const track = tracks[currentIndex];
+      const nextTrack = tracks[(currentIndex + 1) % tracks.length];
+
+      heroTitleEl.innerHTML = `<strong>${track.boldTitle}</strong> ${track.lightTitle}`;
+      heroArtistEl.textContent = `${track.artist} — ${track.album}`;
+      sleeveAlbumEl.textContent = track.sleeve;
+      elapsedTimeEl.textContent = track.elapsed;
+      totalTimeEl.textContent = track.duration;
+      scrubberFillEl.style.width = `${track.progress}%`;
+
+      upNextTitleEl.textContent = nextTrack.fullTitle;
+      upNextArtistEl.textContent = nextTrack.artist;
+      upNextDurEl.textContent = nextTrack.duration;
+
+      renderQueue(document.getElementById("searchInput").value);
+    }
+
+    // Play / Pause Toggle
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const playIcon = document.getElementById("playIcon");
+    const playLabel = document.getElementById("playLabel");
+
+    playPauseBtn.addEventListener("click", () => {
+      isPlaying = !isPlaying;
+      playIcon.textContent = isPlaying ? "❚❚" : "▶";
+      playLabel.textContent = isPlaying ? "Pause" : "Play";
+    });
+
+    // Next / Prev / Up Next
+    document.getElementById("nextBtn").addEventListener("click", () => selectTrack(currentIndex + 1));
+    document.getElementById("prevBtn").addEventListener("click", () => selectTrack(currentIndex - 1));
+    document.getElementById("upNextCard").addEventListener("click", () => selectTrack(currentIndex + 1));
+
+    // Favorite Toggle
+    const likeBtn = document.getElementById("likeBtn");
+    likeBtn.addEventListener("click", () => {
+      likeBtn.classList.toggle("liked");
+    });
+
+    // Center Stage View Switcher
+    const modePills = document.querySelectorAll(".mode-pill");
+    const artworkView = document.getElementById("artworkView");
+    const notesView = document.getElementById("notesView");
+    const stageViewLabel = document.getElementById("stageViewLabel");
+
+    modePills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        modePills.forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+        const view = pill.dataset.view;
+        if (view === "notes") {
+          artworkView.style.display = "none";
+          notesView.classList.add("visible");
+          stageViewLabel.textContent = "Liner Notes";
+        } else {
+          artworkView.style.display = "flex";
+          notesView.classList.remove("visible");
+          stageViewLabel.textContent = "Cover Art";
+        }
+      });
+    });
+
+    // Interactive Scrubber Click
+    const scrubberBar = document.getElementById("scrubberBar");
+    scrubberBar.addEventListener("click", (e) => {
+      const rect = scrubberBar.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      scrubberFillEl.style.width = `${pct}%`;
+    });
+
+    // Top Nav Active State
+    document.querySelectorAll(".nav-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        document.querySelectorAll(".nav-link").forEach((l) => l.classList.remove("active"));
+        link.classList.add("active");
+      });
+    });
+
+    // Live Queue Filter
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      renderQueue(e.target.value);
+    });
+
+    // Initialize
+    selectTrack(0);
+  </script>
+</body>
+</html>
