@@ -12,7 +12,6 @@ belong in the document that owns them.
 | 02 | [Tech stack](02-tech-stack.md) | Runtime, language, frameworks, storage, packaging | Draft v0.1 |
 | 03 | [Architecture](03-architecture.md) | Data model, storage layout, indexing, import pipeline | Draft v0.1 |
 | 04 | [Feature list](04-features.md) | Scoped capabilities, priorities, v1 vs later | Draft v0.1 |
-| 05 | UI design language | Visual system, layout, interaction patterns | Not started |
-
-Earlier notes live in [`../docs_old/`](../docs_old/) and are kept for reference,
-not as the current source of truth.
+| 05 | [UI layout](05-ui-layout.md) | The three-panel frame: left rail, main grid, right preview | Draft v0.1 |
+| 06 | [Visual style](06-ui-visual-style.md) | Tokens, material, type and component treatments | Draft v0.2 |
+| 07 | [Backlog](07-backlog.md) | Working task list | Living |

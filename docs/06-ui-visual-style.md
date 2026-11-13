@@ -1,6 +1,6 @@
 # GILDEX — Visual Style
 
-Status: Draft v0.1 · Last updated: 2026-11-12
+Status: Draft v0.2 · Last updated: 2026-11-13
 
 The condensed visual style — tokens and treatments only. The full system,
 interaction defaults, and fork rationale live in
@@ -8,126 +8,152 @@ interaction defaults, and fork rationale live in
 `stitch-master-prompt.md`. This is the quick-reference sheet for any agent or
 human building screens.
 
+Active direction: **editorial matte**, ported from
+`design/editorial-matte-bento-ui.html` (charcoal + gold, flat surfaces, pill
+controls, editorial sans). Layout is unchanged from `05-ui-layout.md`.
+
 ## 1. North star
 
 **Absolute visual silence — the interface is an invisible gallery frame.**
 
 The artwork is the only saturated, opaque object on screen; everything else is
-ambient material that recedes. **Gilt is an edge, not a fill** — the accent
-appears only as a hairline, a tick, a ring, or an underline, never a solid
-block.
+matte material that recedes. **Gilt is an edge — and the action:** the accent
+appears as a hairline, tick, square, ring or underline; one solid gold fill is
+allowed per screen for the primary action.
 
 ## 2. Three layers
 
 | Layer | Role | Expression |
 |---|---|---|
 | Scandinavian minimalism | Structure | 4px space, hairline borders, low contrast |
-| Frosted glass + metal | Material | translucent tinted chrome; static specular hints |
-| Art Deco | Framing | thin gilt rules, stepped tick, engraved lettering |
+| Editorial matte | Material | flat charcoal panels, no blur or grain, 8px cards, pill controls |
+| Art Deco | Framing | thin gilt rules, 6px gold squares, light editorial headings |
 
 ## 3. Tokens
 
-### 3.1 Color — the green-gilt-patina family
+### 3.1 Color — the charcoal-gold family
 
-Dark ("gilt vault") is default; light ("scandinavian daylight") is secondary.
-Gilt and status colors are shared across both; only neutrals shift.
+Dark ("matte charcoal") is default; light ("ivory matte") is secondary. Gold
+and status colors are shared across both; only neutrals shift.
 
 | Token | Dark | Light | Role |
 |---|---|---|---|
-| `background` | `#0F1713` | `#F4F3EE` | app canvas / gallery wall |
-| `surface` | `#16201B` | `#FFFFFF` | opaque fallback for glass |
-| `surface-glass` | `rgba(22,32,27,0.55)` | `rgba(255,255,255,0.6)` | frosted chrome |
-| `hairline` | `#26322B` | `#D8D5CC` | borders, gutters |
-| `text` | `#E6EAE4` | `#1C221E` | primary text |
-| `text-muted` | `#93A099` | `#6B726B` | secondary labels |
-| `gilt` | `#C6A15B` | — | accent, favorite, selection |
-| `gilt-bright` | `#D4AF37` | — | hover / active only |
-| `status-final` | `#5E7A6A` | — | patina green |
-| `status-wip` | `#A97648` | — | clay amber |
-| `status-draft` | `#93A099` | — | neutral |
-| `danger` | `#A4574E` | — | destructive, missing, purge |
+| `background` | `#090909` | `#F6F3ED` | app canvas / gallery wall |
+| `surface` | `#0F0F0F` | `#FFFDF9` | fixed chrome (header, rail, preview) |
+| `surface-inset` | `#0B0B0B` | `#F0ECE4` | wells, media beds, folder tree |
+| `control` | `#161616` | `#F1EDE5` | inputs, pills, cards, popovers |
+| `hairline` | `#222222` | `#E0DBD1` | borders, gutters |
+| `border-subtle` | `#2A2A2A` | `#D5CFC4` | control borders |
+| `border-strong` | `#3A3A3A` | `#C2BBAE` | hover borders |
+| `text` | `#F5F5F4` | `#171614` | primary text |
+| `text-muted` | `#9CA3AF` | `#6F6B63` | secondary labels |
+| `text-faint` | `#525252` | `#9A948A` | placeholders, metadata |
+| `gilt` | `#C5A073` | `#9E7836` | accent, favorite, selection, primary action |
+| `gilt-bright` | `#D2B187` | `#7F5F25` | hover / active only |
+| `on-gilt` | `#090909` | `#FFFDF9` | text on a solid gold fill |
+| `status-final` | `#4ADE80` | `#3F7D5C` | emerald green |
+| `status-wip` | `#D08C57` | `#A97648` | clay amber |
+| `status-draft` | `#9CA3AF` | `#6F6B63` | neutral |
+| `danger` | `#E0655B` | `#A4574E` | destructive, missing, purge |
 
 Status mapping (D22): favorite → `gilt`; final → `status-final`; wip →
 `status-wip`; draft → `status-draft`. Guardrail: favorite, WIP, and the accent
-must stay separable — favorite = full gilt, WIP = clay, accent = edge-only.
+must stay separable — favorite = full gilt, WIP = clay, accent = edge or the
+single primary action.
 
 ### 3.2 Type
 
-- **UI** — Archivo (system-ui, sans-serif): body and dense UI.
-- **Display** — Marcellus (Cinzel, serif): engraved small-caps roman; headings,
-  gallery plaque labels, empty states.
-- Scale (px): caption 11 · body 13 · body-large 15 · subheading 17 · heading 22 ·
-  display 30. Display tracking 0.08em, small-caps.
+- **UI & display** — Inter (system-ui, sans-serif): the serif display face is
+  retired. Zero-network policy: use the local stack, never fetch a webfont.
+- **Eyebrow** — 10px, weight 600, tracking 0.12em, uppercase; section labels,
+  kickers and control labels.
+- **Headings** — weight 200 with negative tracking (−0.02em); quiet, not bold.
+- Scale (px): caption 10 · body 13 · body-large 15 · subheading 17 · heading 22
+  · display 30. Data figures use tabular numerals.
 
 ### 3.3 Space, radius, elevation, effects
 
 - Spacing base **4px**; all gutters/paddings are multiples.
-- Radius **2px** (chips, ticks) / **4px** (panels). No pill-radius.
-- Elevation **flat** — no drop shadows; "metal" is one static specular gradient;
-  panels are hairline border only.
-- Blur **12px**, `backdrop-filter` on **fixed chrome only**.
-- Density: 3 user presets — contact sheet / default / gallery hang.
+- Radius **6px** (controls, cells, thumbs) / **8px** (cards, popovers, panels)
+  / **12px** (modals, floating toolbars) / **9999px** (pills). Pills are for
+  filters, modes, status and search — not for cards.
+- Elevation **flat** — panels are a hairline border on a matte fill. Only
+  floating layers (modal, batch toolbar, popovers) cast a wide soft shadow.
+- **No blur, no grain, no specular, no glass.** Fixed chrome is a flat surface
+  fill. The optional gallery atmosphere is the only moving material and is off
+  in the reduced-effects state.
 
 ### 3.4 Token file
 
 ```css
 :root {
-  --bg: #0F1713;
-  --surface: #16201B;
-  --surface-glass: rgba(22,32,27,0.55);
-  --hairline: #26322B;
-  --text: #E6EAE4;
-  --text-muted: #93A099;
-  --gilt: #C6A15B;
-  --gilt-bright: #D4AF37;
-  --status-final: #5E7A6A;
-  --status-wip: #A97648;
-  --status-draft: #93A099;
-  --danger: #A4574E;
-  --focus: #D4AF37;
+  --bg: #090909;
+  --surface: #0f0f0f;
+  --surface-inset: #0b0b0b;
+  --control: #161616;
+  --control-hover: #1c1c1c;
+  --hairline: #222222;
+  --border-subtle: #2a2a2a;
+  --border-strong: #3a3a3a;
+  --text: #f5f5f4;
+  --text-muted: #9ca3af;
+  --text-faint: #525252;
+  --gilt: #c5a073;
+  --gilt-bright: #d2b187;
+  --on-gilt: #090909;
+  --status-final: #4ade80;
+  --status-wip: #d08c57;
+  --status-draft: #9ca3af;
+  --danger: #e0655b;
+  --focus: #c5a073;
   --space: 4px;
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --blur: 12px;
-  --font-ui: "Archivo", system-ui, sans-serif;
-  --font-display: "Marcellus", "Cinzel", serif;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+  --font-ui: "Inter", system-ui, sans-serif;
 }
 ```
 
-Light mode overrides only the neutrals (`--bg`, `--surface`, `--surface-glass`,
-`--hairline`, `--text`, `--text-muted`).
+Light mode overrides only the neutrals plus `--on-gilt`.
 
 ## 4. Component treatments
 
 - **Grid cell** — the only saturated, opaque object on the wall; hairline
-  gutter; **no card chrome, no borders, no shadows**.
-- **Selection** — 2px `gilt` ring + stepped corner tick (museum-label corner).
-- **Focus** — faint full-cell `hairline` outline; always visible; distinct from
+  gutter; **no card chrome, no borders, no shadows**; 6px radius.
+- **Selection** — 2px `gilt` ring + corner tick (museum-label corner).
+- **Focus** — 1px `text-muted` full-cell outline; always visible; distinct from
   selection.
-- **Hover** — faint frosted overlay carrying hover-play + badges; brightens on
-  pointer settle, never stroboscopes.
+- **Hover** — neutral lift (`rgba(245,245,244,0.06)`), never a gold wash or
+  specular band.
 - **Hover-play (D18)** — precomputed frame strip, cycled within the cell,
   ~120ms after settle.
-- **Badges (D22)** — favorite top-right (`gilt`), rating/status bottom-left.
-- **Presence** — small gold stepped tick marks deep-layer content; toggleable.
+- **Badges (D22)** — favorite top-right (`gilt` square), rating/status
+  bottom-left on a dark chip.
+- **Presence** — the 6px gold square marks section labels and the active nav
+  item; toggleable deep-layer content keeps a stepped tick.
 - **Kind** — video: hover-play; audio: rough spectrogram (D42). No other glyphs.
-- **Gilt seam** — panel resize handles: thin `gilt` hairline + stepped ziggurat
-  tick at midpoint; near-invisible at rest, `gilt-bright` on hover/drag.
-  Header/footer near the logo: same hairline + single stepped rule.
-- **Inspector plaque** — gallery label, not dashboard: engraved heading, prompt
-  block, quiet parameter spec line (prompt, negative_prompt collapsed, model,
-  seed, steps, sampler, cfg_scale, generated_at, + collapsible additional).
-- **Chips** — inline `[[…]]` → gilt hairline underline + muted chip.
-- **Toast** — frosted chip bottom-center, gilt left-edge.
-- **Empty / first-run** — engraved roman line + stepped motif + "pick root →
-  drag here." The one place ornament may be prominent.
+- **Gilt seam** — panel resize handles: 1px hairline at rest, `gilt` on
+  hover/drag with a stepped tick at midpoint.
+- **Pill control** — bordered `control` fill, 10px uppercase label; active state
+  brightens text and border. Used for surface tabs, status, tag chips, search.
+- **Primary action** — solid `gilt` fill with `on-gilt` text, 6px radius; one per
+  surface (Inspect, Set root, Save).
+- **Inspector plaque** — gallery label, not dashboard: eyebrow headings, 200
+  weight title, prompt block, quiet parameter spec line.
+- **Chips** — inline `[[…]]` → pill with muted text; active tag filters carry a
+  gold dismiss glyph.
+- **Toast** — matte `control` chip bottom-center, gilt left-edge.
+- **Empty / first-run** — gold square ornament + 30px/200 weight line + "pick
+  root → drag here." The one place ornament may be prominent.
 - **Missing file** — muted placeholder + `danger` tick; never deleted.
 
 ## 5. Guardrails
 
-- **Glass contract (D14).** Blur only on fixed chrome; grid opaque; static
-  tint fallback where `backdrop-filter` is unsupported; **no runtime shaders**,
-  no WebGL, no animation.
+- **Matte contract.** No blur, grain, specular or glass on chrome; grid opaque;
+  shadows only on floating layers. No runtime shaders except the optional
+  gallery atmosphere (prototype; hidden in reduced effects), no WebGL elsewhere,
+  no animation.
 - **Deco dosage.** Motifs only in quiet moments and at frame joints — never on
   or around items.
 - **A11y.** WCAG contrast for `text`/`text-muted` vs `background`; visible
@@ -141,8 +167,13 @@ Light mode overrides only the neutrals (`--bg`, `--surface`, `--surface-glass`,
   wrong.
 - **DO** use the tokens as written; never invent a color, face, radius, or
   shadow.
+- **DO** reserve gold fill for the single primary action; everything else is an
+  edge.
+- **DON'T** frost, blur, grain or animate chrome.
+- **DON'T** use serif or small-caps; the editorial voice is uppercase tracking,
+  not engraved type.
+- **DON'T** pill cards or panels — pills are controls only.
 - **DON'T** render raw metadata blobs; show only known fields.
-- **DON'T** fill with gilt — accent is edge-only.
 - **DON'T** use framework shorthand ("rounded-xl"); state values in plain
   language.
 
@@ -150,4 +181,4 @@ Light mode overrides only the neutrals (`--bg`, `--surface`, `--surface-glass`,
 
 Grid/perf (D14), hover-play (D18), badges (D22), audio spectrogram (D42),
 inspector/story (D7, D9), native chrome (D35), zero network (D5), thin theming
-(UI direction).
+(UI direction). Reference mockup: `design/editorial-matte-bento-ui.html`.
