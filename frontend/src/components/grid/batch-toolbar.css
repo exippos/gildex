@@ -1,4 +1,4 @@
-/* Floating batch toolbar (D24). Matte control panel above the footer. */
+/* Floating batch toolbar (D24). Gilded control panel above the footer. */
 
 .batch-toolbar {
   position: absolute;
@@ -15,16 +15,16 @@
   max-width: calc(100% - 24px);
   padding: 6px 10px;
   background: var(--control);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-md);
   font-size: 11px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .batch-count {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   padding: 0 8px 0 2px;
   color: var(--text);
   letter-spacing: 0.02em;
@@ -35,6 +35,7 @@
   width: 5px;
   height: 5px;
   background: var(--gilt);
+  transform: rotate(45deg);
 }
 
 .batch-divider {
@@ -46,7 +47,7 @@
 
 .batch-button {
   padding: 4px 10px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
   color: var(--text-muted);
   font-size: 11px;
@@ -54,19 +55,20 @@
 }
 
 .batch-button:hover {
-  color: var(--text);
-  border: 0;
+  color: var(--gilt-bright);
+  border-color: var(--gilt-border);
   background: var(--control-hover);
 }
 
 .batch-button.is-open {
-  color: var(--text);
-  background: var(--control-hover);
-  border: 0;
+  color: var(--gilt-bright);
+  background: var(--gilt-dim);
+  border-color: var(--gilt-border);
 }
 
 .batch-button.is-danger:hover {
   color: var(--danger);
+  border-color: var(--danger);
 }
 
 .batch-clear {
@@ -82,9 +84,9 @@
   min-width: 156px;
   padding: 10px;
   background: var(--control);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .batch-popover-label {
@@ -92,9 +94,9 @@
   margin-bottom: 8px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--gilt);
 }
 
 .batch-rate-row {
@@ -125,14 +127,14 @@
   border-bottom: 1px solid var(--border-subtle);
   border-radius: 0;
   font-size: 10px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--gilt);
 }
 
 .batch-popover-link:hover {
   border-bottom-color: var(--gilt);
-  color: var(--text);
+  color: var(--gilt-bright);
 }
 
 .batch-status {

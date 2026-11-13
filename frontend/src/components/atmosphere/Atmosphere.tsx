@@ -49,12 +49,14 @@ void main() {
   float r = length(p);
   float band = smoothstep(0.75, 0.0, abs(r - (0.42 + field * 0.10)));
 
-  vec3 ink = mix(vec3(0.035, 0.035, 0.035), vec3(0.061, 0.061, 0.061), field);
-  vec3 gilt = mix(vec3(0.353, 0.275, 0.161), vec3(0.765, 0.639, 0.463), field);
-  vec3 light = mix(vec3(0.976, 0.965, 0.945), vec3(0.941, 0.918, 0.878), field);
+  vec3 deep = mix(vec3(0.024, 0.043, 0.075), vec3(0.055, 0.086, 0.130), field);
+  vec3 gilt = mix(vec3(0.420, 0.330, 0.195), vec3(0.830, 0.690, 0.480), field);
+  vec3 ocean = mix(vec3(0.080, 0.250, 0.380), vec3(0.220, 0.740, 0.970), field);
+  vec3 light = mix(vec3(0.953, 0.965, 0.980), vec3(0.898, 0.925, 0.957), field);
 
-  vec3 base = mix(ink, light, u_theme);
-  vec3 col = mix(base, gilt, band * (0.08 + 0.03 * u_theme));
+  vec3 base = mix(deep, light, u_theme);
+  vec3 ring = mix(ocean, gilt, smoothstep(0.0, 0.35, field));
+  vec3 col = mix(base, ring, band * (0.10 + 0.03 * u_theme));
 
   float vignette = smoothstep(1.05, 0.25, r);
   col *= mix(0.9, 1.0, vignette);

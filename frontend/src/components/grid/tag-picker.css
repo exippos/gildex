@@ -10,9 +10,9 @@
   gap: 8px;
   padding: 10px;
   background: var(--control);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .tag-picker-filter {
@@ -20,13 +20,18 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 5px 8px;
-  background: var(--surface);
+  background: var(--surface-inset);
   font-size: 12px;
 }
 
 .tag-picker-filter::placeholder,
 .tag-picker-create input::placeholder {
   color: var(--text-faint);
+}
+
+.tag-picker-filter:focus-visible {
+  border-color: var(--gilt);
+  outline: none;
 }
 
 .tag-picker-list {
@@ -45,7 +50,7 @@
 }
 
 .tag-picker-row + .tag-picker-row {
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--hairline);
 }
 
 .tag-picker-name {
@@ -104,11 +109,20 @@
   min-width: 0;
   padding: 5px 8px;
   font-size: 11px;
-  background: var(--surface);
+  background: var(--surface-inset);
 }
 
 .tag-picker-create button {
   flex: 0 0 auto;
   padding: 4px 10px;
+  border-color: var(--gilt-border);
+  background: var(--gilt-dim);
+  color: var(--gilt-bright);
   font-size: 11px;
+}
+
+.tag-picker-create button:hover {
+  border-color: var(--gilt);
+  background: var(--control-hover);
+  color: var(--gilt-bright);
 }

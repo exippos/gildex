@@ -1,35 +1,39 @@
-/* GILDEX design tokens — "editorial matte" variation.
-   Reference: design/editorial-matte-bento-ui.html (charcoal + gold, matte
-   surfaces, pill controls, editorial sans). Layout is unchanged; only the
+/* GILDEX design tokens — "gilded ocean" variation.
+   Reference: design/gilded-ocean-bento-ui.html (deep ocean + gilt, Art-Deco
+   sunburst, gilded frames, ocean-blue accent). Layout is unchanged; only the
    material, palette and type treatment are reworked. Zero network: fonts are
-   local stacks. */
+   local stacks, Cormorant when present, Georgia otherwise. */
 
 :root {
   color-scheme: dark;
 
-  /* dark ("matte charcoal") is default */
-  --bg: #090909; /* app canvas */
-  --surface: #0f0f0f; /* chrome / panels */
-  --surface-inset: #0b0b0b; /* wells, media beds */
-  --control: #161616; /* inputs, pills, cards */
-  --control-hover: #1c1c1c;
-  --surface-glass: rgba(15, 15, 15, 0.86);
-  --hairline: #222222; /* grid rules */
-  --border-subtle: #2a2a2a; /* control borders */
-  --border-strong: #3a3a3a; /* hover borders */
+  /* dark ("abyssal ocean") is default */
+  --bg: #060b13; /* app canvas */
+  --surface: #0b121e; /* chrome / panels */
+  --surface-inset: #08101c; /* wells, media beds */
+  --control: #111b2b; /* inputs, pills, cards */
+  --control-hover: #162338;
+  --surface-glass: rgba(11, 18, 30, 0.9);
+  --hairline: #19263a; /* grid rules */
+  --border-subtle: #24354f; /* control borders */
+  --border-strong: #354b6b; /* hover borders */
 
-  --text: #f5f5f4;
-  --text-muted: #9ca3af;
-  --text-faint: #525252;
+  --text: #f3f6fa;
+  --text-muted: #8fa3be;
+  --text-faint: #4d627e;
 
-  --gilt: #c5a073;
-  --gilt-bright: #d2b187;
-  --on-gilt: #090909;
-  --status-final: #4ade80;
-  --status-wip: #d08c57;
-  --status-draft: #9ca3af;
-  --danger: #e0655b;
-  --focus: #c5a073;
+  --gilt: #d4af72;
+  --gilt-bright: #e5c58a;
+  --on-gilt: #060b13;
+  --gilt-border: rgba(212, 175, 114, 0.34);
+  --gilt-dim: rgba(212, 175, 114, 0.14);
+  --ocean: #38bdf8;
+  --ocean-dim: rgba(56, 189, 248, 0.14);
+  --status-final: #2dd4bf;
+  --status-wip: #c99a6a;
+  --status-draft: #8fa3be;
+  --danger: #e06a6a;
+  --focus: #e5c58a;
 
   --space: 4px;
   --radius-sm: 6px;
@@ -40,11 +44,10 @@
   --blur-lg: 0px;
 
   /* ---- material layer ----
-     Matte variation: no blur, no grain, no specular. The gold ramp survives
-     only for thin rules, ticks and rings. */
-  --gilt-hi: #e0c9a6;
-  --gilt-core: #c5a073;
-  --gilt-lo: #8a6b45;
+     Gilt frames and Art-Deco glyphs; no blur, grain or glass. */
+  --gilt-hi: #f0d6a3;
+  --gilt-core: #d4af72;
+  --gilt-lo: #a17b43;
   --gilt-ramp: linear-gradient(135deg, var(--gilt-lo) 0%, var(--gilt) 50%, var(--gilt-lo) 100%);
   --gilt-edge: linear-gradient(
     90deg,
@@ -54,21 +57,20 @@
     var(--gilt-lo) 88%,
     transparent 100%
   );
+  --gilt-fill: linear-gradient(135deg, #e2c185 0%, #c89f5d 100%);
+  --gilt-fill-border: #f0d6a3;
+  --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
 
-  /* flat tinted chrome: the matte replacement for frosted glass */
   --glass-tint: var(--surface);
   --glass-spec: none;
-
-  /* static frost grain — disabled in the matte variation */
   --grain: none;
   --grain-opacity: 0;
 
-  /* hover wash: neutral lift, no specular band */
-  --sheen: rgba(245, 245, 244, 0.06);
+  /* hover wash: a cool deep-water lift */
+  --sheen: rgba(243, 246, 250, 0.05);
 
-  /* local font stacks (system-first; Inter when present) */
   --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Palatino Linotype', serif;
 
   --rail-width: 220px;
   --preview-width: 300px;
@@ -76,42 +78,48 @@
   --footer-height: 36px;
 }
 
-/* light ("ivory matte") overrides the neutrals; gold and statuses stay warm */
+/* light ("daylight ocean") overrides the neutrals; gilt/ocean stay shared */
 [data-theme='light'] {
   color-scheme: light;
 
-  --bg: #f6f3ed;
-  --surface: #fffdf9;
-  --surface-inset: #f0ece4;
-  --control: #f1ede5;
-  --control-hover: #eae5db;
-  --surface-glass: rgba(255, 253, 249, 0.88);
-  --hairline: #e0dbd1;
-  --border-subtle: #d5cfc4;
-  --border-strong: #c2bbae;
+  --bg: #f3f6fa;
+  --surface: #ffffff;
+  --surface-inset: #eaf0f7;
+  --control: #e9eff7;
+  --control-hover: #dfe8f3;
+  --surface-glass: rgba(255, 255, 255, 0.9);
+  --hairline: #dbe4ef;
+  --border-subtle: #cbd7e6;
+  --border-strong: #b0c2d8;
 
-  --text: #171614;
-  --text-muted: #6f6b63;
-  --text-faint: #9a948a;
+  --text: #101b2a;
+  --text-muted: #5b6b80;
+  --text-faint: #8b9aad;
 
   --gilt: #9e7836;
   --gilt-bright: #7f5f25;
-  --on-gilt: #fffdf9;
-  --status-final: #3f7d5c;
+  --on-gilt: #101b2a;
+  --gilt-border: rgba(158, 120, 54, 0.4);
+  --gilt-dim: rgba(158, 120, 54, 0.12);
+  --ocean: #0284c7;
+  --ocean-dim: rgba(2, 132, 199, 0.12);
+  --status-final: #0f766e;
   --status-wip: #a97648;
-  --status-draft: #6f6b63;
-  --danger: #a4574e;
+  --status-draft: #5b6b80;
+  --danger: #b3403a;
   --focus: #9e7836;
 
-  --gilt-hi: #c9a05a;
+  --gilt-hi: #e2c185;
   --gilt-core: #9e7836;
   --gilt-lo: #7d5c26;
+  --gilt-fill: linear-gradient(135deg, #c9a45f 0%, #a47c37 100%);
+  --gilt-fill-border: #b89354;
 
   --glass-tint: var(--surface);
   --glass-spec: none;
   --grain: none;
   --grain-opacity: 0;
-  --sheen: rgba(23, 22, 20, 0.05);
+  --sheen: rgba(16, 27, 42, 0.04);
 }
 
 /* semantic aliases */

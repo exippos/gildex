@@ -127,11 +127,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-ui);
-  font-weight: 500;
-  font-size: 13px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 16px;
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-faint);
   border: 1px solid var(--border-subtle);
 }
@@ -143,12 +144,12 @@
   z-index: 10;
   padding: 0 5px;
   background: var(--control);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-pill);
   font-size: 10px;
   line-height: 15px;
   font-variant-numeric: tabular-nums;
-  color: var(--text);
+  color: var(--gilt-bright);
   pointer-events: none;
 }
 
@@ -169,8 +170,8 @@
 .timeline-histogram {
   position: absolute;
   border-radius: var(--radius-sm);
-  background: var(--text-muted);
-  opacity: 0.4;
+  background: var(--ocean);
+  opacity: 0.3;
   pointer-events: none;
 }
 
@@ -186,7 +187,7 @@
   gap: 0;
   padding: 2px;
   background: var(--control);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-pill);
 }
 
@@ -201,7 +202,7 @@
 }
 
 .timeline-controls button:hover {
-  color: var(--text);
+  color: var(--gilt-bright);
   background: var(--control-hover);
 }
 

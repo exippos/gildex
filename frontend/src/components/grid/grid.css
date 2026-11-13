@@ -1,4 +1,4 @@
-/* Opaque item wall — matte background, no blur (glass contract D14). */
+/* Opaque item wall — deep ocean canvas (glass contract D14). */
 
 .grid-root {
   position: absolute;
@@ -29,18 +29,21 @@
   border-bottom: 1px solid var(--hairline);
 }
 
-/* gold section square, echoing the rail labels */
+/* gilded diamond section glyph */
 .grid-section::before {
   content: '';
   flex: 0 0 auto;
   width: 6px;
   height: 6px;
   background: var(--gilt);
+  transform: rotate(45deg);
 }
 
 .grid-section-label {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -51,8 +54,7 @@
   display: flex;
   gap: 8px;
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-faint);
   white-space: nowrap;
@@ -77,18 +79,19 @@
   padding: 4px 12px;
   border-radius: var(--radius-pill);
   background: var(--control);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--gilt-border);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--gilt);
 }
 
 .grid-loading-tick {
   width: 5px;
   height: 5px;
   background: var(--gilt);
+  transform: rotate(45deg);
 }
 
 .grid-empty {
@@ -97,7 +100,7 @@
   left: 0;
   right: 0;
   text-align: center;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 14px;
   pointer-events: none;
 }
@@ -112,7 +115,7 @@
   margin: 0;
   padding: 0 14px 0 8px;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--control);
   color: var(--text);
   text-align: left;
@@ -123,8 +126,18 @@
   transition: border-color 120ms linear, background-color 120ms linear;
 }
 
+/* inner Art-Deco hairline, as on the reference's cards */
+.session-card::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--gilt-dim);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
 .session-card:hover {
-  border-color: var(--border-strong);
+  border-color: var(--gilt-border);
   background: var(--control-hover);
   color: var(--text);
 }
@@ -135,7 +148,7 @@
 }
 
 .session-card.is-expanded {
-  border-color: var(--border-strong);
+  border-color: var(--gilt-border);
 }
 
 .session-card-thumb {
@@ -197,7 +210,7 @@
 }
 
 .session-card-label {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--text);
   white-space: nowrap;
@@ -228,6 +241,10 @@
   border-right: 5px solid transparent;
   border-top: 6px solid var(--text-faint);
   transition: transform 140ms linear;
+}
+
+.session-card:hover .session-card-chevron {
+  border-top-color: var(--gilt);
 }
 
 .session-card.is-expanded .session-card-chevron {

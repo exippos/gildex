@@ -20,16 +20,18 @@
 
 .ingest-title {
   margin: 0 0 4px;
-  font-size: 30px;
-  font-weight: 200;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
   color: var(--text);
   text-transform: capitalize;
 }
 
 .ingest-card {
-  border: 1px solid var(--border-subtle);
+  position: relative;
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-md);
   padding: 20px;
   background: var(--control);
@@ -38,12 +40,22 @@
   gap: 8px;
 }
 
+/* inner Art-Deco hairline, as on the reference cards */
+.ingest-card::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--gilt-dim);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
 .ingest-heading {
   margin: 0;
   font-size: 10px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--gilt);
   font-weight: 600;
 }
 
@@ -85,15 +97,16 @@
 }
 
 .ingest-form button.is-primary {
-  border-color: var(--gilt);
-  background: var(--gilt);
+  border-color: var(--gilt-fill-border);
+  background: var(--gilt-fill);
   color: var(--on-gilt);
 }
 
 .ingest-form button.is-primary:hover:not(:disabled) {
-  background: var(--gilt-bright);
+  background: var(--gilt-fill);
   border-color: var(--gilt-bright);
   color: var(--on-gilt);
+  filter: brightness(1.06);
 }
 
 .ingest-form input:disabled,
@@ -126,7 +139,7 @@
 .ingest-progress span {
   display: block;
   height: 100%;
-  background: var(--gilt-edge);
+  background: var(--ocean-gilt);
   transition: width 120ms linear;
 }
 
@@ -139,7 +152,7 @@
 }
 
 .ingest-drop {
-  border: 1px dashed var(--border-subtle);
+  border: 1px dashed var(--gilt-border);
   border-radius: var(--radius-md);
   padding: 28px 16px;
   text-align: center;
@@ -152,9 +165,11 @@
 
 .ingest-drop-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 300;
-  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gilt-bright);
 }
 
 .ingest-drop-hint {

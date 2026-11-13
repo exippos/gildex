@@ -1,5 +1,4 @@
-/* Right preview — matte fixed chrome; the gilt seam is drawn by the resize
-   handle. Sections use editorial labels and control-panel cards. */
+/* Right preview — ocean fixed chrome; gilded frames and serif entity titles. */
 
 .right-preview {
   position: relative;
@@ -16,7 +15,7 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   height: 34px;
   padding: 0 16px;
   border-bottom: 1px solid var(--hairline);
@@ -28,14 +27,15 @@
   width: 6px;
   height: 6px;
   background: var(--gilt);
+  transform: rotate(45deg);
 }
 
 .preview-kicker {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--gilt);
 }
 
 .preview-body {
@@ -52,7 +52,7 @@
   place-items: center;
   gap: 10px;
   background: var(--bg);
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--gilt-border);
   padding: 12px;
 }
 
@@ -79,9 +79,9 @@
 
 .preview-audio-label {
   font-size: 11px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--gilt);
 }
 
 .preview-missing {
@@ -100,7 +100,7 @@
 }
 
 .preview-missing .display {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 /* ---- sections ---- */
@@ -121,13 +121,13 @@
 .preview-section-label {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 8px;
+  color: var(--gilt);
+  margin-bottom: 9px;
 }
 
 .preview-section-label::before {
@@ -136,6 +136,7 @@
   width: 5px;
   height: 5px;
   background: var(--gilt);
+  transform: rotate(45deg);
 }
 
 .preview-filename {
@@ -152,12 +153,13 @@
 }
 
 .preview-title {
-  font-size: 20px;
-  font-weight: 200;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
   color: var(--text);
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
@@ -168,12 +170,14 @@
   color: var(--text-muted);
 }
 
+/* gilded double frame, as on the reference cards */
 .preview-prompt-box {
   margin: 0 0 8px;
   padding: 10px 12px;
-  border: 1px solid var(--border-subtle);
-  border-left: 2px solid var(--gilt);
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-sm);
+  outline: 1px solid var(--gilt-dim);
+  outline-offset: -4px;
   background: var(--control);
   font-size: 12px;
   line-height: 1.6;
@@ -182,7 +186,8 @@
 }
 
 .preview-negative-box {
-  border-left-color: var(--border-strong);
+  border-color: var(--border-subtle);
+  outline-color: transparent;
   background: transparent;
   font-size: 11px;
   line-height: 1.5;
@@ -195,9 +200,9 @@
   padding-right: 6px;
   border-right: 1px solid var(--border-subtle);
   font-size: 9px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--gilt);
 }
 
 .preview-params {
@@ -232,7 +237,7 @@
 .preview-fav {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   padding: 4px 12px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-pill);
@@ -241,18 +246,19 @@
 }
 
 .preview-fav:hover {
-  border-color: var(--border-strong);
+  border-color: var(--gilt-border);
   color: var(--text);
 }
 
 .preview-fav.is-on {
   border-color: var(--gilt);
-  color: var(--gilt);
+  color: var(--gilt-bright);
 }
 
 .preview-fav-mark {
   width: 6px;
   height: 6px;
+  transform: rotate(45deg);
   background: transparent;
   border: 1px solid var(--text-faint);
 }
@@ -260,14 +266,15 @@
 .preview-fav.is-on .preview-fav-mark {
   background: var(--gilt);
   border-color: var(--gilt);
+  box-shadow: 0 0 6px rgba(212, 175, 114, 0.55);
 }
 
 .preview-control-label {
   display: inline-block;
-  min-width: 48px;
+  min-width: 52px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
@@ -299,6 +306,7 @@
 .preview-rating-dot.is-on {
   background: var(--gilt);
   border-color: var(--gilt);
+  box-shadow: 0 0 6px rgba(212, 175, 114, 0.45);
 }
 
 .preview-status {
@@ -321,14 +329,14 @@
 }
 
 .preview-status-button:hover {
-  border-color: var(--border-subtle);
+  border-color: var(--gilt-border);
   background: var(--control);
   color: var(--text);
 }
 
 .preview-status-button.is-active {
   background: var(--control);
-  border-color: var(--border-subtle);
+  border-color: var(--gilt-border);
 }
 
 .preview-status-button.is-active[data-status='draft'] {
@@ -347,13 +355,13 @@
   padding-top: 12px;
 }
 
-/* primary action: solid gold, the one filled accent in the panel */
+/* primary action: the gilt gradient from the reference */
 .preview-inspect {
   width: 100%;
   padding: 9px 12px;
-  border: 1px solid var(--gilt);
+  border: 1px solid var(--gilt-fill-border);
   border-radius: var(--radius-sm);
-  background: var(--gilt);
+  background: var(--gilt-fill);
   color: var(--on-gilt);
   font-size: 11px;
   font-weight: 600;
@@ -362,7 +370,7 @@
 }
 
 .preview-inspect:hover {
-  background: var(--gilt-bright);
+  filter: brightness(1.06);
   border-color: var(--gilt-bright);
   color: var(--on-gilt);
 }

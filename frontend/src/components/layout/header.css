@@ -1,5 +1,5 @@
-/* Header — matte fixed chrome: squared brand mark + workspace nav left,
-   quiet icon controls right. Active nav is type-only; gold stays an edge. */
+/* Header — ocean chrome, gilt sunburst brand + type nav with a gold underline.
+   A second hairline sits just below the header seam. */
 
 .app-header {
   display: flex;
@@ -9,6 +9,24 @@
   z-index: 20;
 }
 
+/* double gilt hairline under the header (reference detail) */
+.app-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-border) 20%,
+    var(--gilt-border) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
 .app-brand {
   flex: 0 0 auto;
   display: inline-flex;
@@ -16,26 +34,30 @@
   gap: 10px;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--gilt);
   user-select: none;
 }
 
-/* brand mark: 14px gold outline with a 4px gold core */
-.app-brand::before {
-  content: '';
+.brand-mark {
   flex: 0 0 auto;
-  width: 14px;
-  height: 14px;
-  border: 1.5px solid var(--gilt);
-  background: linear-gradient(var(--gilt), var(--gilt)) center / 4px 4px no-repeat;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  color: var(--gilt);
+}
+
+.brand-mark svg {
+  width: 22px;
+  height: 22px;
 }
 
 .workspace-tabs {
   display: flex;
-  align-items: center;
-  align-self: center;
+  align-items: stretch;
+  align-self: stretch;
   gap: 24px;
 }
 
@@ -45,7 +67,7 @@
   align-items: center;
   border: 0;
   border-radius: 0;
-  padding: 6px 0;
+  padding: 0 2px;
   color: var(--text-muted);
   font-size: 13px;
   letter-spacing: 0.01em;
@@ -54,7 +76,13 @@
 }
 
 .workspace-tab::after {
-  display: none;
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: transparent;
 }
 
 .workspace-tab:hover {
@@ -67,6 +95,10 @@
   font-weight: 500;
 }
 
+.workspace-tab.is-active::after {
+  background: var(--gilt);
+}
+
 .workspace-tab.is-busy::before {
   content: '';
   position: absolute;
@@ -74,9 +106,8 @@
   right: -10px;
   width: 5px;
   height: 5px;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  background: var(--gilt);
+  transform: translateY(-50%) rotate(45deg);
+  background: var(--gilt-bright);
   animation: header-pulse 1s ease-in-out infinite;
 }
 
@@ -99,20 +130,20 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 1px solid transparent;
+  border: 1px solid var(--gilt-border);
   border-radius: var(--radius-pill);
-  color: var(--text-muted);
-  background: transparent;
+  color: var(--gilt);
+  background: var(--control);
 }
 
 .theme-toggle:hover,
 .effects-toggle:hover {
-  color: var(--text);
-  background: var(--control);
-  border-color: var(--border-subtle);
+  color: var(--gilt-bright);
+  background: var(--control-hover);
+  border-color: var(--gilt-bright);
 }
 
 .theme-toggle svg,
@@ -122,14 +153,14 @@
 }
 
 .effects-toggle.is-on {
-  color: var(--gilt);
+  color: var(--gilt-bright);
 }
 
 /* reduced state: a hairline slash across the faceted mark */
 .effects-slash {
   position: absolute;
-  left: 7px;
-  right: 7px;
+  left: 9px;
+  right: 9px;
   top: 50%;
   height: 1px;
   transform: rotate(-45deg);

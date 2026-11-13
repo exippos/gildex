@@ -22,7 +22,7 @@ body {
 }
 
 ::selection {
-  background: rgba(197, 160, 115, 0.28);
+  background: rgba(212, 175, 114, 0.26);
   color: var(--text);
 }
 
@@ -38,7 +38,7 @@ button {
   transition: color 120ms linear, border-color 120ms linear, background-color 120ms linear;
 }
 button:hover {
-  border-color: var(--border-strong);
+  border-color: var(--gilt-border);
   color: var(--text);
 }
 button:focus-visible,
@@ -65,9 +65,10 @@ textarea::placeholder {
   color: var(--text-faint);
 }
 
+/* thin ocean scrollbar from the reference */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border-subtle);
@@ -80,13 +81,12 @@ textarea::placeholder {
   background: transparent;
 }
 
-/* Editorial sans label. Component classes own weight, size, tracking and
-   case; this keeps the former display face on the UI stack. */
+/* Sans base; serif moments are opted into by the component styles. */
 .display {
   font-family: var(--font-ui);
 }
 
-/* Fixed chrome: matte panel, flat fill. No blur or grain (editorial matte). */
+/* Fixed chrome: flat ocean panel. No blur or grain. */
 .chrome {
   position: relative;
   background: var(--glass-tint);

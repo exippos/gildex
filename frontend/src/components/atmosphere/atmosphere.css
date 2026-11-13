@@ -1,4 +1,5 @@
 /* Atmosphere: one low-resolution fragment-shader wall behind the gallery grid.
+   Gilded-ocean variant: deep navy field with a gold/ocean ring.
    Static CSS fallback shows if WebGL is unavailable (canvas paints nothing). */
 .atmosphere {
   position: absolute;
@@ -9,14 +10,14 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(90% 70% at 50% 15%, rgba(197, 160, 115, 0.03), transparent 60%),
-    radial-gradient(120% 90% at 50% 100%, rgba(22, 22, 22, 0.9), transparent 70%),
+    radial-gradient(90% 70% at 50% 15%, rgba(56, 189, 248, 0.05), transparent 60%),
+    radial-gradient(120% 90% at 50% 100%, rgba(212, 175, 114, 0.05), transparent 70%),
     var(--bg);
 }
 
 [data-theme='light'] .atmosphere {
   background:
-    radial-gradient(90% 70% at 50% 15%, rgba(158, 120, 54, 0.03), transparent 60%),
-    radial-gradient(120% 90% at 50% 100%, rgba(234, 229, 219, 0.9), transparent 70%),
+    radial-gradient(90% 70% at 50% 15%, rgba(2, 132, 199, 0.04), transparent 60%),
+    radial-gradient(120% 90% at 50% 100%, rgba(158, 120, 54, 0.03), transparent 70%),
     var(--bg);
 }

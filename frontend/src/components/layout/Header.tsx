@@ -41,6 +41,16 @@ export function Header() {
   return (
     <header className="app-header chrome">
       <span className="app-brand display" aria-hidden="true">
+        <span className="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3">
+            <polygon points="12,2 22,12 12,22 2,12" />
+            <circle cx="12" cy="12" r="4.5" />
+            <line x1="12" y1="2" x2="12" y2="7.5" />
+            <line x1="12" y1="16.5" x2="12" y2="22" />
+            <line x1="2" y1="12" x2="7.5" y2="12" />
+            <line x1="16.5" y1="12" x2="22" y2="12" />
+          </svg>
+        </span>
         gildex
       </span>
 
