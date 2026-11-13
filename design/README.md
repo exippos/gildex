@@ -6,10 +6,26 @@ browser and read it as a picture with CSS.
 
 ```
 open design/gilded-ocean-bento-ui.html      # or drag into a browser
+open design/compare.html                    # 2×2 live theme board (see below)
 ```
 
 No build step, no server. The only network request is the Google Fonts
 stylesheet; offline, the stacks fall back to system sans/serif.
+
+## Compare board
+
+`design/compare.html` is a local review tool, not a mockup. It embeds four
+copies of the running app at a scaled 1440×900 viewport, one per implemented
+theme, with a theme selector and full-size link per pane.
+
+```
+go run . -listen :8080          # app on http://localhost:8080
+open design/compare.html        # or: ?base=http://localhost:5173/
+```
+
+Each pane is independent; the app themes are selected with `?theme=` and the
+board remembers its layout in the URL:
+`?a=gilded&b=dark-bento&c=sage&d=copper&base=http://localhost:8080/`.
 
 ## Catalogue
 
