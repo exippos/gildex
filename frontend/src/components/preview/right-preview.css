@@ -266,7 +266,7 @@
 .preview-fav.is-on .preview-fav-mark {
   background: var(--gilt);
   border-color: var(--gilt);
-  box-shadow: 0 0 6px rgba(212, 175, 114, 0.55);
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 
 .preview-control-label {
@@ -306,7 +306,7 @@
 .preview-rating-dot.is-on {
   background: var(--gilt);
   border-color: var(--gilt);
-  box-shadow: 0 0 6px rgba(212, 175, 114, 0.45);
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 
 .preview-status {

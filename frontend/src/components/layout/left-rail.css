@@ -82,7 +82,7 @@
 
 .rail-nav-item.is-active::before {
   background: var(--gilt);
-  box-shadow: 0 0 6px rgba(212, 175, 114, 0.55);
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 
 /* ---- surface content ---- */

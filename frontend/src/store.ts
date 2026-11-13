@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { api } from './api'
 import type { DroppedFile } from './api'
+import { applyTheme, initialTheme, persistTheme, syncThemeUrl, type Theme } from './theme'
 import type {
   Collection,
   FolderNode,
@@ -95,6 +96,8 @@ interface AppState {
   notes: Note[]
 
   // presentation
+  theme: Theme
+  setTheme: (theme: Theme) => void
   effects: EffectsMode
   setEffects: (mode: EffectsMode) => void
 
@@ -192,6 +195,14 @@ export const useStore = create<AppState>((set, get) => ({
   collectionPicker: null,
 
   notes: [],
+
+  theme: initialTheme,
+  setTheme: (theme) => {
+    applyTheme(theme)
+    persistTheme(theme)
+    syncThemeUrl(theme)
+    set({ theme })
+  },
 
   effects: initialEffects,
   setEffects: (mode) => {

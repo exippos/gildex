@@ -1,13 +1,49 @@
-/* GILDEX design tokens — "gilded ocean" variation.
-   Reference: design/gilded-ocean-bento-ui.html (deep ocean + gilt, Art-Deco
-   sunburst, gilded frames, ocean-blue accent). Layout is unchanged; only the
-   material, palette and type treatment are reworked. Zero network: fonts are
-   local stacks, Cormorant when present, Georgia otherwise. */
+/* GILDEX design tokens — four UI themes over one shared shell.
+   References: design/gilded-ocean-bento-ui.html (default),
+   design/editorial-matte-bento-ui.html,
+   design/scandinavian-green-gilded-bento-ui.html,
+   design/ivory-copper-bento-ui.html.
+
+   The light/dark mode switch is gone: each theme is a complete, fixed
+   appearance. `data-theme` names the UI theme. Layout and behaviour are
+   shared; only palette, type and material tokens change. */
 
 :root {
+  /* ---- structure (shared) ---- */
+  --space: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+  --blur: 0px;
+  --blur-lg: 0px;
+
+  --rail-width: 220px;
+  --preview-width: 300px;
+  --header-height: 56px;
+  --footer-height: 36px;
+
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Palatino Linotype', serif;
+
+  --glass-spec: none;
+  --grain: none;
+  --grain-opacity: 0;
+  --gilt-ramp: linear-gradient(135deg, var(--gilt-lo) 0%, var(--gilt) 50%, var(--gilt-lo) 100%);
+  --gilt-edge: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-lo) 12%,
+    var(--gilt) 50%,
+    var(--gilt-lo) 88%,
+    transparent 100%
+  );
+
+  /* =====================================================================
+     GILDED OCEAN (default) — deep navy + gilt, Art-Deco framing.
+     ===================================================================== */
   color-scheme: dark;
 
-  /* dark ("abyssal ocean") is default */
   --bg: #060b13; /* app canvas */
   --surface: #0b121e; /* chrome / panels */
   --surface-inset: #08101c; /* wells, media beds */
@@ -35,91 +71,216 @@
   --danger: #e06a6a;
   --focus: #e5c58a;
 
-  --space: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-pill: 9999px;
-  --blur: 0px;
-  --blur-lg: 0px;
-
-  /* ---- material layer ----
-     Gilt frames and Art-Deco glyphs; no blur, grain or glass. */
   --gilt-hi: #f0d6a3;
   --gilt-core: #d4af72;
   --gilt-lo: #a17b43;
-  --gilt-ramp: linear-gradient(135deg, var(--gilt-lo) 0%, var(--gilt) 50%, var(--gilt-lo) 100%);
-  --gilt-edge: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--gilt-lo) 12%,
-    var(--gilt) 50%,
-    var(--gilt-lo) 88%,
-    transparent 100%
-  );
   --gilt-fill: linear-gradient(135deg, #e2c185 0%, #c89f5d 100%);
   --gilt-fill-border: #f0d6a3;
   --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
 
   --glass-tint: var(--surface);
-  --glass-spec: none;
-  --grain: none;
-  --grain-opacity: 0;
-
-  /* hover wash: a cool deep-water lift */
   --sheen: rgba(243, 246, 250, 0.05);
 
-  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Palatino Linotype', serif;
-
-  --rail-width: 220px;
-  --preview-width: 300px;
-  --header-height: 56px;
-  --footer-height: 36px;
+  --selection: rgba(212, 175, 114, 0.26);
+  --accent-glow: rgba(212, 175, 114, 0.55);
+  --scrim: rgba(6, 11, 19, 0.78);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --inner-rule: var(--gilt-dim);
+  --inner-rule-display: block;
+  --header-rule: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-border) 20%,
+    var(--gilt-border) 80%,
+    transparent 100%
+  );
+  --header-rule-display: block;
 }
 
-/* light ("daylight ocean") overrides the neutrals; gilt/ocean stay shared */
-[data-theme='light'] {
-  color-scheme: light;
+/* =======================================================================
+   DARK BENTO — charcoal + gold, flat matte surfaces, no framing ornaments.
+   ======================================================================= */
+html[data-theme='dark-bento'] {
+  color-scheme: dark;
 
-  --bg: #f3f6fa;
-  --surface: #ffffff;
-  --surface-inset: #eaf0f7;
-  --control: #e9eff7;
-  --control-hover: #dfe8f3;
-  --surface-glass: rgba(255, 255, 255, 0.9);
-  --hairline: #dbe4ef;
-  --border-subtle: #cbd7e6;
-  --border-strong: #b0c2d8;
+  --bg: #090909;
+  --surface: #0f0f0f;
+  --surface-inset: #0b0b0b;
+  --control: #161616;
+  --control-hover: #1c1c1c;
+  --surface-glass: rgba(15, 15, 15, 0.88);
+  --hairline: #222222;
+  --border-subtle: #2a2a2a;
+  --border-strong: #3a3a3a;
 
-  --text: #101b2a;
-  --text-muted: #5b6b80;
-  --text-faint: #8b9aad;
+  --text: #f5f5f4;
+  --text-muted: #9ca3af;
+  --text-faint: #525252;
 
-  --gilt: #9e7836;
-  --gilt-bright: #7f5f25;
-  --on-gilt: #101b2a;
-  --gilt-border: rgba(158, 120, 54, 0.4);
-  --gilt-dim: rgba(158, 120, 54, 0.12);
-  --ocean: #0284c7;
-  --ocean-dim: rgba(2, 132, 199, 0.12);
-  --status-final: #0f766e;
-  --status-wip: #a97648;
-  --status-draft: #5b6b80;
-  --danger: #b3403a;
-  --focus: #9e7836;
+  --gilt: #c5a073;
+  --gilt-bright: #d2b187;
+  --on-gilt: #090909;
+  --gilt-border: rgba(197, 160, 115, 0.32);
+  --gilt-dim: rgba(197, 160, 115, 0.12);
+  --ocean: #a8895d;
+  --ocean-dim: rgba(168, 137, 93, 0.12);
+  --status-final: #4ade80;
+  --status-wip: #d08c57;
+  --status-draft: #9ca3af;
+  --danger: #e0655b;
+  --focus: #c5a073;
 
-  --gilt-hi: #e2c185;
-  --gilt-core: #9e7836;
-  --gilt-lo: #7d5c26;
-  --gilt-fill: linear-gradient(135deg, #c9a45f 0%, #a47c37 100%);
-  --gilt-fill-border: #b89354;
+  --gilt-hi: #e0c9a6;
+  --gilt-core: #c5a073;
+  --gilt-lo: #8a6b45;
+  --gilt-fill: #c5a073;
+  --gilt-fill-border: #c5a073;
+  --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
 
   --glass-tint: var(--surface);
-  --glass-spec: none;
-  --grain: none;
-  --grain-opacity: 0;
-  --sheen: rgba(16, 27, 42, 0.04);
+  --sheen: rgba(245, 245, 244, 0.06);
+
+  --selection: rgba(197, 160, 115, 0.24);
+  --accent-glow: transparent;
+  --scrim: rgba(9, 9, 9, 0.82);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --inner-rule: var(--border-subtle);
+  --inner-rule-display: none;
+  --header-rule: none;
+  --header-rule-display: none;
+
+  /* editorial matte uses the sans stack for display moments */
+  --font-display: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* =======================================================================
+   SCANDINAVIAN SAGE — forest green + brass, botanical calm.
+   ======================================================================= */
+html[data-theme='sage'] {
+  color-scheme: dark;
+
+  --bg: #0b120f;
+  --surface: #111b17;
+  --surface-inset: #0d1713;
+  --control: #182520;
+  --control-hover: #1e2d27;
+  --surface-glass: rgba(17, 27, 23, 0.9);
+  --hairline: #22322b;
+  --border-subtle: #2d4138;
+  --border-strong: #3b5247;
+
+  --text: #f2f5f0;
+  --text-muted: #9bb0a5;
+  --text-faint: #5c7267;
+
+  --gilt: #d4af72;
+  --gilt-bright: #e6c792;
+  --on-gilt: #0b120f;
+  --gilt-border: rgba(212, 175, 114, 0.34);
+  --gilt-dim: rgba(212, 175, 114, 0.14);
+  --ocean: #6ee7b7;
+  --ocean-dim: rgba(110, 231, 183, 0.14);
+  --status-final: #6ee7b7;
+  --status-wip: #c99a6a;
+  --status-draft: #9bb0a5;
+  --danger: #e06a6a;
+  --focus: #e6c792;
+
+  --gilt-hi: #f0d6a3;
+  --gilt-core: #d4af72;
+  --gilt-lo: #a17b43;
+  --gilt-fill: linear-gradient(135deg, #e6c792 0%, #c9a45f 100%);
+  --gilt-fill-border: #f0d6a3;
+  --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
+
+  --glass-tint: var(--surface);
+  --sheen: rgba(242, 245, 240, 0.05);
+
+  --selection: rgba(212, 175, 114, 0.24);
+  --accent-glow: rgba(212, 175, 114, 0.5);
+  --scrim: rgba(11, 18, 15, 0.82);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --inner-rule: var(--gilt-dim);
+  --inner-rule-display: block;
+  --header-rule: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-border) 20%,
+    var(--gilt-border) 80%,
+    transparent 100%
+  );
+  --header-rule-display: block;
+
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Palatino Linotype', serif;
+}
+
+/* =======================================================================
+   IVORY COPPER — warm light canvas, copper accents, archival paper.
+   ======================================================================= */
+html[data-theme='copper'] {
+  color-scheme: light;
+
+  --bg: #faf7f2;
+  --surface: #f3ede4;
+  --surface-inset: #efe7db;
+  --control: #ebe2d6;
+  --control-hover: #e5d9c8;
+  --surface-glass: rgba(250, 247, 242, 0.9);
+  --hairline: #dfd4c6;
+  --border-subtle: #d2c3b2;
+  --border-strong: #c0ad98;
+
+  --text: #1f1b18;
+  --text-muted: #685d55;
+  --text-faint: #9c8f85;
+
+  --gilt: #a84a28;
+  --gilt-bright: #c4623d;
+  --on-gilt: #faf7f2;
+  --gilt-border: rgba(168, 74, 40, 0.32);
+  --gilt-dim: rgba(168, 74, 40, 0.1);
+  --ocean: #c4623d;
+  --ocean-dim: rgba(196, 98, 61, 0.12);
+  --status-final: #2b7a58;
+  --status-wip: #a97648;
+  --status-draft: #685d55;
+  --danger: #a4574e;
+  --focus: #a84a28;
+
+  --gilt-hi: #d98a68;
+  --gilt-core: #a84a28;
+  --gilt-lo: #85361a;
+  --gilt-fill: linear-gradient(135deg, #c4623d 0%, #a84a28 100%);
+  --gilt-fill-border: #85361a;
+  --ocean-gilt: linear-gradient(90deg, var(--ocean) 0%, var(--gilt) 100%);
+
+  --glass-tint: var(--surface);
+  --sheen: rgba(31, 27, 24, 0.04);
+
+  --selection: rgba(168, 74, 40, 0.2);
+  --accent-glow: rgba(168, 74, 40, 0.35);
+  --scrim: rgba(31, 27, 24, 0.8);
+  --shadow-float: 0 10px 30px rgba(74, 47, 29, 0.18);
+  --shadow-modal: 0 24px 64px rgba(74, 47, 29, 0.22);
+  --inner-rule: var(--gilt-dim);
+  --inner-rule-display: block;
+  --header-rule: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gilt-border) 20%,
+    var(--gilt-border) 80%,
+    transparent 100%
+  );
+  --header-rule-display: block;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Palatino Linotype', serif;
 }
 
 /* semantic aliases */

@@ -45,8 +45,9 @@
   content: '';
   position: absolute;
   inset: 3px;
-  border: 1px solid var(--gilt-dim);
+  border: 1px solid var(--inner-rule);
   border-radius: 4px;
+  display: var(--inner-rule-display);
   pointer-events: none;
 }
 

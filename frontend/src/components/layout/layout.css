@@ -65,7 +65,7 @@
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
   padding: 3px 10px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;

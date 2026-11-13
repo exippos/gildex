@@ -1,9 +1,9 @@
 // Experimental WebGL atmosphere layer: one low-resolution full-screen shader
-// painted behind the gallery grid. Renders at a fixed 0.3 scale (the CSS
-// upscales it), capped at 30fps, paused while the document is hidden. If WebGL
-// or shader compilation is unavailable it simply paints nothing and the CSS
-// fallback on the canvas remains visible.
+// painted behind the gallery grid for the gilded theme. Other themes use a
+// static CSS background on the same element. Renders at a fixed 0.3 scale (the
+// CSS upscales it), capped at 30fps, paused while the document is hidden.
 import { useEffect, useRef } from 'react'
+import { useStore } from '../../store'
 import './atmosphere.css'
 
 const RENDER_SCALE = 0.3
@@ -20,7 +20,6 @@ const FRAG_SRC = `
 precision mediump float;
 uniform float u_time;
 uniform vec2 u_res;
-uniform float u_theme;
 
 float hash(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -52,11 +51,10 @@ void main() {
   vec3 deep = mix(vec3(0.024, 0.043, 0.075), vec3(0.055, 0.086, 0.130), field);
   vec3 gilt = mix(vec3(0.420, 0.330, 0.195), vec3(0.830, 0.690, 0.480), field);
   vec3 ocean = mix(vec3(0.080, 0.250, 0.380), vec3(0.220, 0.740, 0.970), field);
-  vec3 light = mix(vec3(0.953, 0.965, 0.980), vec3(0.898, 0.925, 0.957), field);
 
-  vec3 base = mix(deep, light, u_theme);
+  vec3 base = deep;
   vec3 ring = mix(ocean, gilt, smoothstep(0.0, 0.35, field));
-  vec3 col = mix(base, ring, band * (0.10 + 0.03 * u_theme));
+  vec3 col = mix(base, ring, band * 0.10);
 
   float vignette = smoothstep(1.05, 0.25, r);
   col *= mix(0.9, 1.0, vignette);
@@ -66,9 +64,12 @@ void main() {
 `
 
 export function Atmosphere() {
+  const theme = useStore((s) => s.theme)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
+    if (theme !== 'gilded') return
+
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -90,7 +91,6 @@ export function Atmosphere() {
     let aPos = -1
     let uTime: WebGLUniformLocation | null = null
     let uRes: WebGLUniformLocation | null = null
-    let uTheme: WebGLUniformLocation | null = null
 
     let raf = 0
     let observer: ResizeObserver | null = null
@@ -148,7 +148,6 @@ export function Atmosphere() {
 
       gl.uniform1f(uTime, (now - start) / 1000)
       gl.uniform2f(uRes, canvas.width, canvas.height)
-      gl.uniform1f(uTheme, document.documentElement.dataset.theme === 'light' ? 1 : 0)
 
       gl.enableVertexAttribArray(aPos)
       gl.clear(gl.COLOR_BUFFER_BIT)
@@ -200,7 +199,6 @@ export function Atmosphere() {
 
       uTime = gl.getUniformLocation(program, 'u_time')
       uRes = gl.getUniformLocation(program, 'u_res')
-      uTheme = gl.getUniformLocation(program, 'u_theme')
 
       buffer = gl.createBuffer()
       if (!buffer) throw new Error('atmosphere: could not create buffer')
@@ -236,7 +234,8 @@ export function Atmosphere() {
     }
 
     return dispose
-  }, [])
+  }, [theme])
 
+  if (theme !== 'gilded') return <div className="atmosphere" aria-hidden="true" />
   return <canvas ref={canvasRef} className="atmosphere" aria-hidden="true" />
 }

@@ -134,7 +134,7 @@
   height: 7px;
   transform: rotate(45deg);
   background: var(--gilt);
-  box-shadow: 0 0 8px rgba(212, 175, 114, 0.55);
+  box-shadow: 0 0 8px var(--accent-glow);
   z-index: 2;
 }
 
@@ -148,7 +148,7 @@
   gap: 6px;
   padding: 3px 6px;
   border-radius: 4px;
-  background: rgba(6, 11, 19, 0.78);
+  background: var(--scrim);
   pointer-events: none;
 }
 

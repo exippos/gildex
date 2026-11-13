@@ -22,7 +22,7 @@ body {
 }
 
 ::selection {
-  background: rgba(212, 175, 114, 0.26);
+  background: var(--selection);
   color: var(--text);
 }
 
