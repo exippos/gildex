@@ -3,7 +3,7 @@
 export type Kind = 'image' | 'video' | 'audio'
 export type Status = 'draft' | 'final' | 'wip'
 export type State = 'present' | 'missing'
-export type Surface = 'sessions' | 'collections' | 'folders' | 'tags'
+export type Surface = 'all' | 'sessions' | 'collections' | 'folders' | 'tags'
 export type Workspace = 'ingest' | 'gallery' | 'timeline'
 export type OwnerType = 'item' | 'session' | 'collection'
 export type ItemSort = 'time' | 'filename' | 'size' | 'session'

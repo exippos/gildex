@@ -332,7 +332,12 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
 
         {!item && !session && !collection && (
           <div className="preview-section preview-minimal">
-            {surface === 'folders' ? (
+            {surface === 'all' ? (
+              <>
+                <span className="preview-title display">library</span>
+                <span className="preview-sub">{itemsTotal} items in this library</span>
+              </>
+            ) : surface === 'folders' ? (
               <>
                 <span className="preview-title display">
                   {activeFolder ?? 'directories'}

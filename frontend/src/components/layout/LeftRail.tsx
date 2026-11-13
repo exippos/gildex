@@ -9,6 +9,7 @@ import { formatRange } from '../format'
 import './left-rail.css'
 
 const TABS: ReadonlyArray<{ id: Surface; label: string }> = [
+  { id: 'all', label: 'All' },
   { id: 'sessions', label: 'Sessions' },
   { id: 'collections', label: 'Collections' },
   { id: 'folders', label: 'Folders' },
@@ -24,6 +25,7 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
   const sessions = useStore((s) => s.sessions)
   const collections = useStore((s) => s.collections)
   const tags = useStore((s) => s.tags)
+  const library = useStore((s) => s.library)
   const activeSessionId = useStore((s) => s.activeSessionId)
   const activeCollectionId = useStore((s) => s.activeCollectionId)
   const activeTagFilters = useStore((s) => s.activeTagFilters)
@@ -76,6 +78,17 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
       </div>
 
       <div className="rail-body">
+        {surface === 'all' && (
+          <>
+            <div className="rail-label">library</div>
+            <div className="rail-hint">
+              {library?.rootSet
+                ? `${library.itemCount} ${library.itemCount === 1 ? 'item' : 'items'} in ${library.root}`
+                : 'no library root set'}
+            </div>
+          </>
+        )}
+
         {surface === 'sessions' && (
           <>
             <div className="rail-label">sessions</div>
