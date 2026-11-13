@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react'
 import { useStore } from '../../store'
 import { thumbUrl } from '../../api'
 import type { Item } from '../../types'
+import { setDraggedItems } from '../groups/drag'
 import './grid-cell.css'
 
 interface GridCellProps {
@@ -107,6 +108,14 @@ export function GridCell({ item, selected, style }: GridCellProps) {
       aria-pressed={selected}
       aria-label={`${item.kind} ${item.relativePath}`}
       title={item.relativePath}
+      draggable
+      onDragStart={(event) => {
+        // Dragging a selected cell carries the whole selection; dragging an
+        // unselected one carries just that item.
+        const selection = useStore.getState().selection
+        const ids = selection.includes(item.id) ? selection : [item.id]
+        setDraggedItems(event.dataTransfer, ids)
+      }}
       onClick={(event) => {
         setPreviewItemId(item.id)
         if (event.shiftKey) {

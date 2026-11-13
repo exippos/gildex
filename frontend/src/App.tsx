@@ -4,13 +4,13 @@ import { useEffect } from 'react'
 import { useStore } from './store'
 import { Layout } from './components/layout/Layout'
 import { Inspector } from './components/inspector/Inspector'
-import { CollectionModal } from './components/collections/CollectionModal'
+import { GroupEditor } from './components/groups/GroupEditor'
 import { CollectionPicker } from './components/collections/CollectionPicker'
 
 export default function App() {
   const init = useStore((s) => s.init)
   const inspector = useStore((s) => s.inspector)
-  const collectionModal = useStore((s) => s.collectionModal)
+  const groupEditor = useStore((s) => s.groupEditor)
   const collectionPicker = useStore((s) => s.collectionPicker)
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function App() {
     <>
       <Layout />
       {inspector && <Inspector />}
-      {collectionModal && <CollectionModal />}
+      {groupEditor && <GroupEditor />}
       {collectionPicker && <CollectionPicker />}
     </>
   )

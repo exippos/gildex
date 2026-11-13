@@ -192,6 +192,7 @@ function ItemPreview({ item }: { item: Item }) {
 
 function SessionPreview({ session, items }: { session: Session; items: Item[] }) {
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
+  const openGroupEditor = useStore((s) => s.openGroupEditor)
   const thumbs = items
     .filter((item) => item.sessionId === session.id && item.thumbnailPath)
     .slice(0, 12)
@@ -232,6 +233,16 @@ function SessionPreview({ session, items }: { session: Session; items: Item[] })
           )}
         </div>
       </div>
+
+      <div className="preview-section preview-actions">
+        <button
+          type="button"
+          className="preview-edit-group"
+          onClick={() => openGroupEditor('session', session.id)}
+        >
+          Edit session
+        </button>
+      </div>
     </>
   )
 }
@@ -244,6 +255,7 @@ function CollectionPreview({
   items: Item[]
 }) {
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
+  const openGroupEditor = useStore((s) => s.openGroupEditor)
   const thumbs = items.filter((item) => item.thumbnailPath).slice(0, 9)
 
   return (
@@ -278,6 +290,16 @@ function CollectionPreview({
             <span className="preview-empty-line">no thumbnails yet</span>
           )}
         </div>
+      </div>
+
+      <div className="preview-section preview-actions">
+        <button
+          type="button"
+          className="preview-edit-group"
+          onClick={() => openGroupEditor('collection', collection.id)}
+        >
+          Edit collection
+        </button>
       </div>
     </>
   )

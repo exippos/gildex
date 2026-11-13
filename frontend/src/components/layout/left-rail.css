@@ -85,6 +85,12 @@
   box-shadow: 0 0 6px var(--accent-glow);
 }
 
+.rail-nav-item.is-drop-target {
+  color: var(--gilt-bright);
+  border-color: var(--gilt);
+  background: var(--gilt-dim);
+}
+
 /* ---- surface content ---- */
 
 .rail-body {
@@ -266,4 +272,58 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* ---- editable group rows ---- */
+
+.rail-row-wrap {
+  position: relative;
+}
+
+.rail-row-wrap .rail-row {
+  padding-right: 38px;
+}
+
+.rail-row-edit {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  padding: 1px 5px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  opacity: 0;
+  transition: opacity 120ms linear, color 120ms linear, border-color 120ms linear;
+}
+
+.rail-row-wrap:hover .rail-row-edit,
+.rail-row-wrap:focus-within .rail-row-edit {
+  opacity: 1;
+}
+
+.rail-row-edit:hover {
+  border-color: var(--gilt-border);
+  color: var(--gilt-bright);
+}
+
+/* item drag hovering a session / collection row */
+.rail-row-wrap.is-drop-target .rail-row {
+  border-color: var(--gilt);
+  background: var(--gilt-dim);
+  box-shadow: inset 2px 0 0 var(--gilt);
+}
+
+.rail-new.is-drop-target {
+  border-style: solid;
+  border-color: var(--gilt-bright);
+  background: var(--gilt-dim);
+  color: var(--gilt-bright);
+}
+
+.rail-hint-error {
+  color: var(--danger);
 }

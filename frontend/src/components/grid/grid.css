@@ -228,6 +228,22 @@
   border-color: var(--gilt-border);
 }
 
+/* item drag hovering a group: the tile becomes an obvious drop target */
+.group-tile.is-drop-target .group-tile-poster {
+  border-color: var(--gilt-bright);
+  box-shadow: 0 0 0 1px var(--gilt), 0 0 20px var(--accent-glow);
+}
+
+.group-tile.is-drop-target .group-tile-scrim,
+.group-tile.is-drop-target .group-tile-text {
+  opacity: 1;
+}
+
+.group-tile.is-drop-target .group-tile-chevron {
+  border-color: var(--gilt-bright);
+  background: var(--gilt-dim);
+}
+
 /* ---- open root: full gilded fill, the "you are here" marker ---- */
 
 .group-tile.is-open .group-tile-poster {

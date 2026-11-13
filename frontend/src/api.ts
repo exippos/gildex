@@ -102,8 +102,8 @@ export const api = {
   batch: (patch: BatchPatch) => request<{ ok: boolean }>('PATCH', '/items/batch', patch),
 
   sessions: () => request<Session[]>('GET', '/sessions'),
-  renameSession: (id: string, label: string) =>
-    request<Session>('PATCH', `/sessions/${id}`, { label }),
+  updateSession: (id: string, body: { label?: string; coverItemId?: string | null }) =>
+    request<Session>('PATCH', `/sessions/${id}`, body),
 
   tags: () => request<Tag[]>('GET', '/tags'),
   createTag: (name: string) => request<Tag>('POST', '/tags', { name }),
@@ -112,7 +112,7 @@ export const api = {
   collections: () => request<Collection[]>('GET', '/collections'),
   createCollection: (body: { name: string; description?: string }) =>
     request<Collection>('POST', '/collections', body),
-  updateCollection: (id: string, body: { name?: string; description?: string; order?: string[] }) =>
+  updateCollection: (id: string, body: { name?: string; description?: string; order?: string[]; coverItemId?: string | null }) =>
     request<Collection>('PATCH', `/collections/${id}`, body),
   deleteCollection: (id: string) => request<void>('DELETE', `/collections/${id}`),
   addToCollection: (id: string, itemIds: string[]) =>

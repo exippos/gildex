@@ -4,6 +4,7 @@ export type Kind = 'image' | 'video' | 'audio'
 export type Status = 'draft' | 'final' | 'wip'
 export type State = 'present' | 'missing'
 export type Surface = 'all' | 'sessions' | 'collections' | 'folders' | 'tags'
+export type GroupType = 'session' | 'collection'
 export type Workspace = 'ingest' | 'gallery' | 'timeline'
 export type OwnerType = 'item' | 'session' | 'collection'
 export type ItemSort = 'time' | 'filename' | 'size' | 'session'
@@ -44,6 +45,7 @@ export interface Session {
   endsAt: number
   itemCount: number
   thumbnailPath: string
+  coverItemId: string | null
 }
 
 export interface Tag {
@@ -58,6 +60,7 @@ export interface Collection {
   description: string
   itemCount: number
   thumbnailPath: string
+  coverItemId: string | null
 }
 
 export interface Note {

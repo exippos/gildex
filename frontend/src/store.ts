@@ -7,6 +7,7 @@ import { applyTheme, initialTheme, persistTheme, syncThemeUrl, type Theme } from
 import type {
   Collection,
   FolderNode,
+  GroupType,
   ImportStatus,
   Item,
   ItemSort,
@@ -40,6 +41,23 @@ export function collectionItemsKey(
   sortDir: SortDir,
 ): string {
   return [id, search, tagFilters.join(','), sort, sortDir].join('|')
+}
+
+// Drops every cached page for one collection after its membership changed.
+function clearCollectionCache(
+  state: Pick<AppState, 'collectionItems' | 'collectionLoading'>,
+  id: string,
+): Pick<AppState, 'collectionItems' | 'collectionLoading'> {
+  const prefix = id + '|'
+  const collectionItems: Record<string, Item[]> = {}
+  for (const [key, value] of Object.entries(state.collectionItems)) {
+    if (!key.startsWith(prefix)) collectionItems[key] = value
+  }
+  const collectionLoading: Record<string, boolean> = {}
+  for (const [key, value] of Object.entries(state.collectionLoading)) {
+    if (!key.startsWith(prefix)) collectionLoading[key] = value
+  }
+  return { collectionItems, collectionLoading }
 }
 
 interface InspectorTarget {
@@ -105,7 +123,13 @@ interface AppState {
   inspector: InspectorTarget | null
 
   // modals
-  collectionModal: { id: string | null } | null
+  groupEditor: { type: GroupType; id: string | null; pendingItemIds: string[] } | null
+  // unfiltered contents of the group being edited
+  groupEditorItems: Item[]
+  groupEditorLoading: boolean
+  // library search inside the editor's "add items" picker
+  groupPickerResults: Item[]
+  groupPickerQuery: string
   collectionPicker: { itemIds: string[] } | null
 
   // notes cache for the open inspector
@@ -149,8 +173,13 @@ interface AppState {
   openInspector: (ownerType: OwnerType, ownerId: string, ownerLabel?: string) => Promise<void>
   closeInspector: () => void
 
-  openCollectionModal: (id: string | null) => void
-  closeCollectionModal: () => void
+  openGroupEditor: (type: GroupType, id: string | null, pendingItemIds?: string[]) => void
+  closeGroupEditor: () => void
+  loadGroupEditorItems: () => Promise<void>
+  searchGroupPicker: (query: string) => Promise<void>
+  addToGroup: (type: GroupType, id: string, itemIds: string[]) => Promise<void>
+  removeFromGroup: (type: GroupType, id: string, itemId: string) => Promise<void>
+  setGroupCover: (type: GroupType, id: string, itemId: string | null) => Promise<void>
   openCollectionPicker: (itemIds: string[]) => void
   closeCollectionPicker: () => void
 
@@ -164,8 +193,9 @@ interface AppState {
   toggleFavorite: (id: string) => Promise<void>
 
   createTag: (name: string) => Promise<void>
-  createCollection: (name: string, description: string) => Promise<string | null>
+  createCollection: (name: string, description: string, itemIds?: string[]) => Promise<string | null>
   updateCollection: (id: string, patch: { name?: string; description?: string }) => Promise<void>
+  updateSession: (id: string, patch: { label?: string }) => Promise<void>
   deleteCollection: (id: string) => Promise<void>
 
   loadNotes: (ownerType: OwnerType, ownerId: string) => Promise<void>
@@ -210,7 +240,11 @@ export const useStore = create<AppState>((set, get) => ({
   previewItemId: null,
   inspector: null,
 
-  collectionModal: null,
+  groupEditor: null,
+  groupEditorItems: [],
+  groupEditorLoading: false,
+  groupPickerResults: [],
+  groupPickerQuery: '',
   collectionPicker: null,
 
   notes: [],
@@ -340,6 +374,10 @@ export const useStore = create<AppState>((set, get) => ({
         dir: sortDir,
       })
       set((s) => ({ collectionItems: { ...s.collectionItems, [key]: page.items } }))
+    } catch {
+      // Cache the failure as an empty page so the grid stops retrying; a
+      // membership change (which clears this key) will try again.
+      set((s) => ({ collectionItems: { ...s.collectionItems, [key]: [] } }))
     } finally {
       set((s) => ({ collectionLoading: { ...s.collectionLoading, [key]: false } }))
     }
@@ -431,8 +469,96 @@ export const useStore = create<AppState>((set, get) => ({
   },
   closeInspector: () => set({ inspector: null, notes: [] }),
 
-  openCollectionModal: (id) => set({ collectionModal: { id } }),
-  closeCollectionModal: () => set({ collectionModal: null }),
+  openGroupEditor: (type, id, pendingItemIds = []) => {
+    set({
+      groupEditor: { type, id, pendingItemIds },
+      groupEditorItems: [],
+      groupEditorLoading: false,
+      groupPickerResults: [],
+      groupPickerQuery: '',
+    })
+    void get().loadGroupEditorItems()
+    if (id) void get().searchGroupPicker('')
+  },
+  closeGroupEditor: () =>
+    set({
+      groupEditor: null,
+      groupEditorItems: [],
+      groupEditorLoading: false,
+      groupPickerResults: [],
+      groupPickerQuery: '',
+    }),
+
+  loadGroupEditorItems: async () => {
+    const editor = get().groupEditor
+    if (!editor?.id) {
+      set({ groupEditorItems: [], groupEditorLoading: false })
+      return
+    }
+    const id = editor.id
+    const type = editor.type
+    set({ groupEditorLoading: true })
+    try {
+      const page = await api.items(
+        type === 'session'
+          ? { sessionId: id, limit: 2000, sort: 'time', dir: 'desc' }
+          : { collectionId: id, limit: 2000, sort: 'time', dir: 'desc' },
+      )
+      const current = get().groupEditor
+      if (current?.id === id && current.type === type) {
+        set({ groupEditorItems: page.items })
+      }
+    } finally {
+      set({ groupEditorLoading: false })
+    }
+  },
+
+  searchGroupPicker: async (query) => {
+    set({ groupPickerQuery: query })
+    try {
+      const page = await api.items({
+        q: query.trim() || undefined,
+        limit: 60,
+        sort: 'time',
+        dir: 'desc',
+      })
+      if (get().groupPickerQuery === query) set({ groupPickerResults: page.items })
+    } catch {
+      if (get().groupPickerQuery === query) set({ groupPickerResults: [] })
+    }
+  },
+
+  addToGroup: async (type, id, itemIds) => {
+    if (!itemIds.length) return
+    if (type === 'collection') {
+      await api.addToCollection(id, itemIds)
+      set((s) => clearCollectionCache(s, id))
+    } else {
+      await api.batch({ ids: itemIds, setSessionId: id })
+    }
+    await get().refreshCatalog()
+    await get().loadGroupEditorItems()
+  },
+  removeFromGroup: async (type, id, itemId) => {
+    if (type === 'collection') {
+      await api.removeFromCollection(id, itemId)
+      set((s) => clearCollectionCache(s, id))
+    } else {
+      await api.batch({ ids: [itemId], setSessionId: null })
+    }
+    await get().refreshCatalog()
+    await get().loadGroupEditorItems()
+  },
+  setGroupCover: async (type, id, itemId) => {
+    if (type === 'collection') {
+      await api.updateCollection(id, { coverItemId: itemId })
+    } else {
+      await api.updateSession(id, { coverItemId: itemId })
+    }
+    await get().refreshCatalog()
+    await get().loadGroupEditorItems()
+  },
+
   openCollectionPicker: (itemIds) => set({ collectionPicker: { itemIds } }),
   closeCollectionPicker: () => set({ collectionPicker: null }),
 
@@ -484,13 +610,18 @@ export const useStore = create<AppState>((set, get) => ({
     await api.createTag(name)
     await get().refreshCatalog()
   },
-  createCollection: async (name, description) => {
+  createCollection: async (name, description, itemIds = []) => {
     const c = await api.createCollection({ name, description })
+    if (itemIds.length) await api.addToCollection(c.id, itemIds)
     await get().refreshCatalog()
     return c.id
   },
   updateCollection: async (id, patch) => {
     await api.updateCollection(id, patch)
+    await get().refreshCatalog()
+  },
+  updateSession: async (id, patch) => {
+    await api.updateSession(id, patch)
     await get().refreshCatalog()
   },
   deleteCollection: async (id) => {

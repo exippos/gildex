@@ -10,6 +10,7 @@ import { thumbUrl } from '../../api'
 import type { Collection, Item, Session } from '../../types'
 import { GridCell } from './GridCell'
 import { formatRange } from '../format'
+import { readDraggedItemIds } from '../groups/drag'
 import './grid.css'
 
 const PAD_X = 16
@@ -216,6 +217,7 @@ function GroupTile({
   tight,
   style,
   onToggle,
+  onDropItems,
 }: {
   group: Group
   open: boolean
@@ -224,7 +226,10 @@ function GroupTile({
   tight: boolean
   style: CSSProperties
   onToggle: () => void
+  onDropItems?: (itemIds: string[]) => void
 }) {
+  const [dropActive, setDropActive] = useState(false)
+  const canDrop = Boolean(onDropItems) && Boolean(group.id)
   const poster = group.thumb ? thumbUrl(group.thumb) : null
   const posterStyle = poster
     ? ({ '--tile-art': `url("${poster}")` } as CSSProperties)
@@ -244,12 +249,32 @@ function GroupTile({
   return (
     <button
       type="button"
-      className={`group-tile${open ? ' is-open' : ''}${compact ? ' is-compact' : ''}${tight ? ' is-tight' : ''}`}
+      className={`group-tile${open ? ' is-open' : ''}${compact ? ' is-compact' : ''}${tight ? ' is-tight' : ''}${dropActive ? ' is-drop-target' : ''}`}
       style={style}
       aria-expanded={open}
       aria-busy={loading || undefined}
       aria-label={`${group.label}, ${group.count} ${group.count === 1 ? 'item' : 'items'}`}
       onClick={onToggle}
+      onDragOver={
+        canDrop
+          ? (event) => {
+              event.preventDefault()
+              event.dataTransfer.dropEffect = 'copy'
+              setDropActive(true)
+            }
+          : undefined
+      }
+      onDragLeave={canDrop ? () => setDropActive(false) : undefined}
+      onDrop={
+        canDrop
+          ? (event) => {
+              event.preventDefault()
+              setDropActive(false)
+              const ids = readDraggedItemIds(event.dataTransfer)
+              if (ids.length) onDropItems?.(ids)
+            }
+          : undefined
+      }
     >
       {deck.length > 0 && (
         <span className="group-tile-deck" aria-hidden="true">
@@ -305,6 +330,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const selection = useStore((s) => s.selection)
   const loading = useStore((s) => s.loadingItems)
   const clearSelection = useStore((s) => s.clearSelection)
+  const addToGroup = useStore((s) => s.addToGroup)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
@@ -401,6 +427,31 @@ export function Grid({ cellSize }: { cellSize: number }) {
       : collectionTiles
         ? 'collection'
         : null
+
+  // An edit can drop a collection's cached page (the group editor or a drop
+  // target invalidates it). Refetch any expanded tile that lost its page so
+  // the open group keeps showing its items.
+  useEffect(() => {
+    if (groupMode !== 'collection') return
+    for (const key of expanded) {
+      if (!key.startsWith('collection:')) continue
+      const id = key.slice('collection:'.length)
+      const keyed = collectionItemsKey(id, search, activeTagFilters, sort, sortDir)
+      if (!collectionItems[keyed] && !collectionLoading[keyed]) {
+        void loadCollectionItems(id)
+      }
+    }
+  }, [
+    groupMode,
+    expanded,
+    collectionItems,
+    collectionLoading,
+    search,
+    activeTagFilters,
+    sort,
+    sortDir,
+    loadCollectionItems,
+  ])
 
   const itemSize = groupMode ? Math.round(cellW * ITEM_SCALE) : cellW
   const itemInset = (cellW - itemSize) / 2
@@ -563,6 +614,11 @@ export function Grid({ cellSize }: { cellSize: number }) {
                       tight={tight}
                       style={style}
                       onToggle={() => toggleGroup(group)}
+                      onDropItems={(ids) => {
+                        void addToGroup(group.source, group.id, ids).catch(() => {
+                          /* the rail reports drop errors; keep the tile quiet */
+                        })
+                      }}
                     />
                   )
                 }

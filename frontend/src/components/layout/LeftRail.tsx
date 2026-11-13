@@ -1,11 +1,12 @@
 // Left rail: nav (surface switcher) + per-surface content. Frosted fixed chrome.
 import { useMemo, useState } from 'react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, DragEvent } from 'react'
 import { useStore } from '../../store'
 import { thumbUrl } from '../../api'
 import type { Surface } from '../../types'
 import { FolderTree } from '../folders/FolderTree'
 import { formatRange } from '../format'
+import { readDraggedItemIds } from '../groups/drag'
 import './left-rail.css'
 
 const TABS: ReadonlyArray<{ id: Surface; label: string }> = [
@@ -34,9 +35,13 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
   const setActiveCollectionId = useStore((s) => s.setActiveCollectionId)
   const toggleTagFilter = useStore((s) => s.toggleTagFilter)
   const clearTagFilters = useStore((s) => s.clearTagFilters)
-  const openCollectionModal = useStore((s) => s.openCollectionModal)
+  const openGroupEditor = useStore((s) => s.openGroupEditor)
+  const addToGroup = useStore((s) => s.addToGroup)
 
   const [tagQuery, setTagQuery] = useState('')
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [createOver, setCreateOver] = useState(false)
+  const [dragError, setDragError] = useState<string | null>(null)
 
   const visibleTags = useMemo(() => {
     const needle = tagQuery.trim().toLowerCase()
@@ -60,21 +65,80 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
     setPreviewItemId(null)
   }
 
+  const dropOnGroup = async (
+    event: DragEvent,
+    type: 'session' | 'collection',
+    id: string,
+  ) => {
+    event.preventDefault()
+    setDragOverId(null)
+    const ids = readDraggedItemIds(event.dataTransfer)
+    if (!ids.length) return
+    setDragError(null)
+    try {
+      await addToGroup(type, id, ids)
+    } catch (err) {
+      setDragError((err as Error).message)
+    }
+  }
+
+  const dropToCreate = (event: DragEvent) => {
+    event.preventDefault()
+    setCreateOver(false)
+    const ids = readDraggedItemIds(event.dataTransfer)
+    if (!ids.length) return
+    setDragError(null)
+    if (surface !== 'collections') chooseSurface('collections')
+    openGroupEditor('collection', null, ids)
+  }
+
+  // Drag events fire for every child the pointer crosses; only clear when the
+  // pointer really left the drop wrapper.
+  const leaves = (event: DragEvent) => {
+    const next = event.relatedTarget as Node | null
+    return !next || !event.currentTarget.contains(next)
+  }
+
   return (
     <aside className="left-rail chrome" style={style} aria-label="Library navigation">
       <div className="rail-nav">
         <div className="rail-label">browse</div>
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`rail-nav-item${tab.id === surface ? ' is-active' : ''}`}
-            aria-current={tab.id === surface ? 'page' : undefined}
-            onClick={() => chooseSurface(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const collectionsTab = tab.id === 'collections'
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={`rail-nav-item${tab.id === surface ? ' is-active' : ''}${
+                collectionsTab && createOver ? ' is-drop-target' : ''
+              }`}
+              aria-current={tab.id === surface ? 'page' : undefined}
+              title={
+                collectionsTab ? 'Drop items here to start a collection' : undefined
+              }
+              onClick={() => chooseSurface(tab.id)}
+              onDragOver={
+                collectionsTab
+                  ? (event) => {
+                      event.preventDefault()
+                      event.dataTransfer.dropEffect = 'copy'
+                      setCreateOver(true)
+                    }
+                  : undefined
+              }
+              onDragLeave={
+                collectionsTab
+                  ? (event) => {
+                      if (leaves(event)) setCreateOver(false)
+                    }
+                  : undefined
+              }
+              onDrop={collectionsTab ? dropToCreate : undefined}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
       </div>
 
       <div className="rail-body">
@@ -102,34 +166,57 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                 <span className="rail-row-meta">{sessions.length} sessions</span>
               </button>
               {sessions.map((session) => (
-                <button
+                <div
                   key={session.id}
-                  type="button"
-                  className={`rail-row rail-row-session${
-                    activeSessionId === session.id ? ' is-active' : ''
-                  }`}
-                  onClick={() => chooseSession(session.id)}
+                  className={`rail-row-wrap${dragOverId === session.id ? ' is-drop-target' : ''}`}
+                  title="Drag items here to add them to this session"
+                  onDragOver={(event) => {
+                    event.preventDefault()
+                    event.dataTransfer.dropEffect = 'copy'
+                    setDragOverId(session.id)
+                  }}
+                  onDragLeave={(event) => {
+                    if (leaves(event)) setDragOverId(null)
+                  }}
+                  onDrop={(event) => void dropOnGroup(event, 'session', session.id)}
                 >
-                  <span className="rail-row-thumb" aria-hidden="true">
-                    {session.thumbnailPath ? (
-                      <img
-                        src={thumbUrl(session.thumbnailPath)!}
-                        alt=""
-                        loading="lazy"
-                        draggable={false}
-                      />
-                    ) : (
-                      <span className="rail-row-thumb-empty" />
-                    )}
-                  </span>
-                  <span className="rail-row-text">
-                    <span className="rail-row-title">{session.label}</span>
-                    <span className="rail-row-meta">
-                      {formatRange(session.startsAt, session.endsAt)}
-                      <span className="rail-row-count">{session.itemCount}</span>
+                  <button
+                    type="button"
+                    className={`rail-row rail-row-session${
+                      activeSessionId === session.id ? ' is-active' : ''
+                    }`}
+                    onClick={() => chooseSession(session.id)}
+                  >
+                    <span className="rail-row-thumb" aria-hidden="true">
+                      {session.thumbnailPath ? (
+                        <img
+                          src={thumbUrl(session.thumbnailPath)!}
+                          alt=""
+                          loading="lazy"
+                          draggable={false}
+                        />
+                      ) : (
+                        <span className="rail-row-thumb-empty" />
+                      )}
                     </span>
-                  </span>
-                </button>
+                    <span className="rail-row-text">
+                      <span className="rail-row-title">{session.label}</span>
+                      <span className="rail-row-meta">
+                        {formatRange(session.startsAt, session.endsAt)}
+                        <span className="rail-row-count">{session.itemCount}</span>
+                      </span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="rail-row-edit"
+                    title="Edit session"
+                    aria-label={`Edit ${session.label}`}
+                    onClick={() => openGroupEditor('session', session.id)}
+                  >
+                    edit
+                  </button>
+                </div>
               ))}
               {sessions.length === 0 && <div className="rail-hint">no sessions yet</div>}
             </div>
@@ -148,26 +235,74 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                 <span className="rail-row-title">All collections</span>
               </button>
               {collections.map((collection) => (
-                <button
+                <div
                   key={collection.id}
-                  type="button"
-                  className={`rail-row${activeCollectionId === collection.id ? ' is-active' : ''}`}
-                  onClick={() => chooseCollection(collection.id)}
+                  className={`rail-row-wrap${dragOverId === collection.id ? ' is-drop-target' : ''}`}
+                  title="Drag items here to add them to this collection"
+                  onDragOver={(event) => {
+                    event.preventDefault()
+                    event.dataTransfer.dropEffect = 'copy'
+                    setDragOverId(collection.id)
+                  }}
+                  onDragLeave={(event) => {
+                    if (leaves(event)) setDragOverId(null)
+                  }}
+                  onDrop={(event) => void dropOnGroup(event, 'collection', collection.id)}
                 >
-                  <span className="rail-row-title">{collection.name}</span>
-                  <span className="rail-row-meta">
-                    <span className="rail-row-count">{collection.itemCount}</span>
-                  </span>
-                </button>
+                  <button
+                    type="button"
+                    className={`rail-row rail-row-session${activeCollectionId === collection.id ? ' is-active' : ''}`}
+                    onClick={() => chooseCollection(collection.id)}
+                  >
+                    <span className="rail-row-thumb" aria-hidden="true">
+                      {collection.thumbnailPath ? (
+                        <img
+                          src={thumbUrl(collection.thumbnailPath)!}
+                          alt=""
+                          loading="lazy"
+                          draggable={false}
+                        />
+                      ) : (
+                        <span className="rail-row-thumb-empty" />
+                      )}
+                    </span>
+                    <span className="rail-row-text">
+                      <span className="rail-row-title">{collection.name}</span>
+                      <span className="rail-row-meta">
+                        <span className="rail-row-count">{collection.itemCount}</span>
+                      </span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="rail-row-edit"
+                    title="Edit collection"
+                    aria-label={`Edit ${collection.name}`}
+                    onClick={() => openGroupEditor('collection', collection.id)}
+                  >
+                    edit
+                  </button>
+                </div>
               ))}
               {collections.length === 0 && <div className="rail-hint">no collections yet</div>}
+              {dragError && <div className="rail-hint rail-hint-error">{dragError}</div>}
             </div>
             <button
               type="button"
-              className="rail-new"
-              onClick={() => openCollectionModal(null)}
+              className={`rail-new${createOver ? ' is-drop-target' : ''}`}
+              title="Drop items here to start a collection"
+              onClick={() => openGroupEditor('collection', null)}
+              onDragOver={(event) => {
+                event.preventDefault()
+                event.dataTransfer.dropEffect = 'copy'
+                setCreateOver(true)
+              }}
+              onDragLeave={(event) => {
+                if (leaves(event)) setCreateOver(false)
+              }}
+              onDrop={dropToCreate}
             >
-              + New collection
+              {createOver ? 'drop to create a collection' : '+ New collection'}
             </button>
           </>
         )}

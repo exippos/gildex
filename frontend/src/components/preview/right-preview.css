@@ -375,6 +375,26 @@
   color: var(--on-gilt);
 }
 
+/* secondary group action: edit a session or collection */
+.preview-edit-group {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--gilt);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.preview-edit-group:hover {
+  border-color: var(--gilt);
+  background: var(--gilt-dim);
+  color: var(--gilt-bright);
+}
+
 /* ---- thumbnail strip / grid ---- */
 
 .preview-strip {
