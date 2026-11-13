@@ -1,11 +1,13 @@
 // Virtualized item grid. Renders only the rows in (and just around) the
 // viewport, absolutely positioned over a tall canvas, so thousands of items
-// scroll smoothly. In the sessions-all view each session renders as a collapsed
-// card that expands in place to reveal its items.
+// scroll smoothly. In group views (sessions / collections with nothing
+// selected) each group is a stacked tile; expanding one spills its items into
+// the shared grid flow instead of giving them a block of their own.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useStore } from '../../store'
+import type { CSSProperties } from 'react'
+import { collectionItemsKey, useStore } from '../../store'
 import { thumbUrl } from '../../api'
-import type { Item, Session } from '../../types'
+import type { Collection, Item, Session } from '../../types'
 import { GridCell } from './GridCell'
 import { formatRange } from '../format'
 import './grid.css'
@@ -13,62 +15,285 @@ import './grid.css'
 const PAD_X = 16
 const PAD_Y = 12
 const GUTTER = 8
-const CARD_H = 60
+const BAND_PAD = 4
 const OVERSCAN_ROWS = 2
+const COMPACT_BELOW = 120
+// Item cells sit a touch smaller than the group tiles that anchor them.
+const ITEM_SCALE = 0.86
 
-interface ItemRow {
-  key: string
-  type: 'items'
-  items: Item[]
-  y: number
-  h: number
-}
+type GroupSource = 'session' | 'collection'
 
-interface SessionGroup {
+interface Group {
   key: string
+  source: GroupSource
+  id: string
   label: string
   range: string
+  /** Items matching the current query (or the catalog count before the first fetch). */
   count: number
+  /** Full catalog count, when it differs from the filtered count. */
+  total: number
   thumb: string
-  kind: Item['kind']
+  fallback: Item['kind'] | null
   items: Item[]
 }
 
-interface CardRow {
+type Slot =
+  | { kind: 'tile'; key: string; group: Group; open: boolean }
+  | { kind: 'cell'; key: string; group: Group | null; item: Item }
+
+interface GridRow {
   key: string
-  type: 'card'
-  group: SessionGroup
   y: number
-  h: number
+  slots: Slot[]
 }
 
-type Row = CardRow | ItemRow
+interface GroupOutline {
+  key: string
+  left: number
+  top: number
+  width: number
+  height: number
+  path: string
+}
 
-function groupSessions(items: Item[], sessions: Session[]): SessionGroup[] {
-  const byId = new Map(sessions.map((s) => [s.id, s]))
-  const out: SessionGroup[] = []
-  let i = 0
-  while (i < items.length) {
-    const sessionId = items[i].sessionId
-    let j = i
-    while (j < items.length && items[j].sessionId === sessionId) j += 1
-
-    const group = items.slice(i, j)
-    const session = sessionId ? byId.get(sessionId) : undefined
-    const times = group.map((it) => it.timestamp)
-    const poster = group[0]
-    out.push({
-      key: `${sessionId ?? 'unsorted'}-${i}`,
-      label: session?.label ?? (sessionId ?? 'Unsorted'),
-      range: formatRange(Math.min(...times), Math.max(...times)),
-      count: group.length,
-      thumb: session?.thumbnailPath || poster.thumbnailPath,
-      kind: poster.kind,
-      items: group,
-    })
-    i = j
+function itemRange(items: Item[]): string {
+  if (!items.length) return ''
+  let lo = items[0].timestamp
+  let hi = lo
+  for (const item of items) {
+    if (item.timestamp < lo) lo = item.timestamp
+    if (item.timestamp > hi) hi = item.timestamp
   }
-  return out
+  return formatRange(lo, hi)
+}
+
+function makeGroup(
+  source: GroupSource,
+  id: string,
+  label: string,
+  items: Item[],
+  thumb: string,
+  total?: number,
+): Group {
+  return {
+    key: `${source}:${id || 'unsorted'}`,
+    source,
+    id,
+    label,
+    range: itemRange(items),
+    count: items.length,
+    total: total ?? items.length,
+    thumb: thumb || items[0]?.thumbnailPath || '',
+    fallback: items[0]?.kind ?? null,
+    items,
+  }
+}
+
+/** Groups items by session in catalog order, keeping unmatched runs visible. */
+function sessionGroups(items: Item[], sessions: Session[]): Group[] {
+  const bySession = new Map<string, Item[]>()
+  const loose: Item[] = []
+  for (const item of items) {
+    if (!item.sessionId) {
+      loose.push(item)
+      continue
+    }
+    const bucket = bySession.get(item.sessionId)
+    if (bucket) bucket.push(item)
+    else bySession.set(item.sessionId, [item])
+  }
+
+  const groups: Group[] = []
+  for (const session of sessions) {
+    const groupItems = bySession.get(session.id)
+    if (!groupItems?.length) continue
+    bySession.delete(session.id)
+    groups.push(
+      makeGroup(
+        'session',
+        session.id,
+        session.label,
+        groupItems,
+        session.thumbnailPath,
+        session.itemCount,
+      ),
+    )
+  }
+  // Items whose session is missing from the catalog list still get a tile.
+  for (const [id, groupItems] of bySession) {
+    groups.push(makeGroup('session', id, id, groupItems, ''))
+  }
+  if (loose.length) groups.push(makeGroup('session', '', 'Unsorted', loose, ''))
+  return groups
+}
+
+function collectionGroup(collection: Collection, cached: Item[] | undefined): Group {
+  const items = cached ?? []
+  const group = makeGroup(
+    'collection',
+    collection.id,
+    collection.name,
+    items,
+    collection.thumbnailPath,
+    collection.itemCount,
+  )
+  // Before the first fetch there are no items to count, so trust the catalog.
+  if (!cached) group.count = collection.itemCount
+  return group
+}
+
+/**
+ * Traces the rectilinear silhouette of an expanded group (tile + items) so it
+ * can be drawn as one continuous panel with a single outline, however the group
+ * wraps across rows.
+ */
+function groupOutline(
+  key: string,
+  startSlot: number,
+  endSlot: number,
+  cols: number,
+  cellW: number,
+  rowStep: number,
+): GroupOutline {
+  const firstRow = Math.floor(startSlot / cols)
+  const lastRow = Math.floor(endSlot / cols)
+  const segments: Array<{ a: number; b: number }> = []
+  for (let row = firstRow; row <= lastRow; row++) {
+    const rowStart = row * cols
+    segments.push({
+      a: Math.max(startSlot, rowStart) - rowStart,
+      b: Math.min(endSlot, rowStart + cols - 1) - rowStart,
+    })
+  }
+
+  const x0 = (a: number) => PAD_X + a * rowStep - BAND_PAD
+  const x1 = (b: number) => PAD_X + b * rowStep + cellW + BAND_PAD
+  const y0 = (r: number) => PAD_Y + r * rowStep - BAND_PAD
+  const y1 = (r: number) => y0(r) + cellW + BAND_PAD * 2
+
+  const left = Math.min(...segments.map((s) => x0(s.a)))
+  const right = Math.max(...segments.map((s) => x1(s.b)))
+  const top = y0(firstRow)
+  const bottom = y1(lastRow)
+
+  const points: Array<[number, number]> = []
+  points.push([x0(segments[0].a), top])
+  points.push([x1(segments[0].b), top])
+  for (let i = 0; i < segments.length; i++) {
+    points.push([x1(segments[i].b), y1(firstRow + i)])
+    if (i + 1 < segments.length) points.push([x1(segments[i + 1].b), y1(firstRow + i)])
+  }
+  points.push([x0(segments[segments.length - 1].a), bottom])
+  for (let i = segments.length - 1; i >= 0; i--) {
+    points.push([x0(segments[i].a), y0(firstRow + i)])
+    if (i > 0) points.push([x0(segments[i - 1].a), y0(firstRow + i)])
+  }
+
+  const path = points
+    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x - left} ${y - top}`)
+    .join('')
+  return {
+    key,
+    left,
+    top,
+    width: right - left,
+    height: bottom - top,
+    path: `${path}Z`,
+  }
+}
+
+function TileFallback({ kind }: { kind: Item['kind'] | null }) {
+  if (kind === 'video') {
+    return (
+      <svg className="tile-glyph" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 5.5 19 12 8 18.5Z" fill="currentColor" />
+      </svg>
+    )
+  }
+  if (kind === 'audio') {
+    return (
+      <span className="tile-audio" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <span />
+      </span>
+    )
+  }
+  return <span className="tile-frame" aria-hidden="true" />
+}
+
+function GroupTile({
+  group,
+  open,
+  loading,
+  compact,
+  tight,
+  style,
+  onToggle,
+}: {
+  group: Group
+  open: boolean
+  loading: boolean
+  compact: boolean
+  tight: boolean
+  style: CSSProperties
+  onToggle: () => void
+}) {
+  const poster = group.thumb ? thumbUrl(group.thumb) : null
+  const peeked = group.items
+    .filter((item) => item.thumbnailPath)
+    .slice(0, 2)
+    .map((item) => thumbUrl(item.thumbnailPath)!)
+  // Without cached items (a collection before its first expand) repeat the
+  // poster so the deck still reads as a stack.
+  const deck = peeked.length > 0 ? peeked : poster ? [poster, poster] : []
+  const countLabel =
+    group.count === group.total
+      ? `${group.count} ${group.total === 1 ? 'item' : 'items'}`
+      : `${group.count} of ${group.total} items`
+
+  return (
+    <button
+      type="button"
+      className={`group-tile${open ? ' is-open' : ''}${compact ? ' is-compact' : ''}${tight ? ' is-tight' : ''}`}
+      style={style}
+      aria-expanded={open}
+      aria-busy={loading || undefined}
+      aria-label={`${group.label}, ${group.count} ${group.count === 1 ? 'item' : 'items'}`}
+      onClick={onToggle}
+    >
+      {deck.length > 0 && (
+        <span className="group-tile-deck" aria-hidden="true">
+          {deck.map((src, index) => (
+            <img key={`${src}-${index}`} src={src} alt="" loading="lazy" draggable={false} />
+          ))}
+        </span>
+      )}
+
+      <span className="group-tile-poster">
+        {poster ? (
+          <img src={poster} alt="" loading="lazy" draggable={false} />
+        ) : (
+          <TileFallback kind={group.fallback} />
+        )}
+        <span className="group-tile-scrim" aria-hidden="true" />
+        <span className="group-tile-text">
+          <span className="group-tile-label display">{group.label}</span>
+          <span className="group-tile-meta">
+            <span>{countLabel}</span>
+            {group.range && <span className="group-tile-range">{group.range}</span>}
+          </span>
+        </span>
+        {loading ? (
+          <span className="group-tile-loading" aria-hidden="true" />
+        ) : (
+          <span className="group-tile-chevron" aria-hidden="true" />
+        )}
+      </span>
+    </button>
+  )
 }
 
 export function Grid({ cellSize }: { cellSize: number }) {
@@ -78,8 +303,14 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const activeCollectionId = useStore((s) => s.activeCollectionId)
   const activeFolder = useStore((s) => s.activeFolder)
   const search = useStore((s) => s.search)
+  const sort = useStore((s) => s.sort)
+  const sortDir = useStore((s) => s.sortDir)
   const activeTagFilters = useStore((s) => s.activeTagFilters)
   const sessions = useStore((s) => s.sessions)
+  const collections = useStore((s) => s.collections)
+  const collectionItems = useStore((s) => s.collectionItems)
+  const collectionLoading = useStore((s) => s.collectionLoading)
+  const loadCollectionItems = useStore((s) => s.loadCollectionItems)
   const selection = useStore((s) => s.selection)
   const loading = useStore((s) => s.loadingItems)
   const clearSelection = useStore((s) => s.clearSelection)
@@ -106,14 +337,14 @@ export function Grid({ cellSize }: { cellSize: number }) {
   }, [])
 
   // Reset scroll when the query changes underneath the grid.
-  const queryKey = `${surface}|${activeSessionId}|${activeCollectionId}|${activeFolder}|${search}|${activeTagFilters.join(',')}`
+  const queryKey = `${surface}|${activeSessionId}|${activeCollectionId}|${activeFolder}|${search}|${activeTagFilters.join(',')}|${sort}|${sortDir}`
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = 0
     setScrollTop(0)
   }, [queryKey, cellSize])
 
-  // Collapse all session cards when the query changes.
+  // Collapse all groups when the query changes.
   useEffect(() => {
     setExpanded(new Set())
   }, [queryKey])
@@ -147,6 +378,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
     })
   }
 
+  const cacheKey = (id: string) =>
+    collectionItemsKey(id, search, activeTagFilters, sort, sortDir)
+
   const cols = Math.max(
     1,
     Math.floor((Math.max(width, 1) - PAD_X * 2 + GUTTER) / (cellSize + GUTTER)),
@@ -156,64 +390,107 @@ export function Grid({ cellSize }: { cellSize: number }) {
       ? Math.max(40, (width - PAD_X * 2 - GUTTER * (cols - 1)) / cols)
       : cellSize
   const rowStep = cellW + GUTTER
-  const grouped = surface === 'sessions' && activeSessionId === null
+  const compact = cellW < COMPACT_BELOW
+  const tight = cellW < 210
 
-  const groups = useMemo(
-    () => (grouped ? groupSessions(items, sessions) : []),
-    [grouped, items, sessions],
-  )
+  // Sessions group by their catalog entries; collections only when nothing is
+  // selected and no text/tag filter is active, because collection membership is
+  // not part of the item payload. Filtered views stay flat rather than showing
+  // per-collection counts the query cannot vouch for.
+  const collectionTiles =
+    surface === 'collections' &&
+    activeCollectionId === null &&
+    !search.trim() &&
+    activeTagFilters.length === 0
+  const groupMode: GroupSource | null =
+    surface === 'sessions'
+      ? activeSessionId === null
+        ? 'session'
+        : null
+      : collectionTiles
+        ? 'collection'
+        : null
+
+  const itemSize = groupMode ? Math.round(cellW * ITEM_SCALE) : cellW
+  const itemInset = (cellW - itemSize) / 2
+
+  const groups = useMemo(() => {
+    if (groupMode === 'session') return sessionGroups(items, sessions)
+    if (groupMode === 'collection') {
+      const out: Group[] = []
+      for (const collection of collections) {
+        const cached = collectionItems[cacheKey(collection.id)]
+        if (collection.itemCount === 0 && !cached?.length) continue
+        out.push(collectionGroup(collection, cached))
+      }
+      return out
+    }
+    return []
+  }, [groupMode, items, sessions, collections, collectionItems, search, activeTagFilters, sort, sortDir])
 
   const layout = useMemo(() => {
-    const rows: Row[] = []
-    let y = PAD_Y
-    if (grouped) {
+    const slots: Slot[] = []
+    const outlines: GroupOutline[] = []
+    if (groupMode) {
       for (const group of groups) {
-        rows.push({ key: `card-${group.key}`, type: 'card', group, y, h: CARD_H })
-        y += CARD_H
-        if (expanded.has(group.key)) {
-          for (let k = 0; k < group.items.length; k += cols) {
-            rows.push({
-              key: `r-${group.key}-${k}`,
-              type: 'items',
-              items: group.items.slice(k, k + cols),
-              y,
-              h: cellW,
+        const open = expanded.has(group.key)
+        const start = slots.length
+        slots.push({ kind: 'tile', key: `tile:${group.key}`, group, open })
+        if (open) {
+          for (const item of group.items) {
+            slots.push({
+              kind: 'cell',
+              key: `cell:${group.key}:${item.id}`,
+              group,
+              item,
             })
-            y += rowStep
           }
+          outlines.push(
+            groupOutline(group.key, start, slots.length - 1, cols, cellW, rowStep),
+          )
         }
       }
     } else {
-      for (let i = 0; i < items.length; i += cols) {
-        rows.push({
-          key: `r-${i}`,
-          type: 'items',
-          items: items.slice(i, i + cols),
-          y,
-          h: cellW,
-        })
-        y += rowStep
+      for (const item of items) {
+        slots.push({ kind: 'cell', key: `cell:${item.id}`, group: null, item })
       }
     }
-    const height = Math.max(y - (rows.length ? GUTTER : 0) + PAD_Y, viewportH)
-    return { rows, height }
-  }, [grouped, groups, items, cols, cellW, rowStep, expanded, viewportH])
+
+    const rows: GridRow[] = []
+    for (let i = 0; i < slots.length; i += cols) {
+      rows.push({
+        key: `row-${i}`,
+        y: PAD_Y + rows.length * rowStep,
+        slots: slots.slice(i, i + cols),
+      })
+    }
+
+    const height = Math.max(
+      rows.length ? PAD_Y + rows.length * rowStep - GUTTER + PAD_Y : PAD_Y * 2,
+      viewportH,
+    )
+    return { rows, outlines, height, empty: slots.length === 0 }
+  }, [groupMode, groups, items, cols, cellW, rowStep, expanded, viewportH])
 
   const visible = useMemo(() => {
-    if (width <= 0 || viewportH <= 0) return [] as Row[]
+    if (width <= 0 || viewportH <= 0) return [] as GridRow[]
     const overscan = rowStep * OVERSCAN_ROWS
     const top = scrollTop - overscan
     const bottom = scrollTop + viewportH + overscan
-    return layout.rows.filter((row) => row.y + row.h >= top && row.y <= bottom)
-  }, [layout, scrollTop, viewportH, rowStep, width])
+    return layout.rows.filter((row) => row.y + cellW >= top && row.y <= bottom)
+  }, [layout, scrollTop, viewportH, rowStep, cellW, width])
 
   const selectedSet = useMemo(() => new Set(selection), [selection])
 
-  const toggleSession = (key: string) => {
+  const toggleGroup = (group: Group) => {
+    const open = expanded.has(group.key)
+    if (!open && group.source === 'collection' && !collectionItems[cacheKey(group.id)]) {
+      void loadCollectionItems(group.id)
+    }
     setExpanded((prev) => {
       const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
+      if (next.has(group.key)) next.delete(group.key)
+      else next.add(group.key)
       return next
     })
   }
@@ -237,72 +514,74 @@ export function Grid({ cellSize }: { cellSize: number }) {
         }}
       >
         <div className="grid-canvas" style={{ height: layout.height }}>
-          {width > 0 &&
-            visible.map((row) => {
-              if (row.type === 'card') {
-                const group = row.group
-                const isExpanded = expanded.has(group.key)
-                return (
-                  <button
-                    key={row.key}
-                    type="button"
-                    className={`session-card${isExpanded ? ' is-expanded' : ''}`}
-                    style={{ top: row.y, left: PAD_X, right: PAD_X, height: row.h }}
-                    aria-expanded={isExpanded}
-                    onClick={() => toggleSession(group.key)}
-                  >
-                    <span className="session-card-thumb" aria-hidden="true">
-                      {group.thumb ? (
-                        <img
-                          src={thumbUrl(group.thumb)!}
-                          alt=""
-                          loading="lazy"
-                          draggable={false}
-                        />
-                      ) : group.kind === 'video' ? (
-                        <svg viewBox="0 0 24 24">
-                          <path d="M8 5.5 19 12 8 18.5Z" fill="currentColor" />
-                        </svg>
-                      ) : group.kind === 'audio' ? (
-                        <span className="session-card-audio">
-                          <span />
-                          <span />
-                          <span />
-                          <span />
-                        </span>
-                      ) : (
-                        <span className="session-card-frame" />
-                      )}
-                    </span>
-                    <span className="session-card-body">
-                      <span className="session-card-label display">{group.label}</span>
-                      <span className="session-card-meta">
-                        {group.range && <span>{group.range}</span>}
-                        <span>
-                          {group.count} {group.count === 1 ? 'item' : 'items'}
-                        </span>
-                      </span>
-                    </span>
-                    <span className="session-card-chevron" aria-hidden="true" />
-                  </button>
-                )
-              }
-              return row.items.map((item, index) => (
-                <GridCell
-                  key={item.id}
-                  item={item}
-                  selected={selectedSet.has(item.id)}
-                  style={{
-                    top: row.y,
-                    left: PAD_X + index * (cellW + GUTTER),
-                    width: cellW,
-                    height: row.h,
-                  }}
-                />
-              ))
-            })}
+          {layout.outlines.map((outline) => (
+            <svg
+              key={outline.key}
+              className="group-outline"
+              style={{
+                top: outline.top,
+                left: outline.left,
+                width: outline.width,
+                height: outline.height,
+              }}
+              aria-hidden="true"
+            >
+              <path className="group-outline-fill" d={outline.path} />
+              <path className="group-outline-tint" d={outline.path} />
+              <path className="group-outline-edge" d={outline.path} />
+            </svg>
+          ))}
 
-          {!loading && items.length === 0 && (
+          {width > 0 &&
+            visible.map((row) =>
+              row.slots.map((slot, index) => {
+                const style: CSSProperties =
+                  slot.kind === 'tile'
+                    ? {
+                        top: row.y,
+                        left: PAD_X + index * rowStep,
+                        width: cellW,
+                        height: cellW,
+                      }
+                    : {
+                        top: row.y + itemInset,
+                        left: PAD_X + index * rowStep + itemInset,
+                        width: itemSize,
+                        height: itemSize,
+                      }
+                if (slot.kind === 'tile') {
+                  const group = slot.group
+                  const cached = collectionItems[cacheKey(group.id)]
+                  return (
+                    <GroupTile
+                      key={slot.key}
+                      group={group}
+                      open={slot.open}
+                      loading={
+                        slot.open &&
+                        group.source === 'collection' &&
+                        !cached &&
+                        Boolean(collectionLoading[cacheKey(group.id)])
+                      }
+                      compact={compact}
+                      tight={tight}
+                      style={style}
+                      onToggle={() => toggleGroup(group)}
+                    />
+                  )
+                }
+                return (
+                  <GridCell
+                    key={slot.key}
+                    item={slot.item}
+                    selected={selectedSet.has(slot.item.id)}
+                    style={style}
+                  />
+                )
+              }),
+            )}
+
+          {!loading && layout.empty && (
             <div className="grid-empty">
               <span className="display">no items in this view</span>
             </div>

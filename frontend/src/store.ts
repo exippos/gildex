@@ -29,6 +29,19 @@ const SORT_PARAM: Record<ItemSort, string> = {
   session: 'session',
 }
 
+// Collection contents are fetched lazily and cached per query. The key folds in
+// every input that changes the result set, so a stale page never gets reused
+// after a sort or filter change.
+export function collectionItemsKey(
+  id: string,
+  search: string,
+  tagFilters: string[],
+  sort: ItemSort,
+  sortDir: SortDir,
+): string {
+  return [id, search, tagFilters.join(','), sort, sortDir].join('|')
+}
+
 interface InspectorTarget {
   ownerType: OwnerType
   ownerId: string
@@ -77,6 +90,9 @@ interface AppState {
   tags: Tag[]
   collections: Collection[]
   folders: FolderNode[]
+  // collection id + query key -> one page of that collection's items
+  collectionItems: Record<string, Item[]>
+  collectionLoading: Record<string, boolean>
 
   // selection
   selection: string[]
@@ -108,6 +124,7 @@ interface AppState {
   importFiles: (files: DroppedFile[]) => Promise<void>
   pollImport: () => Promise<void>
   loadItems: () => Promise<void>
+  loadCollectionItems: (id: string) => Promise<void>
   refreshCatalog: () => Promise<void>
 
   setWorkspace: (w: Workspace) => void
@@ -184,6 +201,8 @@ export const useStore = create<AppState>((set, get) => ({
   tags: [],
   collections: [],
   folders: [],
+  collectionItems: {},
+  collectionLoading: {},
 
   selection: [],
   lastSelectedId: null,
@@ -303,6 +322,26 @@ export const useStore = create<AppState>((set, get) => ({
       set({ items: page.items, itemsTotal: page.total })
     } finally {
       set({ loadingItems: false })
+    }
+  },
+
+  loadCollectionItems: async (id) => {
+    const { search, activeTagFilters, sort, sortDir } = get()
+    const key = collectionItemsKey(id, search, activeTagFilters, sort, sortDir)
+    if (get().collectionItems[key] || get().collectionLoading[key]) return
+    set((s) => ({ collectionLoading: { ...s.collectionLoading, [key]: true } }))
+    try {
+      const page = await api.items({
+        collectionId: id,
+        tags: activeTagFilters.length ? activeTagFilters : undefined,
+        q: search || undefined,
+        limit: 2000,
+        sort: SORT_PARAM[sort],
+        dir: sortDir,
+      })
+      set((s) => ({ collectionItems: { ...s.collectionItems, [key]: page.items } }))
+    } finally {
+      set((s) => ({ collectionLoading: { ...s.collectionLoading, [key]: false } }))
     }
   },
 

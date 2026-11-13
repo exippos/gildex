@@ -105,149 +105,386 @@
   pointer-events: none;
 }
 
-/* ---- session cards (collapsed/expandable in sessions-all view) ---- */
+/* ---- expanded-group panel ------------------------------------------------
+   The group silhouette (tile + items) is traced as one path, filled with a
+   distinct well and outlined with a single gilt hairline. */
 
-.session-card {
+.group-outline {
   position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  z-index: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.group-outline-fill {
+  fill: var(--control);
+}
+
+.group-outline-tint {
+  fill: var(--gilt-dim);
+}
+
+.group-outline-edge {
+  fill: none;
+  stroke: var(--gilt);
+  stroke-opacity: 0.42;
+  stroke-width: 1;
+}
+
+/* ---- group tiles: collapsed sessions / collections ----------------------
+   A cell-sized stacked deck: poster in front, up to two item thumbnails
+   peeking out bottom-right, label and meta laid over a scrim. */
+
+.group-tile {
+  --tile-ink: #f3eee2;
+  position: absolute;
+  z-index: 1;
   margin: 0;
-  padding: 0 14px 0 8px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--control);
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--text);
   text-align: left;
   cursor: pointer;
-  overflow: hidden;
+  outline: none;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.group-tile:focus-visible {
+  outline: 1px solid var(--gilt);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.group-tile-deck,
+.group-tile-poster {
+  position: absolute;
+  inset: 6px;
+  border-radius: var(--radius-sm);
+}
+
+.group-tile-deck img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1px solid var(--gilt-dim);
+  border-radius: var(--radius-sm);
+  transition: transform 140ms linear, filter 140ms linear;
+}
+
+/* first layer sits deepest; the second tucks in behind the poster */
+.group-tile-deck img:nth-child(1) {
+  transform: translate(6px, 6px);
+  filter: brightness(0.5);
+}
+
+.group-tile-deck img:nth-child(2) {
+  transform: translate(3px, 3px);
+  filter: brightness(0.68);
+}
+
+.group-tile:hover .group-tile-deck img:nth-child(1) {
+  transform: translate(7px, 7px);
+}
+
+.group-tile:hover .group-tile-deck img:nth-child(2) {
+  transform: translate(3.5px, 3.5px);
+}
+
+.group-tile-poster {
+  display: block;
+  background: var(--surface-inset);
+  border: 1px solid var(--gilt-border);
+  overflow: hidden;
   transition: border-color 120ms linear, background-color 120ms linear;
 }
 
-/* inner Art-Deco hairline, as on the reference's cards */
-.session-card::after {
+/* gilded inner rule, as on the reference cards */
+.group-tile-poster::after {
   content: '';
   position: absolute;
   inset: 3px;
   border: 1px solid var(--inner-rule);
-  border-radius: 4px;
-  display: var(--inner-rule-display);
+  border-radius: 3px;
   pointer-events: none;
 }
 
-.session-card:hover {
-  border-color: var(--gilt-border);
-  background: var(--control-hover);
-  color: var(--text);
-}
-
-.session-card:focus-visible {
-  outline: 1px solid var(--gilt);
-  outline-offset: -1px;
-}
-
-.session-card.is-expanded {
-  border-color: var(--gilt-border);
-}
-
-.session-card-thumb {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-inset);
-  overflow: hidden;
-  color: var(--text-faint);
-}
-
-.session-card-thumb img {
+.group-tile-poster > img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.session-card-thumb svg {
-  width: 20px;
-  height: 20px;
-  opacity: 0.55;
+.group-tile:hover .group-tile-poster {
+  border-color: var(--gilt-border);
 }
 
-.session-card-frame {
-  width: 16px;
-  height: 16px;
+/* ---- open root: full gilded fill, the "you are here" marker ---- */
+
+.group-tile.is-open .group-tile-poster {
+  background: var(--gilt-fill);
+  border-color: var(--gilt-bright);
+  box-shadow: 0 0 0 1px var(--gilt-hi), 0 0 22px var(--accent-glow);
+}
+
+.group-tile.is-open .group-tile-poster > img,
+.group-tile.is-open .group-tile-poster > .tile-glyph,
+.group-tile.is-open .group-tile-poster > .tile-audio,
+.group-tile.is-open .group-tile-poster > .tile-frame {
+  opacity: 0;
+}
+
+.group-tile.is-open .group-tile-poster::after {
+  border-color: var(--on-gilt);
+  opacity: 0.28;
+}
+
+.group-tile.is-open .group-tile-deck img {
+  filter: brightness(0.35);
+}
+
+.group-tile.is-open .group-tile-text {
+  color: var(--on-gilt);
+}
+
+.group-tile.is-open .group-tile-label {
+  text-shadow: none;
+}
+
+.group-tile.is-open .group-tile-meta {
+  opacity: 0.78;
+}
+
+.group-tile-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(4, 8, 14, 0.86) 0%,
+    rgba(4, 8, 14, 0.52) 52%,
+    transparent 82%
+  );
+  pointer-events: none;
+}
+
+.group-tile-scrim,
+.group-tile-text {
+  opacity: 0;
+  transition: opacity 160ms linear;
+}
+
+.group-tile:hover .group-tile-scrim,
+.group-tile:focus-visible .group-tile-scrim,
+.group-tile:hover .group-tile-text,
+.group-tile:focus-visible .group-tile-text {
+  opacity: 1;
+}
+
+/* An open root keeps its gilded face: no scrim, label always visible. */
+.group-tile.is-open .group-tile-scrim {
+  opacity: 0;
+}
+
+.group-tile.is-open .group-tile-text {
+  opacity: 1;
+}
+
+.group-tile-text {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--tile-ink);
+  pointer-events: none;
+}
+
+.group-tile-label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.24;
+  letter-spacing: 0.01em;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.group-tile-meta {
+  display: flex;
+  gap: 7px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.74;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.group-tile-meta > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-tile-meta > span:first-child {
+  flex: 0 0 auto;
+}
+
+.group-tile-range {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.group-tile.is-tight .group-tile-range {
+  display: none;
+}
+
+.group-tile-meta > span + span::before {
+  content: '·';
+  margin-right: 7px;
+}
+
+.group-tile.is-compact .group-tile-meta {
+  display: none;
+}
+
+.group-tile.is-compact .group-tile-label {
+  font-size: 11px;
+}
+
+.group-tile.is-compact .group-tile-text {
+  left: 8px;
+  right: 8px;
+  bottom: 7px;
+}
+
+.group-tile-chevron {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--control);
+  border: 1px solid var(--gilt-border);
+  transition: background-color 120ms linear, border-color 120ms linear;
+}
+
+.group-tile-chevron::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid var(--gilt-bright);
+  border-bottom: 1px solid var(--gilt-bright);
+  transform: translate(-50%, -60%) rotate(45deg);
+  transition: transform 140ms linear;
+}
+
+.group-tile.is-open .group-tile-chevron::before {
+  transform: translate(-50%, -30%) rotate(-135deg);
+}
+
+.group-tile:hover .group-tile-chevron,
+.group-tile.is-open .group-tile-chevron {
+  border-color: var(--gilt);
+  background: var(--gilt-dim);
+}
+
+.group-tile.is-open .group-tile-chevron {
+  background: transparent;
+  border-color: var(--on-gilt);
+  opacity: 0.6;
+}
+
+.group-tile.is-open .group-tile-chevron::before {
+  border-color: var(--on-gilt);
+}
+
+.group-tile-loading {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  width: 8px;
+  height: 8px;
+  background: var(--gilt);
+  transform: rotate(45deg);
+  animation: tile-pulse 900ms linear infinite;
+}
+
+@keyframes tile-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---- tile placeholders (no thumbnail) ---- */
+
+.tile-glyph {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
+}
+
+.tile-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
   border: 1px solid var(--border-subtle);
   border-radius: 2px;
   opacity: 0.8;
 }
 
-.session-card-audio {
+.tile-audio {
+  position: absolute;
+  left: 50%;
+  top: 50%;
   display: flex;
   align-items: center;
   gap: 2px;
   height: 20px;
+  transform: translate(-50%, -50%);
 }
 
-.session-card-audio span {
+.tile-audio span {
   width: 2px;
   border-radius: 1px;
   background: var(--text-muted);
 }
 
-.session-card-audio span:nth-child(1) { height: 10px; }
-.session-card-audio span:nth-child(2) { height: 20px; }
-.session-card-audio span:nth-child(3) { height: 14px; }
-.session-card-audio span:nth-child(4) { height: 7px; }
-
-.session-card-body {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.tile-audio span:nth-child(1) {
+  height: 10px;
 }
-
-.session-card-label {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.tile-audio span:nth-child(2) {
+  height: 20px;
 }
-
-.session-card-meta {
-  display: flex;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
+.tile-audio span:nth-child(3) {
+  height: 14px;
 }
-
-.session-card-meta > span + span::before {
-  content: '·';
-  margin-right: 8px;
-  color: var(--border-subtle);
-}
-
-.session-card-chevron {
-  flex: 0 0 auto;
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid var(--text-faint);
-  transition: transform 140ms linear;
-}
-
-.session-card:hover .session-card-chevron {
-  border-top-color: var(--gilt);
-}
-
-.session-card.is-expanded .session-card-chevron {
-  transform: rotate(180deg);
+.tile-audio span:nth-child(4) {
+  height: 7px;
 }
