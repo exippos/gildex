@@ -1,0 +1,222 @@
+/* Horizontal broken-axis time canvas — opaque surface, no blur (glass contract D14).
+   Gilt appears only as an edge: stack rings, control hovers. */
+
+.timeline {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ---- pannable viewport ---- */
+
+.timeline-viewport {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  overscroll-behavior: contain;
+}
+
+.timeline-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+/* ---- collapsed gap marker (broken axis) ---- */
+
+.timeline-break {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.timeline-break-rule {
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  right: 6px;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    to right,
+    var(--hairline) 0,
+    var(--hairline) 15px,
+    transparent 15px,
+    transparent 23px,
+    var(--hairline) 23px,
+    var(--hairline) 100%
+  );
+}
+
+.timeline-break-rule::before,
+.timeline-break-rule::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+  background: var(--hairline);
+}
+
+.timeline-break-rule::before {
+  left: 15px;
+}
+
+.timeline-break-rule::after {
+  left: 23px;
+}
+
+.timeline-break-label {
+  position: absolute;
+  top: calc(50% + 8px);
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- hour stacks (one fanned deck per hour bucket) ---- */
+
+.timeline-stack {
+  position: absolute;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.timeline-stack:hover,
+.timeline-stack.is-active {
+  outline: 1px solid var(--gilt);
+  outline-offset: 2px;
+}
+
+.timeline-stack-img {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 0;
+  pointer-events: none;
+}
+
+.timeline-stack-img.is-top {
+  border: 1px solid var(--hairline);
+}
+
+.timeline-stack:hover .timeline-stack-img.is-top,
+.timeline-stack.is-active .timeline-stack-img.is-top {
+  border-color: var(--gilt);
+}
+
+.timeline-stack-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--text-muted);
+  border: 1px solid var(--hairline);
+}
+
+.timeline-stack-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 10;
+  padding: 0 4px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.timeline-stack-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---- hourly histogram (zoomed-out fallback) ---- */
+
+.timeline-histogram {
+  position: absolute;
+  border-radius: var(--radius-sm);
+  background: var(--text-muted);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ---- floating chrome (opaque, hairline edged — no blur) ---- */
+
+.timeline-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 2px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+
+.timeline-controls button {
+  border: 0;
+  border-radius: 0;
+  padding: 1px 6px;
+  min-width: 18px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.timeline-controls button:hover {
+  color: var(--gilt-bright);
+}
+
+.timeline-controls button + button {
+  border-left: 1px solid var(--hairline);
+}
+
+/* ---- empty ---- */
+
+.timeline-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--text-muted);
+  pointer-events: none;
+}

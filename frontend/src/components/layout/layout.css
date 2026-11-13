@@ -1,0 +1,156 @@
+/* Browse frame geometry. Blur lives on .chrome only (header, rail, preview, footer). */
+
+.app-frame {
+  display: grid;
+  grid-template-rows: var(--header-height) minmax(0, 1fr) var(--footer-height);
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.frame-body {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---- header / footer hairline seams ---- */
+
+.app-header {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  border-top: 1px solid var(--hairline);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---- center column ---- */
+
+.grid-column {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.grid-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: var(--bg);
+}
+
+/* ---- footer controls ---- */
+
+.footer-toggles {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+}
+
+.footer-toggles button {
+  border: 0;
+  border-radius: 0;
+  padding: 2px 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+  border-bottom: 1px solid transparent;
+}
+
+.footer-toggles button:hover {
+  color: var(--gilt-bright);
+  border-bottom-color: var(--gilt);
+}
+
+.footer-toggles button.is-active {
+  color: var(--text);
+  border-bottom-color: var(--gilt);
+}
+
+.footer-count {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- resizable panel seams ---- */
+
+.resize-handle {
+  position: relative;
+  flex: 0 0 6px;
+  width: 6px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 12;
+  user-select: none;
+}
+
+.resize-rule {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 1px;
+  background: var(--gilt);
+  opacity: 0.25;
+  transition: opacity 120ms linear;
+}
+
+.resize-tick {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.resize-tick::before,
+.resize-tick::after {
+  content: '';
+  height: 1px;
+  background: var(--gilt);
+  opacity: 0.5;
+}
+
+.resize-tick::before {
+  width: 7px;
+}
+
+.resize-tick::after {
+  width: 4px;
+}
+
+.resize-handle:hover .resize-rule,
+.resize-handle:active .resize-rule {
+  opacity: 0.9;
+}
+
+.resize-handle:hover .resize-tick::before,
+.resize-handle:hover .resize-tick::after,
+.resize-handle:active .resize-tick::before,
+.resize-handle:active .resize-tick::after {
+  opacity: 0.9;
+}
+
+/* rail / preview seams are drawn by the panels themselves */

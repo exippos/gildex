@@ -1,0 +1,110 @@
+/* Header — frosted fixed chrome: brand + workspace tabs left, theme toggle right. */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 14px;
+  z-index: 20;
+}
+
+.app-brand {
+  flex: 0 0 auto;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  padding-right: 4px;
+  user-select: none;
+}
+
+.workspace-tabs {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+  gap: 2px;
+}
+
+.workspace-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.workspace-tab::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 1px;
+  background: transparent;
+}
+
+.workspace-tab:hover {
+  color: var(--text);
+  border-color: transparent;
+}
+
+.workspace-tab.is-active {
+  color: var(--text);
+}
+
+.workspace-tab.is-active::after {
+  background: var(--gilt);
+  opacity: 0.85;
+}
+
+.workspace-tab.is-busy::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--gilt-bright);
+  animation: header-pulse 1s ease-in-out infinite;
+}
+
+@keyframes header-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.header-spacer {
+  flex: 1 1 auto;
+}
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.theme-toggle:hover {
+  color: var(--gilt-bright);
+  border: 0;
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}

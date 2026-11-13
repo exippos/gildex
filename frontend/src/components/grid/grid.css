@@ -1,0 +1,223 @@
+/* Opaque item wall — no blur here (glass contract D14). */
+
+.grid-root {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+}
+
+.grid-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.grid-canvas {
+  position: relative;
+  width: 100%;
+}
+
+.grid-section {
+  position: absolute;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-top: 8px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.grid-section::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 42px;
+  height: 1px;
+  background: var(--gilt);
+}
+
+.grid-section-label {
+  font-size: 15px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grid-section-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.grid-section-meta > span + span::before {
+  content: '·';
+  margin-right: 8px;
+  color: var(--hairline);
+}
+
+/* ---- loading / empty ---- */
+
+.grid-loading {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.grid-loading-tick {
+  width: 6px;
+  height: 6px;
+  background: var(--gilt);
+}
+
+.grid-empty {
+  position: absolute;
+  top: 72px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 17px;
+  pointer-events: none;
+}
+
+/* ---- session cards (collapsed/expandable in sessions-all view) ---- */
+
+.session-card {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0 12px 0 6px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.session-card:hover {
+  border-color: var(--gilt);
+  color: var(--text);
+}
+
+.session-card:focus-visible {
+  outline: 1px solid var(--text-muted);
+  outline-offset: -1px;
+}
+
+.session-card-thumb {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  overflow: hidden;
+  color: var(--text-muted);
+}
+
+.session-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.session-card-thumb svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0.55;
+}
+
+.session-card-frame {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  opacity: 0.8;
+}
+
+.session-card-audio {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+}
+
+.session-card-audio span {
+  width: 2px;
+  border-radius: 1px;
+  background: var(--text-muted);
+}
+
+.session-card-audio span:nth-child(1) { height: 10px; }
+.session-card-audio span:nth-child(2) { height: 20px; }
+.session-card-audio span:nth-child(3) { height: 14px; }
+.session-card-audio span:nth-child(4) { height: 7px; }
+
+.session-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-card-label {
+  font-size: 15px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-card-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.session-card-meta > span + span::before {
+  content: '·';
+  margin-right: 8px;
+  color: var(--hairline);
+}
+
+.session-card-chevron {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--text-muted);
+  transition: transform 140ms linear;
+}
+
+.session-card.is-expanded .session-card-chevron {
+  transform: rotate(180deg);
+}

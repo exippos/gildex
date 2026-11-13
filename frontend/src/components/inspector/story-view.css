@@ -1,0 +1,453 @@
+/* Story view (D9) — media beside an engraved gallery plaque.
+   Flat panel, hairline only, gilt reserved for label underlines and ticks. */
+
+.story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* --- media ------------------------------------------------------------- */
+
+.story-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+}
+
+.story-media img,
+.story-media video {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 200px);
+  border-radius: var(--radius-sm);
+}
+
+.story-media--audio {
+  min-height: 200px;
+}
+
+.story-audio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px 8px;
+}
+
+.story-audio-title {
+  font-size: 15px;
+  color: var(--text-muted);
+  text-align: center;
+  word-break: break-all;
+}
+
+.story-audio audio {
+  width: 100%;
+}
+
+.story-media--missing {
+  border-style: dashed;
+}
+
+.story-missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.story-missing-tick {
+  width: 3px;
+  height: 32px;
+  background: var(--danger);
+}
+
+.story-missing-title {
+  font-size: 17px;
+  color: var(--text-muted);
+}
+
+.story-missing-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* --- plaque ------------------------------------------------------------ */
+
+.story-plaque {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.story-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.story-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.story-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--gilt);
+  align-self: flex-start;
+}
+
+.story-link {
+  padding: 0;
+  border: none;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--hairline);
+}
+.story-link:hover {
+  color: var(--gilt-bright);
+  border: none;
+  text-decoration-color: var(--gilt);
+}
+
+.story-prompt {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 60ch;
+}
+.story-prompt.is-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.story-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.story-edit textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.story-edit input {
+  width: 100%;
+}
+
+.story-edit-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.story-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.story-primary {
+  border-color: var(--gilt);
+  color: var(--gilt-bright);
+}
+.story-primary:hover {
+  border-color: var(--gilt-bright);
+}
+.story-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* --- disclosures ------------------------------------------------------- */
+
+.story-disclosure {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+
+.story-disclosure-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-variant-caps: small-caps;
+  color: var(--text-muted);
+}
+.story-disclosure-btn:hover {
+  color: var(--gilt-bright);
+  border: none;
+}
+
+.story-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid var(--text-muted);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+.story-caret.is-open {
+  transform: rotate(90deg);
+}
+
+.story-extra-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 0 4px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+
+.story-negative {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.story-extra-list {
+  display: grid;
+  grid-template-columns: minmax(88px, max-content) minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.story-extra-row {
+  display: contents;
+}
+
+.story-extra-row dt {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.story-extra-row dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* --- parameter spec ---------------------------------------------------- */
+
+.story-spec {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.story-spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.story-spec-item dt {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-variant-caps: small-caps;
+  color: var(--text-muted);
+}
+
+.story-spec-item dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* --- user fields ------------------------------------------------------- */
+
+.story-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+
+.story-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.story-control-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.story-fav {
+  border: none;
+  padding: 0;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+.story-fav.is-on {
+  color: var(--gilt);
+}
+.story-fav:hover {
+  border: none;
+  color: var(--gilt-bright);
+}
+
+.story-rating {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.story-star {
+  border: none;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--hairline);
+}
+.story-star.is-on {
+  color: var(--gilt);
+}
+.story-star:hover {
+  border: none;
+  color: var(--gilt-bright);
+}
+
+.story-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.story-status-tick {
+  width: 2px;
+  height: 12px;
+  background: var(--status-draft);
+}
+.story-status--final .story-status-tick {
+  background: var(--status-final);
+}
+.story-status--wip .story-status-tick {
+  background: var(--status-wip);
+}
+
+.story-status select {
+  padding: 2px 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+/* --- file metadata ----------------------------------------------------- */
+
+.story-files {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+
+.story-file-row {
+  display: contents;
+}
+
+.story-file-row dt {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.story-file-row dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.story-file-row dd.is-missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--danger);
+}
+
+.story-danger-tick {
+  width: 2px;
+  height: 10px;
+  background: var(--danger);
+}
+
+.story-source {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.story-source .display {
+  color: var(--text-muted);
+  margin-right: 4px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.story-error {
+  margin: 0;
+  font-size: 11px;
+  color: var(--danger);
+}
+
+@media (max-width: 900px) {
+  .story {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .story-media img,
+  .story-media video {
+    max-height: 60vh;
+  }
+}

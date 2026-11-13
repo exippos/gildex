@@ -1,0 +1,376 @@
+/* Right preview — frosted fixed chrome; the gilt seam is drawn by the resize handle. */
+
+.right-preview {
+  position: relative;
+  flex: 0 0 var(--preview-width);
+  width: var(--preview-width);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.preview-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.preview-kicker {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.preview-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+/* ---- media ---- */
+
+.preview-media {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--hairline);
+  padding: 10px;
+}
+
+.preview-media img,
+.preview-media video {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+}
+
+.preview-media video {
+  width: 100%;
+}
+
+.preview-media.is-audio {
+  padding: 24px 14px;
+}
+
+.preview-media audio {
+  width: 100%;
+}
+
+.preview-audio-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.preview-missing {
+  min-height: 130px;
+  position: relative;
+  color: var(--text-muted);
+}
+
+.preview-danger-tick {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 3px;
+  height: 16px;
+  background: var(--danger);
+}
+
+.preview-missing .display {
+  font-size: 15px;
+}
+
+/* ---- sections ---- */
+
+.preview-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.preview-section:last-child {
+  border-bottom: 0;
+}
+
+.preview-lead {
+  padding-top: 14px;
+}
+
+.preview-section-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.preview-filename {
+  font-size: 13px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.preview-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.preview-title {
+  font-size: 19px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.preview-description {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.preview-prompt-box {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--hairline);
+  border-left: 2px solid var(--gilt);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.preview-negative-box {
+  border-left-color: var(--hairline);
+  background: transparent;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.preview-neg-label {
+  display: inline-block;
+  margin-right: 5px;
+  padding-right: 5px;
+  border-right: 1px solid var(--hairline);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.preview-params {
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.preview-meta {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 2px 8px;
+  margin: 0;
+  font-size: 11px;
+}
+
+.preview-meta dt {
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+.preview-meta dd {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* ---- triage controls ---- */
+
+.preview-fav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.preview-fav.is-on {
+  border-color: var(--gilt);
+  color: var(--text);
+}
+
+.preview-fav-mark {
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: transparent;
+  border: 1px solid var(--text-muted);
+}
+
+.preview-fav.is-on .preview-fav-mark {
+  background: var(--gilt);
+  border-color: var(--gilt);
+}
+
+.preview-control-label {
+  display: inline-block;
+  min-width: 42px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.preview-rating {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.preview-rating-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.preview-rating-dot {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.preview-rating-dot.is-on {
+  background: var(--gilt);
+  border-color: var(--gilt);
+}
+
+.preview-status {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.preview-status-row {
+  display: flex;
+  gap: 2px;
+}
+
+.preview-status-button {
+  padding: 1px 7px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.preview-status-button:hover {
+  border-bottom-color: var(--hairline);
+}
+
+.preview-status-button.is-active[data-status='draft'] {
+  color: var(--status-draft);
+  border-bottom-color: var(--status-draft);
+}
+
+.preview-status-button.is-active[data-status='wip'] {
+  color: var(--status-wip);
+  border-bottom-color: var(--status-wip);
+}
+
+.preview-status-button.is-active[data-status='final'] {
+  color: var(--status-final);
+  border-bottom-color: var(--status-final);
+}
+
+.preview-actions {
+  padding-top: 10px;
+}
+
+.preview-inspect {
+  width: 100%;
+  padding: 5px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.preview-inspect:hover {
+  border-color: var(--gilt);
+  color: var(--gilt-bright);
+}
+
+/* ---- thumbnail strip / grid ---- */
+
+.preview-strip {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.preview-thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.preview-thumb {
+  display: block;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.preview-thumb-grid .preview-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.preview-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-thumb:hover {
+  border-color: var(--gilt);
+}
+
+.preview-empty-line {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---- minimal folder/tag line ---- */
+
+.preview-minimal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
