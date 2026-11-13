@@ -1,4 +1,4 @@
-/* Gallery controls — shown in the header's hover-reveal strip. */
+/* Header utility strip — item count and panel toggles. */
 
 .grid-toolbar {
   display: flex;
@@ -11,80 +11,6 @@
 .toolbar-spacer {
   flex: 1 1 auto;
 }
-
-.size-control,
-.sort-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.control-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  white-space: nowrap;
-}
-
-.size-control input[type='range'] {
-  width: 90px;
-  height: 16px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  accent-color: var(--gilt);
-  cursor: pointer;
-}
-
-.sort-control select {
-  border: 0;
-  border-bottom: 1px solid var(--border-subtle);
-  border-radius: 0;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
-  padding: 2px 2px 3px;
-  cursor: pointer;
-}
-
-.sort-control select:hover {
-  color: var(--text);
-  border-bottom-color: var(--gilt);
-}
-
-.sort-control select:focus-visible {
-  outline: 1px solid var(--focus);
-  outline-offset: 2px;
-}
-
-.sort-dir {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  color: var(--text-muted);
-  background: transparent;
-  font-size: 13px;
-  line-height: 1;
-}
-
-.sort-dir:hover {
-  color: var(--gilt-bright);
-  border-color: var(--gilt-border);
-  background: var(--control);
-}
-
-.sort-dir[aria-pressed='true'] {
-  color: var(--gilt);
-}
-
-/* ---- count + panel toggles (moved out of the removed footer) ---- */
 
 .toolbar-count {
   font-size: 10px;

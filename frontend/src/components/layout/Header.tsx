@@ -141,9 +141,9 @@ export function Header({
       {workspace !== 'ingest' && (
         <div className="header-reveal">
           <GridToolbar
+            showRail={workspace === 'gallery'}
             railOpen={railOpen}
             previewOpen={previewOpen}
-            gridControls={workspace === 'gallery'}
             onToggleRail={onToggleRail}
             onTogglePreview={onTogglePreview}
           />

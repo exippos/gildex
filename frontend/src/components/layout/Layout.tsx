@@ -5,6 +5,7 @@ import { useStore } from '../../store'
 import { Header } from './Header'
 import { LeftRail } from './LeftRail'
 import { Grid } from '../grid/Grid'
+import { GalleryViewControls } from '../grid/GalleryViewControls'
 import { TimelineCanvas } from '../timeline/TimelineCanvas'
 import { BatchToolbar } from '../grid/BatchToolbar'
 import { RightPreview } from '../preview/RightPreview'
@@ -150,6 +151,7 @@ export function Layout() {
                 {workspace === 'gallery' && effects === 'full' && <Atmosphere />}
                 {workspace === 'timeline' ? <TimelineCanvas /> : <Grid cellSize={cellSize} />}
                 {workspace === 'gallery' && <EmptyState />}
+                {workspace === 'gallery' && <GalleryViewControls />}
               </div>
               {workspace === 'gallery' && <BatchToolbar />}
             </main>
