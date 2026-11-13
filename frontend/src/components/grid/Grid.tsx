@@ -50,10 +50,6 @@ interface GridRow {
 
 interface GroupOutline {
   key: string
-  left: number
-  top: number
-  width: number
-  height: number
   path: string
 }
 
@@ -172,35 +168,23 @@ function groupOutline(
   const y0 = (r: number) => PAD_Y + r * rowStep - BAND_PAD
   const y1 = (r: number) => y0(r) + cellW + BAND_PAD * 2
 
-  const left = Math.min(...segments.map((s) => x0(s.a)))
-  const right = Math.max(...segments.map((s) => x1(s.b)))
-  const top = y0(firstRow)
-  const bottom = y1(lastRow)
-
   const points: Array<[number, number]> = []
-  points.push([x0(segments[0].a), top])
-  points.push([x1(segments[0].b), top])
+  points.push([x0(segments[0].a), y0(firstRow)])
+  points.push([x1(segments[0].b), y0(firstRow)])
   for (let i = 0; i < segments.length; i++) {
     points.push([x1(segments[i].b), y1(firstRow + i)])
     if (i + 1 < segments.length) points.push([x1(segments[i + 1].b), y1(firstRow + i)])
   }
-  points.push([x0(segments[segments.length - 1].a), bottom])
+  points.push([x0(segments[segments.length - 1].a), y1(lastRow)])
   for (let i = segments.length - 1; i >= 0; i--) {
     points.push([x0(segments[i].a), y0(firstRow + i)])
     if (i > 0) points.push([x0(segments[i - 1].a), y0(firstRow + i)])
   }
 
   const path = points
-    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x - left} ${y - top}`)
+    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x} ${y}`)
     .join('')
-  return {
-    key,
-    left,
-    top,
-    width: right - left,
-    height: bottom - top,
-    path: `${path}Z`,
-  }
+  return { key, path: `${path}Z` }
 }
 
 function TileFallback({ kind }: { kind: Item['kind'] | null }) {
@@ -514,23 +498,28 @@ export function Grid({ cellSize }: { cellSize: number }) {
         }}
       >
         <div className="grid-canvas" style={{ height: layout.height }}>
-          {layout.outlines.map((outline) => (
+          {layout.outlines.length > 0 && (
             <svg
-              key={outline.key}
-              className="group-outline"
-              style={{
-                top: outline.top,
-                left: outline.left,
-                width: outline.width,
-                height: outline.height,
-              }}
+              className="group-layer"
+              width="100%"
+              height={layout.height}
               aria-hidden="true"
             >
-              <path className="group-outline-fill" d={outline.path} />
-              <path className="group-outline-tint" d={outline.path} />
-              <path className="group-outline-edge" d={outline.path} />
+              <defs>
+                <linearGradient id="group-tint-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="currentColor" stopOpacity="0.3" />
+                  <stop offset="1" stopColor="currentColor" stopOpacity="0.18" />
+                </linearGradient>
+              </defs>
+              {layout.outlines.map((outline) => (
+                <g key={outline.key}>
+                  <path className="group-outline-fill" d={outline.path} />
+                  <path className="group-outline-tint" d={outline.path} />
+                  <path className="group-outline-edge" d={outline.path} />
+                </g>
+              ))}
             </svg>
-          ))}
+          )}
 
           {width > 0 &&
             visible.map((row) =>

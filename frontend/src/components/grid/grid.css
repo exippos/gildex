@@ -109,25 +109,29 @@
    The group silhouette (tile + items) is traced as one path, filled with a
    distinct well and outlined with a single gilt hairline. */
 
-.group-outline {
+.group-layer {
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 0;
   overflow: visible;
   pointer-events: none;
+  /* currentColor feeds the tint gradient's stops */
+  color: var(--gilt);
 }
 
 .group-outline-fill {
-  fill: var(--control);
+  fill: var(--surface-inset);
 }
 
 .group-outline-tint {
-  fill: var(--gilt-dim);
+  fill: url(#group-tint-grad);
 }
 
 .group-outline-edge {
   fill: none;
   stroke: var(--gilt);
-  stroke-opacity: 0.42;
+  stroke-opacity: 0.55;
   stroke-width: 1;
 }
 
@@ -232,7 +236,14 @@
   box-shadow: 0 0 0 1px var(--gilt-hi), 0 0 22px var(--accent-glow);
 }
 
-.group-tile.is-open .group-tile-poster > img,
+/* The root's own artwork is etched into the metal: a grayscale multiply
+   keeps the plate gold while the image sits in it as a darker relief. */
+.group-tile.is-open .group-tile-poster > img {
+  opacity: 0.4;
+  filter: grayscale(1) contrast(1.25) brightness(0.95);
+  mix-blend-mode: multiply;
+}
+
 .group-tile.is-open .group-tile-poster > .tile-glyph,
 .group-tile.is-open .group-tile-poster > .tile-audio,
 .group-tile.is-open .group-tile-poster > .tile-frame {
