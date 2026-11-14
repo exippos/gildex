@@ -9,11 +9,14 @@ import (
 	"golang.org/x/image/draw"
 )
 
-const maxSide = 512
-
 // Generate resizes img so its longest side is at most 512px (never upscaling)
 // and writes a JPEG to dst.
 func Generate(img image.Image, dst string) error {
+	return GenerateAt(img, dst, 512)
+}
+
+// GenerateAt is like Generate but caps the longest side at maxSide pixels.
+func GenerateAt(img image.Image, dst string, maxSide int) error {
 	if img == nil {
 		return nil
 	}
@@ -24,7 +27,7 @@ func Generate(img image.Image, dst string) error {
 	}
 
 	nw, nh := w, h
-	if longest := maxInt(w, h); longest > maxSide {
+	if longest := maxInt(w, h); maxSide > 0 && longest > maxSide {
 		scale := float64(maxSide) / float64(longest)
 		nw = maxInt(1, int(float64(w)*scale+0.5))
 		nh = maxInt(1, int(float64(h)*scale+0.5))

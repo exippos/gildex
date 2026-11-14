@@ -85,6 +85,7 @@ type Item struct {
 	CFGScale       *float64          `json:"cfgScale"`
 	GeneratedAt    *int64            `json:"generatedAt"`
 	ThumbnailPath  string            `json:"thumbnailPath"` // "<hash>.jpg" or "" if none
+	FrameCount     int               `json:"frameCount"`    // prerendered hover-play frames, 0 = none
 	Extra          map[string]string `json:"extra"`         // tier-3 metadata_kv, never null
 }
 

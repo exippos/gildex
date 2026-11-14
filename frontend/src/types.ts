@@ -46,6 +46,7 @@ export interface Item {
   cfgScale: number | null
   generatedAt: number | null
   thumbnailPath: string // "<hash>.jpg" or ""
+  frameCount: number // prerendered hover-play frames, 0 = none
   extra: Record<string, string>
 }
 

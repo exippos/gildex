@@ -250,3 +250,54 @@
   background-repeat: no-repeat, no-repeat;
   opacity: 0.7;
 }
+
+/* ---- video format indication + hover-play ---- */
+
+/* hover-play frame cycler: sits directly under the thumbnail overlays */
+.cell-hover-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+}
+
+/* always-on play mark: small frosted disc centered on the cell */
+.cell-badge {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  margin: auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 60%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--scrim) 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--text);
+  pointer-events: none;
+}
+
+.cell-badge svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+/* duration chip: bottom-right, clear of the bottom-left meta strip */
+.cell-duration {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--scrim);
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}

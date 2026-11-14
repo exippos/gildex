@@ -30,6 +30,7 @@ type ImportItem struct {
 	CFGScale       *float64
 	GeneratedAt    *int64
 	ThumbnailPath  string
+	FrameCount     int
 	PHash          int64
 	Extra          map[string]string
 	RawMetadata    []byte
@@ -97,13 +98,13 @@ func (s *Store) UpsertImport(it ImportItem) error {
 		_, err = tx.Exec(`INSERT INTO items (
 			id, content_hash, relative_path, kind, format, file_size, timestamp, width, height,
 			duration, favorite, rating, status, state, session_id, prompt, negative_prompt,
-			model_name, seed, steps, sampler, cfg_scale, generated_at, thumbnail_path, phash, manual_fields, source_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 'draft', 'present', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)`,
+			model_name, seed, steps, sampler, cfg_scale, generated_at, thumbnail_path, frame_count, phash, manual_fields, source_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 'draft', 'present', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)`,
 			id, it.ContentHash, it.RelativePath, string(it.Kind), it.Format, it.FileSize,
 			it.Timestamp, it.Width, it.Height, floatArg(it.Duration),
 			strArg(it.Prompt), strArg(it.NegativePrompt), strArg(it.ModelName),
 			intArg(it.Seed), intArg(it.Steps), strArg(it.Sampler), floatArg(it.CFGScale),
-			intArg(it.GeneratedAt), it.ThumbnailPath, it.PHash, strArg(it.SourceID),
+			intArg(it.GeneratedAt), it.ThumbnailPath, it.FrameCount, it.PHash, strArg(it.SourceID),
 		)
 		if err != nil {
 			return err
@@ -115,12 +116,12 @@ func (s *Store) UpsertImport(it ImportItem) error {
 		sets := []string{
 			"relative_path = ?", "kind = ?", "format = ?", "file_size = ?",
 			"timestamp = ?", "width = ?", "height = ?", "duration = ?",
-			"thumbnail_path = ?", "phash = ?", "state = 'present'", "source_id = ?",
+			"thumbnail_path = ?", "frame_count = ?", "phash = ?", "state = 'present'", "source_id = ?",
 		}
 		args := []any{
 			it.RelativePath, string(it.Kind), it.Format, it.FileSize,
 			it.Timestamp, it.Width, it.Height, floatArg(it.Duration),
-			it.ThumbnailPath, it.PHash, strArg(it.SourceID),
+			it.ThumbnailPath, it.FrameCount, it.PHash, strArg(it.SourceID),
 		}
 		addOpt := func(field, col string, value any) {
 			if manualSet[field] {

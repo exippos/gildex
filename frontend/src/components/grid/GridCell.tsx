@@ -1,10 +1,12 @@
 // A single grid cell: the only saturated, opaque object on the wall.
 // No card chrome, no borders, no shadows. Thumbnail + D22 badges +
 // museum-corner selection tick.
+import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useStore } from '../../store'
-import { thumbUrl } from '../../api'
+import { frameUrl, thumbUrl } from '../../api'
 import type { Item } from '../../types'
+import { formatDuration } from '../format'
 import { setDraggedItems } from '../groups/drag'
 import './grid-cell.css'
 
@@ -83,6 +85,54 @@ function Placeholder({ item }: { item: Item }) {
   )
 }
 
+/**
+ * Poster thumbnail that cycles through prerendered hover-play frames while the
+ * pointer is over the cell, then falls back to the poster when idle.
+ */
+function HoverVideo({ item, thumb }: { item: Item; thumb: string | null }) {
+  const [frame, setFrame] = useState(0)
+  const timer = useRef<number | null>(null)
+  const frameCount = item.frameCount
+
+  const stop = () => {
+    if (timer.current !== null) {
+      window.clearInterval(timer.current)
+      timer.current = null
+    }
+  }
+
+  // Never leave an interval running once the cell is gone.
+  useEffect(() => {
+    return () => {
+      if (timer.current !== null) window.clearInterval(timer.current)
+    }
+  }, [])
+
+  const handleEnter = () => {
+    if (item.kind !== 'video' || frameCount <= 0) return
+    stop()
+    let next = 1
+    setFrame(next)
+    timer.current = window.setInterval(() => {
+      next = next >= frameCount ? 0 : next + 1
+      setFrame(next)
+    }, 120)
+  }
+
+  const handleLeave = () => {
+    stop()
+    setFrame(0)
+  }
+
+  const src = frame === 0 ? thumb : (frameUrl(item.contentHash, frame) ?? thumb)
+
+  return (
+    <span className="cell-hover-video" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <img className="cell-thumb" src={src ?? undefined} alt="" loading="lazy" draggable={false} />
+    </span>
+  )
+}
+
 function RatingDots({ rating }: { rating: number }) {
   return (
     <span className="cell-rating" aria-label={`${rating} of 5`}>
@@ -154,12 +204,24 @@ export function GridCell({ item, selected, isCover = false, style, onMenu }: Gri
       }}
     >
       {canShowThumb && thumb ? (
-        <img className="cell-thumb" src={thumb} alt="" loading="lazy" draggable={false} />
+        <HoverVideo item={item} thumb={thumb} />
       ) : (
         <Placeholder item={item} />
       )}
 
       <span className="cell-hover" aria-hidden="true" />
+
+      {item.kind === 'video' && item.state !== 'missing' && (
+        <span className="cell-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M8 5.5 19 12 8 18.5Z" fill="currentColor" />
+          </svg>
+        </span>
+      )}
+
+      {item.kind === 'video' && item.duration != null && item.duration > 0 && (
+        <span className="cell-duration">{formatDuration(item.duration)}</span>
+      )}
 
       {isCover && <span className="cell-cover" aria-hidden="true" />}
 

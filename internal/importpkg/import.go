@@ -28,7 +28,11 @@ import (
 	"gildex/internal/phash"
 	"gildex/internal/store"
 	"gildex/internal/thumb"
+	"gildex/internal/video"
 )
+
+// videoFrames is how many hover-play frames to prerender per video (D18).
+const videoFrames = 8
 
 // ErrRunning is returned when an import job is already in flight.
 var ErrRunning = errors.New("import already running")
@@ -408,7 +412,25 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 				item.ThumbnailPath = thumbName
 			}
 		}
+	} else if kind == model.KindVideo {
+		// Poster thumbnail + hover-play frame strip + duration, via ffmpeg on
+		// PATH (D18, D33). Degrades silently to the placeholder when ffmpeg is
+		// absent or the extraction fails — the item still imports.
+		setStage("extract")
+		res, err := video.Extract(f.abs, thumbDir, hash, videoFrames)
+		if err != nil {
+			log.Printf("gildex: video extract %s: %v", f.rel, err)
+		}
+		item.ThumbnailPath = res.ThumbnailPath
+		item.FrameCount = res.FrameCount
+		item.Width = res.Width
+		item.Height = res.Height
+		item.Duration = res.Duration
+		if res.PHash != 0 {
+			item.PHash = res.PHash
+		}
 	} else {
+		// Audio: placeholder duration until audio thumbnailing lands (D42).
 		zero := 0.0
 		item.Duration = &zero
 	}

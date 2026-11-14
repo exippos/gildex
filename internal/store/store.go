@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS items (
   cfg_scale       REAL,
   generated_at    INTEGER,
   thumbnail_path  TEXT NOT NULL DEFAULT '',
+  frame_count     INTEGER NOT NULL DEFAULT 0,
   phash           INTEGER NOT NULL DEFAULT 0,
   manual_fields   TEXT NOT NULL DEFAULT '',
   source_id       TEXT
@@ -171,6 +172,7 @@ func migrate(db *sql.DB) error {
 		{"sessions", "cover_item_id", `ALTER TABLE sessions ADD COLUMN cover_item_id TEXT`},
 		{"collections", "cover_item_id", `ALTER TABLE collections ADD COLUMN cover_item_id TEXT`},
 		{"items", "source_id", `ALTER TABLE items ADD COLUMN source_id TEXT`},
+		{"items", "frame_count", `ALTER TABLE items ADD COLUMN frame_count INTEGER NOT NULL DEFAULT 0`},
 	}
 	for _, c := range columns {
 		ok, err := hasColumn(db, c.table, c.column)
@@ -242,7 +244,7 @@ func NewID() string {
 const itemCols = `i.id, i.content_hash, i.relative_path, i.kind, i.format, i.file_size,
 	i.timestamp, i.width, i.height, i.duration, i.favorite, i.rating, i.status, i.state,
 	i.session_id, i.prompt, i.negative_prompt, i.model_name, i.seed, i.steps, i.sampler,
-	i.cfg_scale, i.generated_at, i.thumbnail_path, i.source_id`
+	i.cfg_scale, i.generated_at, i.thumbnail_path, i.frame_count, i.source_id`
 
 func scanItem(sc interface{ Scan(dest ...any) error }) (*model.Item, error) {
 	var (
@@ -262,7 +264,7 @@ func scanItem(sc interface{ Scan(dest ...any) error }) (*model.Item, error) {
 		&it.ID, &it.ContentHash, &it.RelativePath, &kind, &format, &it.FileSize,
 		&it.Timestamp, &it.Width, &it.Height, &duration, &favorite, &it.Rating, &status, &state,
 		&sessionID, &prompt, &negative, &modelN, &seed, &steps, &sampler,
-		&cfg, &generatedAt, &it.ThumbnailPath, &sourceID,
+		&cfg, &generatedAt, &it.ThumbnailPath, &it.FrameCount, &sourceID,
 	)
 	if err != nil {
 		return nil, err

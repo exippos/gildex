@@ -162,6 +162,10 @@ export const api = {
 export function thumbUrl(thumbnailPath: string): string | null {
   return thumbnailPath ? `/api/thumb/${thumbnailPath}` : null
 }
+export function frameUrl(contentHash: string, index: number): string | null {
+  if (!contentHash || index < 1) return null
+  return `/api/thumb/${contentHash}-f${String(index).padStart(2, '0')}.jpg`
+}
 export function mediaUrl(itemId: string): string {
   return `/api/media/${itemId}`
 }
