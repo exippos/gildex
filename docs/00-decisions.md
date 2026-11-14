@@ -69,6 +69,8 @@ not an index. The "source" term is retired.
 
 **Affects.** Vision §4, §6, §7, §10; Feature list.
 
+**Amended by.** D43 — "source" is reintroduced as an ingest-configuration entity, distinct from the "folders" browse view.
+
 ## D7 — Context layer surface: hybrid inspector
 
 **Choice.** Notes, regions, cross-links, and attached files live behind a
@@ -201,6 +203,8 @@ inbox is a folder *under* the root (referenced in place) or an external landing
 zone (copied in via D1's copy-into-library).
 
 **Affects.** Architecture (import pipeline, watcher); Feature list (inbox UX).
+
+**Amended by.** D43 — watching is per-source, not only the designated inbox.
 
 ## D17 — Audio is first-class media
 
@@ -451,3 +455,27 @@ only; audio similarity is deferred.
 
 **Affects.** Architecture (audio thumbnail pipeline); Feature list (audio
 similarity, deferred).
+
+## D43 — Library is a directory bundle; sources are ingest entities
+
+**Choice.** The library is a single relocatable directory bundle named
+`<Name>.gildex` containing a `library.gildex.json` manifest (identity + schema
+version), the SQLite catalog, and the derived caches `thumbnails/`,
+`attachments/`, and `_inbox/`. Media lives in external SOURCES — folders
+referenced in place — each configured `once` (one-time import, default) or
+`watch` (periodically re-scanned). Removing a source marks its items `missing`;
+nothing on disk is ever deleted.
+
+**Rationale.** Separates the catalog's identity/storage from where media
+actually lives, so a user can create an empty library first and then attach (and
+detach) many media folders. The `.gildex` directory bundle keeps the catalog,
+DB, and caches as one relocatable unit (macOS package semantics) while remaining
+a plain folder the pipeline writes to directly.
+
+**Amends.** D6 (the retired "source" term returns as an
+*ingest-configuration* entity, distinct from the "folders" browse view), D13
+(relocatable root is now the bundle, not the media stash), D16 (watching
+broadens from the inbox to per-source).
+
+**Affects.** Architecture §1/§4 (storage layout); Feature list §2.1; a future
+multi-library decision.

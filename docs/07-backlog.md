@@ -4,13 +4,15 @@
 - [ ] Subsessions (groups visually similar images inside a session or a collection)
 
 # 1. Core
-- [ ] Root is weird. Change it to new master file ("Library") creation
+- [X] Library creation: File -> New -> Library Creation Wizard (.gildex directory bundle + manifest + system dirs)
 
 ## 1.1 Ingest
 - [X] Drag-n-Drop ingest
 - [X] Ingest | Gallery | Timeline tabs
 - [X] Ingest duplication thumbnails + links to existing files
 - [ ] Sessions only for generated items (decided by metadata)
+- [X] Media sources: add/remove, once vs watch toggle, rescan
+- [X] Background source watcher (polling; fsnotify is v1 hardening)
 
 # 2. UX
 ## 2.1 Gallery

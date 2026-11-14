@@ -27,7 +27,7 @@ lineage, watcher, auto-tagging, hover-play frames, audio/video polish.
 
 ```
 # backend (serves API + built frontend)
-cd prototype && go run . -root /path/to/media -listen :8080
+cd prototype && go run . -library /path/to/MyLibrary.gildex -listen :8080
 
 # frontend dev (Vite proxies /api to :8080)
 cd prototype/frontend && npm install && npm run dev
@@ -36,15 +36,18 @@ cd prototype/frontend && npm install && npm run dev
 cd prototype/frontend && npm run build
 ```
 
-First run: click **pick root** in the empty state (or set `-root`), then **import** a
-folder of AI-generated PNGs. A1111/ComfyUI prompt + model are parsed automatically;
-files without metadata become full items anyway.
+First run: the app shows a **Create/Open library** screen. Create a library
+(`<Name>.gildex`, a directory bundle holding the manifest, catalog DB, and
+caches), then **add a media source** folder — an external folder referenced in
+place, imported `once` or re-scanned on `watch` — and it imports. A1111/ComfyUI
+prompt + model are parsed automatically; files without metadata become full
+items anyway.
 
 ### Demo without a real generation stash
 
 ```
 go run ./tools/seed -out ./seed-out -count 120 -sessions 4
-go run . -root ./seed-out            # then import ./seed-out in the UI
+go run . -library /tmp/Demo.gildex   # then create/add ./seed-out as a source in the UI
 ```
 
 `tools/seed` writes synthetic A1111/ComfyUI-style PNGs (prompt, model, params embedded
@@ -59,7 +62,14 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/status` | → `LibraryStatus` |
-| POST | `/api/library/root` | body `{ path }`; sets/relocates root (D13) |
+| POST | `/api/library` | body `{ name, directory }`; creates ``<directory>/<name>.gildex`` and opens it → `LibraryStatus` |
+| POST | `/api/library/open` | body `{ path }`; opens an existing bundle → `LibraryStatus` |
+| GET | `/api/sources` | → `Source[]` |
+| POST | `/api/sources` | body `{ path, name?, mode? }` (`once`\|`watch`) → `Source` |
+| PATCH | `/api/sources/{id}` | body `{ name?, mode? }` → `Source` |
+| DELETE | `/api/sources/{id}` | remove source; its items become `missing` |
+| POST | `/api/sources/{id}/scan` | start an import scan of that source → `{ started }` |
+| GET | `/api/fs/list?path=` | directory browser for the in-app folder picker |
 | POST | `/api/import` | body `{ paths: string[] }`; starts async job |
 | POST | `/api/import/upload` | multipart form `files` (each part's filename = relative path); writes into `<root>/_inbox/`, then starts import → `{ started, count }` |
 | GET | `/api/import/status` | → `ImportStatus` (poll while `running`) |
@@ -88,12 +98,14 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 
 ### `/api/items` query params
 
-`sessionId`, `collectionId`, `folder` (path prefix, recursive), `tags` (comma list,
+`sessionId`, `collectionId`, `sourceId` (filter by source), `sourceNull` (items
+with no source), `folder` (path prefix, recursive), `tags` (comma list,
 AND), `untagged` (only items with no tags), `q` (full-text over
 prompt/negative-prompt/filename/session+collection names),
 `kind`, `rating`, `status`, `favorite`, `limit` (default 200), `offset` (default 0),
 `sort` (`time` default). Response `{ items, total }`. Each item carries `sessionId`
-so the frontend can render the session timeline as sections.
+so the frontend can render the session timeline as sections. `LibraryStatus`
+carries `id`, `name`, and `sourceCount`.
 
 ### Import pipeline (D3, D9, D12, D20, D33)
 
