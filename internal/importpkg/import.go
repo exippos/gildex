@@ -195,15 +195,21 @@ func run(st *store.Store, root, thumbDir string, sourceID *string, paths []strin
 	}
 }
 
-// workerCount returns the number of concurrent file-processing workers,
-// defaulting to runtime.NumCPU() and overridable via GILDEX_WORKERS.
+// workerCount returns the number of concurrent file-processing workers.
+// It defaults to half the available cores (min 2) so a scan leaves headroom
+// for the UI/browser instead of saturating the machine (D14 "yield to
+// generation"); GILDEX_WORKERS overrides it for a one-off bulk import.
 func workerCount() int {
 	if v := strings.TrimSpace(os.Getenv("GILDEX_WORKERS")); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			return n
 		}
 	}
-	return runtime.NumCPU()
+	n := runtime.NumCPU() / 2
+	if n < 2 {
+		n = 2
+	}
+	return n
 }
 
 // processOne handles a single file and advances the job counter.
