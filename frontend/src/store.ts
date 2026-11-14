@@ -30,6 +30,23 @@ const SORT_PARAM: Record<ItemSort, string> = {
   session: 'session',
 }
 
+// Tag filters are a multi-select AND chain. "Untagged" is a UI-side pseudo
+// filter: it is exclusive, and the API takes it as a separate `untagged` flag
+// rather than a tag name.
+export const UNTAGGED_FILTER = '__untagged__'
+
+export function tagFilterLabel(name: string): string {
+  return name === UNTAGGED_FILTER ? 'untagged' : name
+}
+
+function tagFilterParams(filters: string[]): { tags?: string[]; untagged?: boolean } {
+  const names = filters.filter((name) => name !== UNTAGGED_FILTER)
+  return {
+    tags: names.length ? names : undefined,
+    untagged: filters.includes(UNTAGGED_FILTER) || undefined,
+  }
+}
+
 // Collection contents are fetched lazily and cached per query. The key folds in
 // every input that changes the result set, so a stale page never gets reused
 // after a sort or filter change.
@@ -106,6 +123,8 @@ interface AppState {
   // data caches
   sessions: Session[]
   tags: Tag[]
+  // items with no tags, shown as the "untagged" pseudo tag
+  untaggedCount: number
   collections: Collection[]
   folders: FolderNode[]
   // collection id + query key -> one page of that collection's items
@@ -229,6 +248,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   sessions: [],
   tags: [],
+  untaggedCount: 0,
   collections: [],
   folders: [],
   collectionItems: {},
@@ -317,14 +337,21 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   refreshCatalog: async () => {
-    const [library, sessions, tags, collections, folders] = await Promise.all([
+    const [library, sessions, tagList, collections, folders] = await Promise.all([
       api.status(),
       api.sessions(),
       api.tags(),
       api.collections(),
       api.folders(),
     ])
-    set({ library, sessions, tags, collections, folders })
+    set({
+      library,
+      sessions,
+      tags: tagList.tags,
+      untaggedCount: tagList.untagged,
+      collections,
+      folders,
+    })
     await get().loadItems()
   },
 
@@ -346,7 +373,7 @@ export const useStore = create<AppState>((set, get) => ({
         collectionId:
           gallery && surface === 'collections' ? activeCollectionId ?? undefined : undefined,
         folder: gallery && surface === 'folders' ? activeFolder ?? undefined : undefined,
-        tags: activeTagFilters.length ? activeTagFilters : undefined,
+        ...tagFilterParams(activeTagFilters),
         q: search || undefined,
         limit: 2000,
         sort: SORT_PARAM[get().sort],
@@ -367,7 +394,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const page = await api.items({
         collectionId: id,
-        tags: activeTagFilters.length ? activeTagFilters : undefined,
+        ...tagFilterParams(activeTagFilters),
         q: search || undefined,
         limit: 2000,
         sort: SORT_PARAM[sort],
@@ -415,7 +442,15 @@ export const useStore = create<AppState>((set, get) => ({
   setCellSize: (cellSize) => set({ cellSize }),
   toggleTagFilter: (name) => {
     const cur = get().activeTagFilters
-    const next = cur.includes(name) ? cur.filter((t) => t !== name) : [...cur, name]
+    let next: string[]
+    if (cur.includes(name)) {
+      next = cur.filter((t) => t !== name)
+    } else if (name === UNTAGGED_FILTER) {
+      // Untagged excludes every named tag, so it stands alone.
+      next = [UNTAGGED_FILTER]
+    } else {
+      next = [...cur.filter((t) => t !== UNTAGGED_FILTER), name]
+    }
     set({ activeTagFilters: next })
     void get().loadItems()
   },

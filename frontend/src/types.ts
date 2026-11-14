@@ -54,6 +54,12 @@ export interface Tag {
   itemCount: number
 }
 
+// GET /api/tags: the vocabulary plus a count of items that carry no tag.
+export interface TagList {
+  tags: Tag[]
+  untagged: number
+}
+
 export interface Collection {
   id: string
   name: string
@@ -115,6 +121,7 @@ export interface ItemQuery {
   collectionId?: string
   folder?: string
   tags?: string[]
+  untagged?: boolean
   q?: string
   kind?: Kind
   rating?: number

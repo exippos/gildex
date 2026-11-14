@@ -1,7 +1,7 @@
 // Borderless search spanning the grid column, with active tag-filter chips.
 // `/` focuses the input from anywhere outside a text field.
 import { useEffect, useRef } from 'react'
-import { useStore } from '../../store'
+import { useStore, tagFilterLabel } from '../../store'
 import './search-bar.css'
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -68,9 +68,9 @@ export function SearchBar() {
               type="button"
               className="search-chip"
               onClick={() => toggleTagFilter(name)}
-              aria-label={`Remove tag filter ${name}`}
+              aria-label={`Remove tag filter ${tagFilterLabel(name)}`}
             >
-              <span className="search-chip-name">{name}</span>
+              <span className="search-chip-name">{tagFilterLabel(name)}</span>
               <span className="search-chip-x" aria-hidden="true">
                 ×
               </span>

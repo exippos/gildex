@@ -69,7 +69,7 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 | PATCH | `/api/items/batch` | body `{ ids, addTags[], removeTags[], addToCollectionId, removeFromCollectionId, favorite?, rating?, status?, setSessionId?, removeFromCatalog? }` |
 | GET | `/api/sessions` | → `Session[]` |
 | PATCH | `/api/sessions/{id}` | body `{ label }` (rename) |
-| GET | `/api/tags` | → `Tag[]` |
+| GET | `/api/tags` | → `TagList` (`{ tags: Tag[], untagged }`) |
 | POST | `/api/tags` | body `{ name }` → `Tag` |
 | DELETE | `/api/tags/{id}` | delete tag (unassigns) |
 | GET | `/api/collections` | → `Collection[]` |
@@ -89,7 +89,8 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 ### `/api/items` query params
 
 `sessionId`, `collectionId`, `folder` (path prefix, recursive), `tags` (comma list,
-AND), `q` (full-text over prompt/negative-prompt/filename/session+collection names),
+AND), `untagged` (only items with no tags), `q` (full-text over
+prompt/negative-prompt/filename/session+collection names),
 `kind`, `rating`, `status`, `favorite`, `limit` (default 200), `offset` (default 0),
 `sort` (`time` default). Response `{ items, total }`. Each item carries `sessionId`
 so the frontend can render the session timeline as sections.

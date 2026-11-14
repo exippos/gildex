@@ -15,6 +15,7 @@ type ItemQuery struct {
 	CollectionID string
 	Folder       string
 	Tags         []string
+	Untagged     bool
 	Q            string
 	Kind         string
 	Rating       *int
@@ -83,6 +84,9 @@ func (s *Store) QueryItems(q ItemQuery) (model.ItemPage, error) {
 		}
 		where = append(where, `EXISTS (SELECT 1 FROM item_tag it JOIN tags t ON t.id = it.tag_id WHERE it.item_id = i.id AND t.name = ? COLLATE NOCASE)`)
 		args = append(args, tag)
+	}
+	if q.Untagged {
+		where = append(where, `NOT EXISTS (SELECT 1 FROM item_tag it WHERE it.item_id = i.id)`)
 	}
 	if q.Q != "" {
 		like := "%" + escapeLike(q.Q) + "%"

@@ -32,6 +32,15 @@ func (s *Store) Tags() ([]model.Tag, error) {
 	return out, rows.Err()
 }
 
+// UntaggedCount counts catalog items that carry no tag at all.
+func (s *Store) UntaggedCount() (int, error) {
+	var n int
+	err := s.db.QueryRow(`
+		SELECT COUNT(*) FROM items i
+		WHERE NOT EXISTS (SELECT 1 FROM item_tag it WHERE it.item_id = i.id)`).Scan(&n)
+	return n, err
+}
+
 // CreateTag returns the tag with name, creating it if needed.
 func (s *Store) CreateTag(name string) (*model.Tag, error) {
 	name = strings.TrimSpace(name)

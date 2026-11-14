@@ -68,6 +68,13 @@ func parseItemQuery(r *http.Request) (store.ItemQuery, error) {
 		}
 		q.Rating = &n
 	}
+	if raw := v.Get("untagged"); raw != "" {
+		b, err := strconv.ParseBool(raw)
+		if err != nil {
+			return q, errInvalid("invalid untagged")
+		}
+		q.Untagged = b
+	}
 	if raw := v.Get("favorite"); raw != "" {
 		b, err := strconv.ParseBool(raw)
 		if err != nil {

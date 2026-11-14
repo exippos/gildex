@@ -1,7 +1,7 @@
 // Left rail: nav (surface switcher) + per-surface content. Frosted fixed chrome.
 import { useMemo, useState } from 'react'
 import type { CSSProperties, DragEvent } from 'react'
-import { useStore } from '../../store'
+import { useStore, UNTAGGED_FILTER } from '../../store'
 import { thumbUrl } from '../../api'
 import type { Surface } from '../../types'
 import { FolderTree } from '../folders/FolderTree'
@@ -26,6 +26,7 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
   const sessions = useStore((s) => s.sessions)
   const collections = useStore((s) => s.collections)
   const tags = useStore((s) => s.tags)
+  const untaggedCount = useStore((s) => s.untaggedCount)
   const library = useStore((s) => s.library)
   const activeSessionId = useStore((s) => s.activeSessionId)
   const activeCollectionId = useStore((s) => s.activeCollectionId)
@@ -332,6 +333,17 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
               </button>
             )}
             <div className="rail-list rail-tag-list">
+              <button
+                type="button"
+                className={`rail-row rail-tag-row rail-tag-untagged${
+                  activeTagFilters.includes(UNTAGGED_FILTER) ? ' is-active' : ''
+                }`}
+                aria-pressed={activeTagFilters.includes(UNTAGGED_FILTER)}
+                onClick={() => toggleTagFilter(UNTAGGED_FILTER)}
+              >
+                <span className="rail-row-title">untagged</span>
+                <span className="rail-row-count">{untaggedCount}</span>
+              </button>
               {visibleTags.map((tag) => (
                 <button
                   key={tag.id}
@@ -343,9 +355,7 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                   onClick={() => toggleTagFilter(tag.name)}
                 >
                   <span className="rail-row-title">{tag.name}</span>
-                  <span className="rail-row-meta">
-                    <span className="rail-row-count">{tag.itemCount}</span>
-                  </span>
+                  <span className="rail-row-count">{tag.itemCount}</span>
                 </button>
               ))}
               {visibleTags.length === 0 && <div className="rail-hint">no tags match</div>}

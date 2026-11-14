@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"gildex/internal/model"
 	"gildex/internal/store"
 )
 
@@ -63,7 +64,12 @@ func (a *API) handleTags(w http.ResponseWriter, r *http.Request) {
 		writeStoreError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, tags)
+	untagged, err := st.UntaggedCount()
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, model.TagList{Tags: tags, Untagged: untagged})
 }
 
 func (a *API) handleCreateTag(w http.ResponseWriter, r *http.Request) {

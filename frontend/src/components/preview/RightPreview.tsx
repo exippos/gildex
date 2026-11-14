@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { mediaUrl, thumbUrl } from '../../api'
-import { useStore } from '../../store'
+import { useStore, tagFilterLabel } from '../../store'
 import type { Collection, Item, Session, Status } from '../../types'
 import {
   formatBytes,
@@ -373,7 +373,7 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
                 </span>
                 <span className="preview-sub">
                   {activeTagFilters.length
-                    ? `${activeTagFilters.join(' + ')} · ${itemsTotal} items`
+                    ? `${activeTagFilters.map(tagFilterLabel).join(' + ')} · ${itemsTotal} items`
                     : 'browse the vocabulary in the rail'}
                 </span>
               </>

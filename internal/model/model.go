@@ -85,6 +85,12 @@ type Tag struct {
 	ItemCount int    `json:"itemCount"`
 }
 
+// TagList is the tag vocabulary plus the count of items with no tags.
+type TagList struct {
+	Tags     []Tag `json:"tags"`
+	Untagged int   `json:"untagged"`
+}
+
 // Collection is a user-authored, ordered index (D21).
 type Collection struct {
 	ID            string  `json:"id"`

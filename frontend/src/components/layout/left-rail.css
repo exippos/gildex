@@ -226,8 +226,44 @@
   flex: 1 1 auto;
 }
 
+.rail-tag-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 9px 3px 10px;
+  line-height: 1.5;
+}
+
+/* dense one-liner: › name .......... count */
+.rail-tag-row::before {
+  content: '›';
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.rail-tag-row:hover::before,
+.rail-tag-row.is-active::before {
+  color: var(--gilt);
+}
+
 .rail-tag-row .rail-row-title {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 12px;
+  line-height: 1.5;
+}
+
+.rail-tag-row .rail-row-count {
+  flex: 0 0 auto;
+  margin-left: 0;
+  padding-left: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.rail-tag-untagged {
+  margin-bottom: 3px;
 }
 
 /* ---- session row thumbnail ---- */

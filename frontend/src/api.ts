@@ -13,6 +13,7 @@ import type {
   OwnerType,
   Session,
   Tag,
+  TagList,
 } from './types'
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -85,6 +86,7 @@ export const api = {
         collectionId: q.collectionId,
         folder: q.folder,
         tags: q.tags?.length ? q.tags.join(',') : undefined,
+        untagged: q.untagged,
         q: q.q,
         kind: q.kind,
         rating: q.rating,
@@ -105,7 +107,7 @@ export const api = {
   updateSession: (id: string, body: { label?: string; coverItemId?: string | null }) =>
     request<Session>('PATCH', `/sessions/${id}`, body),
 
-  tags: () => request<Tag[]>('GET', '/tags'),
+  tags: () => request<TagList>('GET', '/tags'),
   createTag: (name: string) => request<Tag>('POST', '/tags', { name }),
   deleteTag: (id: string) => request<void>('DELETE', `/tags/${id}`),
 
