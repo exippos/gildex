@@ -14,8 +14,21 @@ func Compute(img image.Image) int64 {
 	if img == nil {
 		return 0
 	}
+
+	// Two-step downscale: a fast bilinear pass to a small intermediate avoids
+	// the cubic cost of resampling a full-resolution source straight to 9×8.
+	src := img
+	if b := img.Bounds(); b.Dx() > 64 || b.Dy() > 64 {
+		scale := 64.0 / float64(maxInt(b.Dx(), b.Dy()))
+		nw := maxInt(1, int(float64(b.Dx())*scale))
+		nh := maxInt(1, int(float64(b.Dy())*scale))
+		mid := image.NewGray(image.Rect(0, 0, nw, nh))
+		draw.ApproxBiLinear.Scale(mid, mid.Bounds(), img, b, draw.Src, nil)
+		src = mid
+	}
+
 	small := image.NewGray(image.Rect(0, 0, 9, 8))
-	draw.CatmullRom.Scale(small, small.Bounds(), img, img.Bounds(), draw.Src, nil)
+	draw.ApproxBiLinear.Scale(small, small.Bounds(), src, src.Bounds(), draw.Src, nil)
 
 	var bits uint64
 	for y := 0; y < 8; y++ {
@@ -26,4 +39,11 @@ func Compute(img image.Image) int64 {
 		}
 	}
 	return int64(bits)
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

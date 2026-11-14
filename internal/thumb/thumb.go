@@ -34,7 +34,7 @@ func GenerateAt(img image.Image, dst string, maxSide int) error {
 	}
 
 	resized := image.NewRGBA(image.Rect(0, 0, nw, nh))
-	draw.CatmullRom.Scale(resized, resized.Bounds(), img, b, draw.Src, nil)
+	draw.ApproxBiLinear.Scale(resized, resized.Bounds(), img, b, draw.Src, nil)
 
 	f, err := os.Create(dst)
 	if err != nil {
