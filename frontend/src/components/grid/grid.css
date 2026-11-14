@@ -501,37 +501,17 @@
   pointer-events: none;
 }
 
-/* metallic disc: gold on the dark themes, copper on ivory — glossed like a
-   stamped coin so it reads clearly over any poster. */
+/* metallic disc: gold on the dark themes, copper on ivory (--gilt-fill). */
 .group-tile-kind {
-  position: relative;
   display: grid;
   place-items: center;
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 1px solid var(--gilt-hi);
-  background: linear-gradient(155deg, var(--gilt-hi) 0%, var(--gilt-core) 46%, var(--gilt-lo) 100%);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.4),
-    0 0 10px var(--accent-glow);
+  border: 1px solid var(--gilt-fill-border);
+  background: var(--gilt-fill);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   color: var(--on-gilt);
-  overflow: hidden;
-}
-
-/* glossy top shine */
-.group-tile-kind::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 50%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.55) 0%,
-    rgba(255, 255, 255, 0.12) 42%,
-    transparent 60%
-  );
-  pointer-events: none;
 }
 
 .group-tile-kind svg {
