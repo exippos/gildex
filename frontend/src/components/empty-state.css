@@ -147,3 +147,28 @@
   color: var(--on-gilt);
   filter: brightness(1.06);
 }
+
+/* two-up first-run choice: create (primary) / open (quiet) */
+.empty-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.empty-actions .empty-action {
+  margin-top: 0;
+}
+
+.empty-action.is-quiet {
+  background: transparent;
+  color: var(--gilt);
+  border-color: var(--gilt-border);
+}
+
+.empty-action.is-quiet:hover {
+  background: var(--control);
+  color: var(--gilt-bright);
+  border-color: var(--gilt-bright);
+  filter: none;
+}

@@ -1,4 +1,6 @@
-// Fixed header — brand + workspace tabs + catalog search, theme/effects on the right.
+// Fixed header — brand + file menu + workspace tabs + catalog search, theme/effects
+// on the right.
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../store'
 import { THEMES, THEME_LABELS, type Theme } from '../../theme'
 import type { Workspace } from '../../types'
@@ -20,6 +22,34 @@ export function Header() {
   const effects = useStore((s) => s.effects)
   const setEffects = useStore((s) => s.setEffects)
   const effectsOn = effects === 'full'
+  const openLibraryModal = useStore((s) => s.openLibraryModal)
+
+  const [fileMenuOpen, setFileMenuOpen] = useState(false)
+  const fileMenuRef = useRef<HTMLDivElement | null>(null)
+
+  // Close the file menu on an outside click or Escape while it is open.
+  useEffect(() => {
+    if (!fileMenuOpen) return
+    const onDocumentClick = (event: MouseEvent) => {
+      const target = event.target
+      if (target instanceof Node && fileMenuRef.current?.contains(target)) return
+      setFileMenuOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFileMenuOpen(false)
+    }
+    document.addEventListener('click', onDocumentClick)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('click', onDocumentClick)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [fileMenuOpen])
+
+  const pickLibraryAction = (mode: 'create' | 'open') => {
+    setFileMenuOpen(false)
+    openLibraryModal(mode)
+  }
 
   return (
     <header className="app-header chrome">
@@ -57,6 +87,39 @@ export function Header() {
           </span>
           gildex
         </span>
+
+        <div className="file-menu" ref={fileMenuRef}>
+          <button
+            type="button"
+            className={`file-menu-button${fileMenuOpen ? ' is-open' : ''}`}
+            aria-haspopup="menu"
+            aria-expanded={fileMenuOpen}
+            onClick={() => setFileMenuOpen((open) => !open)}
+          >
+            Library
+            <span className="file-menu-caret" aria-hidden="true" />
+          </button>
+          {fileMenuOpen && (
+            <div className="file-menu-list" role="menu" aria-label="Library">
+              <button
+                type="button"
+                className="file-menu-item"
+                role="menuitem"
+                onClick={() => pickLibraryAction('create')}
+              >
+                New library…
+              </button>
+              <button
+                type="button"
+                className="file-menu-item"
+                role="menuitem"
+                onClick={() => pickLibraryAction('open')}
+              >
+                Open library…
+              </button>
+            </div>
+          )}
+        </div>
 
         <nav className="workspace-tabs" aria-label="Workspaces">
           {WORKSPACES.map((tab) => (

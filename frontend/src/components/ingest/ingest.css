@@ -1,4 +1,4 @@
-/* Ingest workspace — opaque, centered column of root/import cards. */
+/* Ingest workspace — opaque, centered column of source/import cards. */
 
 .ingest {
   flex: 1 1 auto;
@@ -67,60 +67,200 @@
   color: var(--text-muted);
 }
 
-.ingest-form {
+.ingest-error {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.ingest-actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   margin-top: 4px;
+  flex-wrap: wrap;
 }
 
-.ingest-form input {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 6px 10px;
-  font-size: 12px;
-  background: var(--surface-inset);
-}
-
-.ingest-form button {
+.ingest-actions button {
   flex: 0 0 auto;
   padding: 6px 14px;
   border-color: var(--border-subtle);
   color: var(--text);
+  font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.ingest-form button:hover:not(:disabled) {
+.ingest-actions button:hover:not(:disabled) {
   border-color: var(--border-strong);
+  background: var(--control-hover);
   color: var(--text);
 }
 
-.ingest-form button.is-primary {
+.ingest-actions button.is-primary {
   border-color: var(--gilt-fill-border);
   background: var(--gilt-fill);
   color: var(--on-gilt);
 }
 
-.ingest-form button.is-primary:hover:not(:disabled) {
+.ingest-actions button.is-primary:hover:not(:disabled) {
   background: var(--gilt-fill);
   border-color: var(--gilt-bright);
   color: var(--on-gilt);
   filter: brightness(1.06);
 }
 
-.ingest-form input:disabled,
-.ingest-form button:disabled {
+.ingest-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.ingest-error {
-  margin: 2px 0 0;
+.ingest-sources-list {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.ingest-sources-empty {
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.ingest-source {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+}
+
+.ingest-source-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ingest-source-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ingest-source-path {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-ui);
   font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ingest-source-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ingest-source-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--control);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ingest-source-mode:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--control-hover);
+  color: var(--text);
+}
+
+.ingest-source-mode.is-watch {
+  border-color: var(--gilt-border);
+  background: var(--gilt-dim);
+  color: var(--gilt);
+}
+
+.ingest-source-mode.is-watch:hover:not(:disabled) {
+  border-color: var(--gilt);
+  color: var(--gilt-bright);
+}
+
+.ingest-source-mode-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.ingest-source-mode.is-watch .ingest-source-mode-dot {
+  opacity: 1;
+  box-shadow: 0 0 6px var(--gilt);
+}
+
+.ingest-source-btn {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--control);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ingest-source-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--control-hover);
+  color: var(--text);
+}
+
+.ingest-source-btn.is-danger {
   color: var(--danger);
-  overflow-wrap: anywhere;
+}
+
+.ingest-source-btn.is-danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.ingest-source-mode:disabled,
+.ingest-source-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .ingest-stage {

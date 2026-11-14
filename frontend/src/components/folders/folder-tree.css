@@ -92,6 +92,34 @@
   opacity: 0.85;
 }
 
+/* Media source containers: a filled glyph (like the root) plus a quiet tag so
+   they read as sources rather than inbox folders. */
+.folder-icon.is-source {
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.folder-row:hover .folder-icon.is-source {
+  color: var(--text);
+}
+
+.folder-source-row .folder-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.folder-source-tag {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  border: 1px solid var(--gilt-border);
+  border-radius: 3px;
+  font-size: 9px;
+  line-height: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
 .folder-name {
   flex: 1 1 auto;
   min-width: 0;

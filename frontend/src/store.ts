@@ -16,6 +16,8 @@ import type {
   OwnerType,
   Session,
   SortDir,
+  Source,
+  SourceMode,
   Status,
   Surface,
   Tag,
@@ -46,6 +48,10 @@ function tagFilterParams(filters: string[]): { tags?: string[]; untagged?: boole
     untagged: filters.includes(UNTAGGED_FILTER) || undefined,
   }
 }
+
+// Sentinel for `activeSourceId`: the library-local inbox (source_id IS NULL),
+// distinct from `null` ("all items") and a real source id.
+export const INBOX_SOURCE = '__inbox__'
 
 // Collection contents are fetched lazily and cached per query. The key folds in
 // every input that changes the result set, so a stale page never gets reused
@@ -109,6 +115,7 @@ interface AppState {
   activeSessionId: string | null
   activeCollectionId: string | null
   activeFolder: string | null
+  activeSourceId: string | null
   activeTagFilters: string[]
 
   // search & items
@@ -127,6 +134,7 @@ interface AppState {
   untaggedCount: number
   collections: Collection[]
   folders: FolderNode[]
+  sources: Source[]
   // collection id + query key -> one page of that collection's items
   collectionItems: Record<string, Item[]>
   collectionLoading: Record<string, boolean>
@@ -154,6 +162,9 @@ interface AppState {
   // notes cache for the open inspector
   notes: Note[]
 
+  // library modal (creation / open wizard)
+  libraryModal: 'create' | 'open' | null
+
   // presentation
   theme: Theme
   setTheme: (theme: Theme) => void
@@ -162,7 +173,12 @@ interface AppState {
 
   // actions
   init: () => Promise<void>
-  setRoot: (path: string) => Promise<void>
+  createLibrary: (name: string, directory: string) => Promise<void>
+  openLibrary: (path: string) => Promise<void>
+  addSource: (path: string, name?: string, mode?: SourceMode) => Promise<string>
+  updateSource: (id: string, patch: { name?: string; mode?: SourceMode }) => Promise<void>
+  removeSource: (id: string) => Promise<void>
+  scanSource: (id: string) => Promise<void>
   importPaths: (paths: string[]) => Promise<void>
   importFiles: (files: DroppedFile[]) => Promise<void>
   pollImport: () => Promise<void>
@@ -175,6 +191,7 @@ interface AppState {
   setActiveSessionId: (id: string | null) => void
   setActiveCollectionId: (id: string | null) => void
   setActiveFolder: (path: string | null) => void
+  selectFolder: (sourceId: string | null, folder: string | null) => void
   setSearch: (q: string) => void
   setSort: (s: ItemSort) => void
   setSortDir: (d: SortDir) => void
@@ -221,6 +238,9 @@ interface AppState {
   addNote: (body: string, typeLabel?: string) => Promise<void>
   updateNote: (id: string, body: string) => Promise<void>
   deleteNote: (id: string) => Promise<void>
+
+  openLibraryModal: (mode: 'create' | 'open') => void
+  closeLibraryModal: () => void
 }
 
 const EMPTY_PROGRESS: ImportStatus = { running: false, total: 0, done: 0, stage: '', error: '', duplicates: [] }
@@ -236,6 +256,7 @@ export const useStore = create<AppState>((set, get) => ({
   activeSessionId: null,
   activeCollectionId: null,
   activeFolder: null,
+  activeSourceId: null,
   activeTagFilters: [],
 
   search: '',
@@ -251,6 +272,7 @@ export const useStore = create<AppState>((set, get) => ({
   untaggedCount: 0,
   collections: [],
   folders: [],
+  sources: [],
   collectionItems: {},
   collectionLoading: {},
 
@@ -268,6 +290,8 @@ export const useStore = create<AppState>((set, get) => ({
   collectionPicker: null,
 
   notes: [],
+
+  libraryModal: null,
 
   theme: initialTheme,
   setTheme: (theme) => {
@@ -294,10 +318,42 @@ export const useStore = create<AppState>((set, get) => ({
     if (library.rootSet) await get().refreshCatalog()
   },
 
-  setRoot: async (path) => {
-    const library = await api.setRoot(path)
+  createLibrary: async (name, directory) => {
+    const library = await api.createLibrary(name, directory)
     set({ library })
     await get().refreshCatalog()
+  },
+
+  openLibrary: async (path) => {
+    const library = await api.openLibrary(path)
+    set({ library })
+    await get().refreshCatalog()
+  },
+
+  addSource: async (path, name, mode) => {
+    const src = await api.addSource({ path, name, mode })
+    await get().refreshCatalog()
+    return src.id
+  },
+
+  updateSource: async (id, patch) => {
+    await api.updateSource(id, patch)
+    await get().refreshCatalog()
+  },
+
+  removeSource: async (id) => {
+    await api.deleteSource(id)
+    await get().refreshCatalog()
+  },
+
+  scanSource: async (id) => {
+    set({ importing: true, importError: null, importProgress: EMPTY_PROGRESS })
+    try {
+      await api.scanSource(id)
+      await get().pollImport()
+    } catch (e) {
+      set({ importing: false, importError: (e as Error).message })
+    }
   },
 
   importPaths: async (paths) => {
@@ -337,12 +393,13 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   refreshCatalog: async () => {
-    const [library, sessions, tagList, collections, folders] = await Promise.all([
+    const [library, sessions, tagList, collections, folders, sources] = await Promise.all([
       api.status(),
       api.sessions(),
       api.tags(),
       api.collections(),
       api.folders(),
+      api.sources(),
     ])
     set({
       library,
@@ -351,6 +408,7 @@ export const useStore = create<AppState>((set, get) => ({
       untaggedCount: tagList.untagged,
       collections,
       folders,
+      sources,
     })
     await get().loadItems()
   },
@@ -362,17 +420,24 @@ export const useStore = create<AppState>((set, get) => ({
       activeSessionId,
       activeCollectionId,
       activeFolder,
+      activeSourceId,
       activeTagFilters,
       search,
     } = get()
     set({ loadingItems: true })
     try {
       const gallery = workspace === 'gallery'
+      const foldersSurface = gallery && surface === 'folders'
       const q = {
         sessionId: gallery && surface === 'sessions' ? activeSessionId ?? undefined : undefined,
         collectionId:
           gallery && surface === 'collections' ? activeCollectionId ?? undefined : undefined,
-        folder: gallery && surface === 'folders' ? activeFolder ?? undefined : undefined,
+        folder: foldersSurface ? activeFolder ?? undefined : undefined,
+        sourceId:
+          foldersSurface && activeSourceId && activeSourceId !== INBOX_SOURCE
+            ? activeSourceId
+            : undefined,
+        sourceNull: foldersSurface && activeSourceId === INBOX_SOURCE ? true : undefined,
         ...tagFilterParams(activeTagFilters),
         q: search || undefined,
         limit: 2000,
@@ -414,7 +479,8 @@ export const useStore = create<AppState>((set, get) => ({
     set({ workspace, previewItemId: null })
     if (workspace !== 'ingest') void get().loadItems()
   },
-  setSurface: (surface) => set({ surface, activeSessionId: null, activeCollectionId: null, activeFolder: null }),
+  setSurface: (surface) =>
+    set({ surface, activeSessionId: null, activeCollectionId: null, activeFolder: null, activeSourceId: null }),
   setActiveSessionId: (id) => {
     set({ activeSessionId: id })
     void get().loadItems()
@@ -425,6 +491,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
   setActiveFolder: (path) => {
     set({ activeFolder: path })
+    void get().loadItems()
+  },
+  selectFolder: (sourceId, folder) => {
+    set({ activeSourceId: sourceId, activeFolder: folder })
     void get().loadItems()
   },
   setSearch: (q) => {
@@ -703,4 +773,7 @@ export const useStore = create<AppState>((set, get) => ({
     const { inspector } = get()
     if (inspector) await get().loadNotes(inspector.ownerType, inspector.ownerId)
   },
+
+  openLibraryModal: (mode) => set({ libraryModal: mode }),
+  closeLibraryModal: () => set({ libraryModal: null }),
 }))

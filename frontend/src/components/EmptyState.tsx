@@ -1,5 +1,5 @@
 // First-run / empty browse states: nothing to show yet — point the user at the
-// Ingest workspace (root pick + import live there now).
+// library (create/open) or at the Ingest workspace once a library is open.
 import { useStore } from '../store'
 import './empty-state.css'
 
@@ -13,13 +13,16 @@ export function EmptyState() {
   const activeSessionId = useStore((s) => s.activeSessionId)
   const activeCollectionId = useStore((s) => s.activeCollectionId)
   const activeFolder = useStore((s) => s.activeFolder)
+  const activeSourceId = useStore((s) => s.activeSourceId)
   const setWorkspace = useStore((s) => s.setWorkspace)
+  const openLibraryModal = useStore((s) => s.openLibraryModal)
 
   if (!library) return null
 
   const filtered =
     Boolean(search) ||
     activeTagFilters.length > 0 ||
+    activeSourceId !== null ||
     (surface === 'sessions' && activeSessionId !== null) ||
     (surface === 'collections' && activeCollectionId !== null) ||
     (surface === 'folders' && activeFolder !== null)
@@ -34,15 +37,28 @@ export function EmptyState() {
 
   if (!library.rootSet) {
     return (
-      <div className="empty-state" role="dialog" aria-label="Set a library root">
+      <div className="empty-state" role="dialog" aria-label="Create or open a library">
         {ornament}
-        <p className="empty-line display">library root not set</p>
+        <p className="empty-line display">no library open</p>
         <p className="empty-hint">
-          gildex watches a single folder. open ingest to point it at your media library.
+          gildex catalogues your media into a library. create one or open an existing one to begin.
         </p>
-        <button type="button" className="empty-action" onClick={() => setWorkspace('ingest')}>
-          Open ingest
-        </button>
+        <div className="empty-actions">
+          <button
+            type="button"
+            className="empty-action"
+            onClick={() => openLibraryModal('create')}
+          >
+            Create library
+          </button>
+          <button
+            type="button"
+            className="empty-action is-quiet"
+            onClick={() => openLibraryModal('open')}
+          >
+            Open library
+          </button>
+        </div>
       </div>
     )
   }
@@ -53,8 +69,8 @@ export function EmptyState() {
         {ornament}
         <p className="empty-line display">nothing catalogued yet</p>
         <p className="empty-hint">
-          root is set to <span className="empty-root">{library.root}</span>. open ingest to import
-          a folder.
+          <span className="empty-root">{library.name || library.root}</span> is open. open ingest to
+          add a media source.
         </p>
         <button type="button" className="empty-action" onClick={() => setWorkspace('ingest')}>
           Open ingest

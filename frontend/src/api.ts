@@ -12,6 +12,8 @@ import type {
   Note,
   OwnerType,
   Session,
+  Source,
+  SourceMode,
   Tag,
   TagList,
 } from './types'
@@ -65,10 +67,31 @@ export interface DroppedFile {
   relPath: string
 }
 
+export interface FsEntry {
+  name: string
+  path: string
+  isDir: boolean
+}
+
 export const api = {
   status: () => request<LibraryStatus>('GET', '/status'),
 
-  setRoot: (path: string) => request<LibraryStatus>('POST', '/library/root', { path }),
+  createLibrary: (name: string, directory: string) =>
+    request<LibraryStatus>('POST', '/library', { name, directory }),
+  openLibrary: (path: string) => request<LibraryStatus>('POST', '/library/open', { path }),
+
+  sources: () => request<Source[]>('GET', '/sources'),
+  addSource: (body: { path: string; name?: string; mode?: SourceMode }) =>
+    request<Source>('POST', '/sources', body),
+  updateSource: (id: string, body: { name?: string; mode?: SourceMode }) =>
+    request<Source>('PATCH', `/sources/${id}`, body),
+  deleteSource: (id: string) => request<void>('DELETE', `/sources/${id}`),
+  scanSource: (id: string) => request<{ started: boolean }>('POST', `/sources/${id}/scan`),
+
+  fsList: (path: string) =>
+    request<{ path: string; parent: string; entries: FsEntry[] }>('GET', `/fs/list${qs({ path })}`),
+  fsRoots: () =>
+    request<{ home: string; roots: FsEntry[] }>('GET', '/fs/roots'),
 
   importPaths: (paths: string[]) => request<{ started: boolean }>('POST', '/import', { paths }),
   importStatus: () => request<ImportStatus>('GET', '/import/status'),
@@ -85,6 +108,8 @@ export const api = {
         sessionId: q.sessionId,
         collectionId: q.collectionId,
         folder: q.folder,
+        sourceId: q.sourceId,
+        sourceNull: q.sourceNull,
         tags: q.tags?.length ? q.tags.join(',') : undefined,
         untagged: q.untagged,
         q: q.q,

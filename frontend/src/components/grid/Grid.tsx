@@ -353,6 +353,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const activeSessionId = useStore((s) => s.activeSessionId)
   const activeCollectionId = useStore((s) => s.activeCollectionId)
   const activeFolder = useStore((s) => s.activeFolder)
+  const activeSourceId = useStore((s) => s.activeSourceId)
   const search = useStore((s) => s.search)
   const sort = useStore((s) => s.sort)
   const sortDir = useStore((s) => s.sortDir)
@@ -396,7 +397,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   }, [])
 
   // Reset scroll when the query changes underneath the grid.
-  const queryKey = `${surface}|${activeSessionId}|${activeCollectionId}|${activeFolder}|${search}|${activeTagFilters.join(',')}|${sort}|${sortDir}`
+  const queryKey = `${surface}|${activeSessionId}|${activeCollectionId}|${activeFolder}|${activeSourceId}|${search}|${activeTagFilters.join(',')}|${sort}|${sortDir}`
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = 0

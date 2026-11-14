@@ -126,6 +126,89 @@
   flex: 1 1 auto;
 }
 
+/* ---- file / library menu ---- */
+
+.file-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.file-menu-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition:
+    color 120ms linear,
+    border-color 120ms linear,
+    background 120ms linear;
+}
+
+.file-menu-button:hover,
+.file-menu-button.is-open {
+  color: var(--text);
+  border-color: var(--gilt-border);
+  background: var(--control);
+}
+
+.file-menu-button:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.file-menu-caret {
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  opacity: 0.75;
+}
+
+.file-menu-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  min-width: 176px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float);
+}
+
+.file-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.file-menu-item:hover,
+.file-menu-item:focus-visible {
+  outline: none;
+  border-color: var(--gilt-border);
+  background: var(--control);
+  color: var(--text);
+}
+
 /* ---- inline catalog search ---- */
 
 .header-search {

@@ -6,6 +6,7 @@ import { Layout } from './components/layout/Layout'
 import { Inspector } from './components/inspector/Inspector'
 import { GroupEditor } from './components/groups/GroupEditor'
 import { CollectionPicker } from './components/collections/CollectionPicker'
+import { LibraryWizard } from './components/library/LibraryWizard'
 
 export default function App() {
   const init = useStore((s) => s.init)
@@ -23,6 +24,7 @@ export default function App() {
       {inspector && <Inspector />}
       {groupEditor && <GroupEditor />}
       {collectionPicker && <CollectionPicker />}
+      <LibraryWizard />
     </>
   )
 }

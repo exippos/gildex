@@ -9,11 +9,22 @@ export type Workspace = 'ingest' | 'gallery' | 'timeline'
 export type OwnerType = 'item' | 'session' | 'collection'
 export type ItemSort = 'time' | 'filename' | 'size' | 'session'
 export type SortDir = 'asc' | 'desc'
+export type SourceMode = 'once' | 'watch'
+
+export interface Source {
+  id: string
+  name: string
+  path: string
+  mode: SourceMode
+  addedAt: number
+  lastScanAt: number | null
+}
 
 export interface Item {
   id: string
   contentHash: string
   relativePath: string
+  sourceId: string | null
   kind: Kind
   format: string
   fileSize: number
@@ -82,17 +93,21 @@ export interface Note {
 export interface FolderNode {
   name: string
   path: string
+  sourceId: string | null
   itemCount: number
   children: FolderNode[]
 }
 
 export interface LibraryStatus {
+  id: string
+  name: string
   root: string
   rootSet: boolean
   itemCount: number
   sessionCount: number
   tagCount: number
   collectionCount: number
+  sourceCount: number
 }
 
 export interface ImportDuplicate {
@@ -120,6 +135,8 @@ export interface ItemQuery {
   sessionId?: string
   collectionId?: string
   folder?: string
+  sourceId?: string
+  sourceNull?: boolean
   tags?: string[]
   untagged?: boolean
   q?: string
