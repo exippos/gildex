@@ -14,7 +14,6 @@
 
 # 2. UX
 ## 2.1 Gallery
-
 - [X] "ALL" view
 - [X] Maximise vertical spave on gallery view
     - [X] Remove Session|collection|folders|tags from gallery view
@@ -27,15 +26,17 @@
 - [X] Collapsible side panels controlls
 - [ ] Session split for AI gen and regular media (based on ai gen metadata)
     - [ ] Left side panel for session view split into AI/regular 
+
 ### Group items
 - [X] Collection/Session Edit
     - [X] Drag items to create collections
     - [X] Edit name, remove items from session/collection, add files to session manually
     - [X] Set an image as a group item image lable
-    - [ ] 
+    - [ ] Side panel "edit" button bad placement
+
 ### Tags
-- [ ] Add "untagged" tag
-- [ ] Make tags lines in right side panel smaller vertically, very compact list "> tag 545" 
+- [X] Add "untagged" tag
+- [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545" 
 
 
 - [ ] Preview (right side) panel refocus
