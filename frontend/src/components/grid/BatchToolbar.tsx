@@ -4,15 +4,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '../../store'
 import type { Status } from '../../types'
 import { TagPicker } from './TagPicker'
+import { STATUSES } from './statuses'
 import './batch-toolbar.css'
 
 type Popover = 'tag' | 'rate' | 'status' | null
-
-const STATUSES: ReadonlyArray<{ id: Status; label: string }> = [
-  { id: 'draft', label: 'draft' },
-  { id: 'wip', label: 'wip' },
-  { id: 'final', label: 'final' },
-]
 
 export function BatchToolbar() {
   const selection = useStore((s) => s.selection)

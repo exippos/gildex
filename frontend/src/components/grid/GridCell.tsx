@@ -11,7 +11,9 @@ import './grid-cell.css'
 interface GridCellProps {
   item: Item
   selected: boolean
+  isCover?: boolean
   style: CSSProperties
+  onMenu?: (x: number, y: number) => void
 }
 
 /** Deterministic bar heights for the D42 audio placeholder. */
@@ -91,7 +93,7 @@ function RatingDots({ rating }: { rating: number }) {
   )
 }
 
-export function GridCell({ item, selected, style }: GridCellProps) {
+export function GridCell({ item, selected, isCover = false, style, onMenu }: GridCellProps) {
   const setSelected = useStore((s) => s.setSelected)
   const selectRange = useStore((s) => s.selectRange)
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
@@ -100,6 +102,14 @@ export function GridCell({ item, selected, style }: GridCellProps) {
   const thumb = thumbUrl(item.thumbnailPath)
   const canShowThumb = Boolean(thumb) && item.state !== 'missing'
 
+  // Right-clicking an item outside the current selection selects it first;
+  // right-clicking inside the selection keeps the batch together.
+  const selectForMenu = () => {
+    const state = useStore.getState()
+    if (!state.selection.includes(item.id)) state.setSelected(item.id, false)
+    state.setPreviewItemId(item.id)
+  }
+
   return (
     <button
       type="button"
@@ -107,6 +117,7 @@ export function GridCell({ item, selected, style }: GridCellProps) {
       style={style}
       aria-pressed={selected}
       aria-label={`${item.kind} ${item.relativePath}`}
+      aria-haspopup="menu"
       title={item.relativePath}
       draggable
       onDragStart={(event) => {
@@ -115,6 +126,20 @@ export function GridCell({ item, selected, style }: GridCellProps) {
         const selection = useStore.getState().selection
         const ids = selection.includes(item.id) ? selection : [item.id]
         setDraggedItems(event.dataTransfer, ids)
+      }}
+      onContextMenu={(event) => {
+        if (!onMenu) return
+        event.preventDefault()
+        selectForMenu()
+        onMenu(event.clientX, event.clientY)
+      }}
+      onKeyDown={(event) => {
+        if (!onMenu) return
+        if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return
+        event.preventDefault()
+        selectForMenu()
+        const rect = event.currentTarget.getBoundingClientRect()
+        onMenu(rect.left + Math.min(rect.width / 2, 120), rect.top + 18)
       }}
       onClick={(event) => {
         setPreviewItemId(item.id)
@@ -135,6 +160,8 @@ export function GridCell({ item, selected, style }: GridCellProps) {
       )}
 
       <span className="cell-hover" aria-hidden="true" />
+
+      {isCover && <span className="cell-cover" aria-hidden="true" />}
 
       {item.favorite && <span className="cell-fav" aria-hidden="true" title="favorite" />}
 

@@ -7,10 +7,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { collectionItemsKey, useStore } from '../../store'
 import { thumbUrl } from '../../api'
-import type { Collection, Item, Session } from '../../types'
+import type { Collection, GroupType, Item, Session } from '../../types'
+import { ContextMenu, type MenuEntry } from '../common/ContextMenu'
 import { GridCell } from './GridCell'
 import { formatRange } from '../format'
 import { readDraggedItemIds } from '../groups/drag'
+import { STATUSES } from './statuses'
 import './grid.css'
 
 const PAD_X = 16
@@ -36,12 +38,18 @@ interface Group {
   total: number
   thumb: string
   fallback: Item['kind'] | null
+  /** User-picked label image, if any. */
+  coverId: string | null
   items: Item[]
 }
 
 type Slot =
   | { kind: 'tile'; key: string; group: Group; open: boolean }
   | { kind: 'cell'; key: string; group: Group | null; item: Item }
+
+type MenuTarget =
+  | { kind: 'cell'; x: number; y: number; item: Item; group: Group | null }
+  | { kind: 'tile'; x: number; y: number; group: Group; open: boolean }
 
 interface GridRow {
   key: string
@@ -72,6 +80,7 @@ function makeGroup(
   items: Item[],
   thumb: string,
   total?: number,
+  coverId: string | null = null,
 ): Group {
   return {
     key: `${source}:${id || 'unsorted'}`,
@@ -83,6 +92,7 @@ function makeGroup(
     total: total ?? items.length,
     thumb: thumb || items[0]?.thumbnailPath || '',
     fallback: items[0]?.kind ?? null,
+    coverId,
     items,
   }
 }
@@ -114,6 +124,7 @@ function sessionGroups(items: Item[], sessions: Session[]): Group[] {
         groupItems,
         session.thumbnailPath,
         session.itemCount,
+        session.coverItemId,
       ),
     )
   }
@@ -134,6 +145,7 @@ function collectionGroup(collection: Collection, cached: Item[] | undefined): Gr
     items,
     collection.thumbnailPath,
     collection.itemCount,
+    collection.coverItemId,
   )
   // Before the first fetch there are no items to count, so trust the catalog.
   if (!cached) group.count = collection.itemCount
@@ -218,6 +230,7 @@ function GroupTile({
   style,
   onToggle,
   onDropItems,
+  onMenu,
 }: {
   group: Group
   open: boolean
@@ -227,6 +240,7 @@ function GroupTile({
   style: CSSProperties
   onToggle: () => void
   onDropItems?: (itemIds: string[]) => void
+  onMenu?: (x: number, y: number) => void
 }) {
   const [dropActive, setDropActive] = useState(false)
   const canDrop = Boolean(onDropItems) && Boolean(group.id)
@@ -254,7 +268,28 @@ function GroupTile({
       aria-expanded={open}
       aria-busy={loading || undefined}
       aria-label={`${group.label}, ${group.count} ${group.count === 1 ? 'item' : 'items'}`}
+      aria-haspopup="menu"
       onClick={onToggle}
+      onContextMenu={
+        onMenu
+          ? (event) => {
+              event.preventDefault()
+              onMenu(event.clientX, event.clientY)
+            }
+          : undefined
+      }
+      onKeyDown={
+        onMenu
+          ? (event) => {
+              if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) {
+                return
+              }
+              event.preventDefault()
+              const rect = event.currentTarget.getBoundingClientRect()
+              onMenu(rect.left + Math.min(rect.width / 2, 120), rect.top + 18)
+            }
+          : undefined
+      }
       onDragOver={
         canDrop
           ? (event) => {
@@ -331,6 +366,12 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const loading = useStore((s) => s.loadingItems)
   const clearSelection = useStore((s) => s.clearSelection)
   const addToGroup = useStore((s) => s.addToGroup)
+  const batchSet = useStore((s) => s.batchSet)
+  const batchRemove = useStore((s) => s.batchRemove)
+  const openCollectionPicker = useStore((s) => s.openCollectionPicker)
+  const openInspector = useStore((s) => s.openInspector)
+  const openGroupEditor = useStore((s) => s.openGroupEditor)
+  const setGroupCover = useStore((s) => s.setGroupCover)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
@@ -339,6 +380,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const [viewportH, setViewportH] = useState(0)
   const [scrollTop, setScrollTop] = useState(0)
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
+  const [menu, setMenu] = useState<MenuTarget | null>(null)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -369,7 +411,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   // Escape or losing focus clears the selection (wired here, once).
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') clearSelection()
+      if (event.key === 'Escape' && !menu) clearSelection()
     }
     const onBlur = () => clearSelection()
     window.addEventListener('keydown', onKey)
@@ -378,7 +420,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('blur', onBlur)
     }
-  }, [clearSelection])
+  }, [clearSelection, menu])
 
   useEffect(() => {
     return () => {
@@ -537,6 +579,176 @@ export function Grid({ cellSize }: { cellSize: number }) {
     })
   }
 
+  // A cancelable view change leaves no stale menu floating over new content.
+  useEffect(() => {
+    setMenu(null)
+  }, [queryKey, cellSize])
+
+  type CoverTarget = {
+    type: GroupType
+    id: string
+    noun: 'session' | 'collection'
+    label: string
+    coverId: string | null
+  }
+
+  const coverTargets = (item: Item, group: Group | null): CoverTarget[] => {
+    // Inside an expanded group, that group is the unambiguous target.
+    if (group?.id) {
+      return [
+        {
+          type: group.source,
+          id: group.id,
+          noun: group.source,
+          label: group.label,
+          coverId: group.coverId,
+        },
+      ]
+    }
+    const targets: CoverTarget[] = []
+    if (item.sessionId) {
+      const session = sessions.find((entry) => entry.id === item.sessionId)
+      if (session) {
+        targets.push({
+          type: 'session',
+          id: session.id,
+          noun: 'session',
+          label: session.label,
+          coverId: session.coverItemId,
+        })
+      }
+    }
+    if (surface === 'collections' && activeCollectionId) {
+      const collection = collections.find((entry) => entry.id === activeCollectionId)
+      if (collection) {
+        targets.push({
+          type: 'collection',
+          id: collection.id,
+          noun: 'collection',
+          label: collection.name,
+          coverId: collection.coverItemId,
+        })
+      }
+    }
+    return targets
+  }
+
+  const buildCellMenu = (item: Item, group: Group | null): MenuEntry[] => {
+    const entries: MenuEntry[] = []
+    const targets = coverTargets(item, group)
+
+    for (const target of targets) {
+      const isCover = target.coverId === item.id
+      entries.push({
+        kind: 'item',
+        label: isCover
+          ? `Clear ${target.noun} cover — ${target.label}`
+          : `Use as ${target.noun} cover — ${target.label}`,
+        hint: isCover ? 'current' : undefined,
+        checked: isCover,
+        onSelect: () => {
+          void setGroupCover(target.type, target.id, isCover ? null : item.id)
+        },
+      })
+      entries.push({
+        kind: 'item',
+        label: target.type === 'session' ? 'Edit session…' : 'Edit collection…',
+        onSelect: () => openGroupEditor(target.type, target.id),
+      })
+    }
+
+    if (entries.length > 0) entries.push({ kind: 'separator' })
+
+    // Batch actions act on the whole selection, as the floating toolbar does.
+    const ids = selection.includes(item.id) ? selection : [item.id]
+    const chosen = items.filter((entry) => ids.includes(entry.id))
+    const allFavorite = chosen.length > 0 && chosen.every((entry) => entry.favorite)
+    const uniformRating =
+      chosen.length > 0 && chosen.every((entry) => entry.rating === chosen[0].rating)
+        ? chosen[0].rating
+        : -1
+    const uniformStatus =
+      chosen.length > 0 && chosen.every((entry) => entry.status === chosen[0].status)
+        ? chosen[0].status
+        : null
+    const countHint = ids.length > 1 ? `${ids.length} selected` : undefined
+
+    entries.push({
+      kind: 'item',
+      label: allFavorite ? 'Unfavorite' : 'Favorite',
+      hint: countHint,
+      onSelect: () => {
+        void batchSet({ favorite: !allFavorite })
+      },
+    })
+
+    const ratingItems: MenuEntry[] = [0, 1, 2, 3, 4, 5].map((value) => ({
+      kind: 'item',
+      label: value === 0 ? 'No rating' : `${value} of 5`,
+      checked: uniformRating === value,
+      onSelect: () => {
+        void batchSet({ rating: value })
+      },
+    }))
+    entries.push({ kind: 'submenu', label: 'Rate', items: ratingItems })
+
+    const statusItems: MenuEntry[] = STATUSES.map((status) => ({
+      kind: 'item',
+      label: status.label,
+      checked: uniformStatus === status.id,
+      onSelect: () => {
+        void batchSet({ status: status.id })
+      },
+    }))
+    entries.push({ kind: 'submenu', label: 'Status', items: statusItems })
+
+    entries.push({
+      kind: 'item',
+      label: 'Add to collection…',
+      onSelect: () => openCollectionPicker(ids),
+    })
+    entries.push({
+      kind: 'item',
+      label: 'Inspect',
+      onSelect: () => {
+        void openInspector('item', item.id)
+      },
+    })
+
+    entries.push({ kind: 'separator' })
+    entries.push({
+      kind: 'item',
+      label: 'Remove from catalog',
+      danger: true,
+      onSelect: () => {
+        const ok = window.confirm(
+          `Remove ${ids.length} ${ids.length === 1 ? 'item' : 'items'} from the catalog?\n\nFiles stay on disk; they can be imported again.`,
+        )
+        if (ok) void batchRemove()
+      },
+    })
+
+    return entries
+  }
+
+  const buildTileMenu = (group: Group, open: boolean): MenuEntry[] => {
+    const entries: MenuEntry[] = []
+    if (group.id) {
+      entries.push({
+        kind: 'item',
+        label: group.source === 'session' ? 'Edit session…' : 'Edit collection…',
+        onSelect: () => openGroupEditor(group.source, group.id),
+      })
+      entries.push({ kind: 'separator' })
+    }
+    entries.push({
+      kind: 'item',
+      label: open ? 'Collapse group' : 'Expand group',
+      onSelect: () => toggleGroup(group),
+    })
+    return entries
+  }
+
   return (
     <div className="grid-root">
       {loading && (
@@ -619,6 +831,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
                           /* the rail reports drop errors; keep the tile quiet */
                         })
                       }}
+                      onMenu={(x, y) =>
+                        setMenu({ kind: 'tile', x, y, group, open: slot.open })
+                      }
                     />
                   )
                 }
@@ -627,7 +842,11 @@ export function Grid({ cellSize }: { cellSize: number }) {
                     key={slot.key}
                     item={slot.item}
                     selected={selectedSet.has(slot.item.id)}
+                    isCover={slot.group?.coverId === slot.item.id}
                     style={style}
+                    onMenu={(x, y) =>
+                      setMenu({ kind: 'cell', x, y, item: slot.item, group: slot.group })
+                    }
                   />
                 )
               }),
@@ -640,6 +859,19 @@ export function Grid({ cellSize }: { cellSize: number }) {
           )}
         </div>
       </div>
+
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          items={
+            menu.kind === 'cell'
+              ? buildCellMenu(menu.item, menu.group)
+              : buildTileMenu(menu.group, menu.open)
+          }
+          onClose={() => setMenu(null)}
+        />
+      )}
     </div>
   )
 }

@@ -139,6 +139,39 @@
   z-index: 2;
 }
 
+/* the current group label image, marked in the expanded group */
+.cell-cover {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  z-index: 3;
+  border-left: 1px solid var(--gilt);
+  border-bottom: 1px solid var(--gilt);
+  border-bottom-left-radius: var(--radius-sm);
+  background: var(--gilt-dim);
+  pointer-events: none;
+}
+
+.cell-cover::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: var(--gilt);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+/* keep the favorite mark clear of the cover corner */
+.cell-cover ~ .cell-fav {
+  top: 26px;
+  right: 7px;
+}
+
 .cell-meta {
   position: absolute;
   left: 8px;

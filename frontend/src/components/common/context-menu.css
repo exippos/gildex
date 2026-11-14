@@ -1,0 +1,107 @@
+/* Context menu — a flat ocean panel with a gilt edge, above the grid but
+   below the editor modals. */
+
+.ctx-panel {
+  position: fixed;
+  z-index: 900;
+  min-width: 216px;
+  max-width: 280px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-float);
+  color: var(--text);
+}
+
+.ctx-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: left;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ctx-item:hover:not(:disabled),
+.ctx-item:focus-visible,
+.ctx-item.is-open {
+  outline: none;
+  border-color: var(--gilt-border);
+  background: var(--control);
+  color: var(--text);
+}
+
+.ctx-item:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.ctx-item.is-danger {
+  color: var(--danger);
+}
+
+.ctx-item.is-danger:hover:not(:disabled),
+.ctx-item.is-danger:focus-visible {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.ctx-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ctx-item-hint {
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.ctx-item-check {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: var(--gilt);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.ctx-item-arrow {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid var(--text-muted);
+  border-right: 1px solid var(--text-muted);
+  transform: rotate(45deg);
+}
+
+.ctx-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--hairline);
+}
+
+/* submenu: opens to the right, or to the left near the viewport edge */
+.ctx-sub {
+  position: absolute;
+  left: calc(100% + 4px);
+  min-width: 150px;
+}
+
+.ctx-sub.is-flip {
+  left: auto;
+  right: calc(100% + 4px);
+}
