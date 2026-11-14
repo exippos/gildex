@@ -43,6 +43,12 @@ place, imported `once` or re-scanned on `watch` — and it imports. A1111/ComfyU
 prompt + model are parsed automatically; files without metadata become full
 items anyway.
 
+The last library you open or create is remembered (in
+`$XDG_CONFIG_HOME/gildex/state.json`, or `~/.config/gildex/state.json`), and the
+app reopens it on the next launch unless you pass an explicit `-library` path.
+The first-run screen also offers an **Open last library** shortcut to jump back
+in.
+
 ### Demo without a real generation stash
 
 ```

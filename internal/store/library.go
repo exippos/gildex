@@ -37,14 +37,23 @@ type Library struct {
 	root       string
 	id         string
 	name       string
+	last       string
 	store      *Store
 	dbOverride string
+	statePath  string
 }
 
 // NewLibrary creates an unconfigured library. dbOverride, when non-empty,
-// replaces the default `<root>/catalog.db` database location.
+// replaces the default `<root>/catalog.db` database location. The previously
+// opened library (if any) is loaded from app state so it can be reopened on
+// the next launch.
 func NewLibrary(dbOverride string) *Library {
-	return &Library{dbOverride: dbOverride}
+	sp := statePath()
+	l := &Library{dbOverride: dbOverride, statePath: sp}
+	if s, err := loadAppState(sp); err == nil {
+		l.last = s.LastLibrary
+	}
+	return l
 }
 
 // Root returns the configured library bundle path, or "" when unset.
@@ -66,6 +75,23 @@ func (l *Library) Name() string {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.name
+}
+
+// LastLibrary returns the path of the most recently opened/created library,
+// or "" when none has been recorded. It may equal the currently open library.
+func (l *Library) LastLibrary() string {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.last
+}
+
+// persistLast writes the last-opened library path to the app state file. It is
+// best-effort: a failure to persist must not fail opening a library.
+func (l *Library) persistLast(path string) {
+	if l.statePath == "" {
+		return
+	}
+	_ = saveAppState(l.statePath, appState{LastLibrary: path})
 }
 
 // Store returns the open store, or nil when no library has been opened.
@@ -201,12 +227,14 @@ func (l *Library) open(bundle string, m manifest) error {
 	l.root = bundle
 	l.id = m.ID
 	l.name = m.Name
+	l.last = bundle
 	l.store = st
 	l.mu.Unlock()
 
 	if old != nil {
 		_ = old.Close()
 	}
+	l.persistLast(bundle)
 	return nil
 }
 
@@ -227,10 +255,11 @@ func (l *Library) Status() (model.LibraryStatus, error) {
 	root := l.Root()
 	st := l.Store()
 	status := model.LibraryStatus{
-		ID:      l.ID(),
-		Name:    l.Name(),
-		Root:    root,
-		RootSet: root != "",
+		ID:          l.ID(),
+		Name:        l.Name(),
+		Root:        root,
+		RootSet:     root != "",
+		LastLibrary: l.LastLibrary(),
 	}
 	if st == nil {
 		return status, nil

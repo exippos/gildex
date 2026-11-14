@@ -151,6 +151,7 @@
 /* two-up first-run choice: create (primary) / open (quiet) */
 .empty-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
   margin-top: 8px;
@@ -158,6 +159,17 @@
 
 .empty-actions .empty-action {
   margin-top: 0;
+}
+
+.empty-last {
+  max-width: 46ch;
+  margin: 2px 0 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .empty-action.is-quiet {

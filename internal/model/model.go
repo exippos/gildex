@@ -156,6 +156,7 @@ type LibraryStatus struct {
 	Name            string `json:"name"`
 	Root            string `json:"root"`
 	RootSet         bool   `json:"rootSet"`
+	LastLibrary     string `json:"lastLibrary"`
 	ItemCount       int    `json:"itemCount"`
 	SessionCount    int    `json:"sessionCount"`
 	TagCount        int    `json:"tagCount"`

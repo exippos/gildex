@@ -1,5 +1,6 @@
 // First-run / empty browse states: nothing to show yet — point the user at the
 // library (create/open) or at the Ingest workspace once a library is open.
+import { useState } from 'react'
 import { useStore } from '../store'
 import './empty-state.css'
 
@@ -16,8 +17,26 @@ export function EmptyState() {
   const activeSourceId = useStore((s) => s.activeSourceId)
   const setWorkspace = useStore((s) => s.setWorkspace)
   const openLibraryModal = useStore((s) => s.openLibraryModal)
+  const openLibrary = useStore((s) => s.openLibrary)
+
+  const [openingLast, setOpeningLast] = useState(false)
+  const [lastError, setLastError] = useState<string | null>(null)
 
   if (!library) return null
+
+  const openLast = async () => {
+    const last = library.lastLibrary
+    if (!last) return
+    setOpeningLast(true)
+    setLastError(null)
+    try {
+      await openLibrary(last)
+    } catch (err) {
+      setLastError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setOpeningLast(false)
+    }
+  }
 
   const filtered =
     Boolean(search) ||
@@ -36,6 +55,7 @@ export function EmptyState() {
   )
 
   if (!library.rootSet) {
+    const last = library.lastLibrary
     return (
       <div className="empty-state" role="dialog" aria-label="Create or open a library">
         {ornament}
@@ -44,9 +64,19 @@ export function EmptyState() {
           gildex catalogues your media into a library. create one or open an existing one to begin.
         </p>
         <div className="empty-actions">
+          {last && (
+            <button
+              type="button"
+              className="empty-action"
+              onClick={() => void openLast()}
+              disabled={openingLast}
+            >
+              {openingLast ? 'Opening…' : 'Open last library'}
+            </button>
+          )}
           <button
             type="button"
-            className="empty-action"
+            className="empty-action is-quiet"
             onClick={() => openLibraryModal('create')}
           >
             Create library
@@ -59,6 +89,16 @@ export function EmptyState() {
             Open library
           </button>
         </div>
+        {last && (
+          <p className="empty-last" title={last}>
+            {last}
+          </p>
+        )}
+        {lastError && (
+          <p className="empty-error" role="alert">
+            {lastError}
+          </p>
+        )}
       </div>
     )
   }

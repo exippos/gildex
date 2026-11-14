@@ -108,6 +108,7 @@ export interface LibraryStatus {
   name: string
   root: string
   rootSet: boolean
+  lastLibrary: string
   itemCount: number
   sessionCount: number
   tagCount: number

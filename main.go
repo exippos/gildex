@@ -29,6 +29,12 @@ func main() {
 		if err := lib.OpenLibrary(*library); err != nil {
 			log.Printf("gildex: cannot open library %q: %v", *library, err)
 		}
+	} else if last := lib.LastLibrary(); last != "" {
+		// Continue where the user left off: reopen the last library by default
+		// unless an explicit -library path was given.
+		if err := lib.OpenLibrary(last); err != nil {
+			log.Printf("gildex: cannot open last library %q: %v", last, err)
+		}
 	}
 
 	handler := server.NewHandler(lib, "frontend/dist")
