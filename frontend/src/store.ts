@@ -573,6 +573,17 @@ export const useStore = create<AppState>((set, get) => ({
     const ids = get().selection
     if (!ids.length) return
     await api.batch({ ids, ...patch })
+    // Keep expanded collection tiles in step without a refetch.
+    const idSet = new Set(ids)
+    set((s) => {
+      const collectionItems: Record<string, Item[]> = {}
+      for (const [key, page] of Object.entries(s.collectionItems)) {
+        collectionItems[key] = page.map((item) =>
+          idSet.has(item.id) ? { ...item, ...patch } : item,
+        )
+      }
+      return { collectionItems }
+    })
     get().clearSelection()
     await get().refreshCatalog()
   },
@@ -580,6 +591,14 @@ export const useStore = create<AppState>((set, get) => ({
     const ids = get().selection
     if (!ids.length) return
     await api.batch({ ids, removeFromCatalog: true })
+    const idSet = new Set(ids)
+    set((s) => {
+      const collectionItems: Record<string, Item[]> = {}
+      for (const [key, page] of Object.entries(s.collectionItems)) {
+        collectionItems[key] = page.filter((item) => !idSet.has(item.id))
+      }
+      return { collectionItems }
+    })
     get().clearSelection()
     await get().refreshCatalog()
   },
