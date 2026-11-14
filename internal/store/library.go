@@ -1,18 +1,42 @@
 package store
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+	"time"
 
 	"gildex/internal/model"
 )
 
-// Library holds the single configured root and its open store. The root and
-// database are only opened once a root has been chosen.
+// manifestFileName is the marker file that identifies a directory as a GILDEX
+// library bundle (D43). It also records identity and schema version.
+const manifestFileName = "library.gildex.json"
+
+// librarySchemaVersion is bumped when the on-disk bundle layout changes.
+const librarySchemaVersion = 1
+
+// appVersion is recorded in new manifests; informational only.
+const appVersion = "0.1.0"
+
+type manifest struct {
+	Name          string `json:"name"`
+	ID            string `json:"id"`
+	SchemaVersion int    `json:"schemaVersion"`
+	CreatedAt     int64  `json:"createdAt"`
+	AppVersion    string `json:"appVersion"`
+}
+
+// Library holds the single configured library bundle and its open store. The
+// library is a directory (a `.gildex` bundle) containing the catalog database
+// and derived caches; media lives in external sources, referenced in place.
 type Library struct {
 	mu         sync.RWMutex
 	root       string
+	id         string
+	name       string
 	store      *Store
 	dbOverride string
 }
@@ -23,14 +47,28 @@ func NewLibrary(dbOverride string) *Library {
 	return &Library{dbOverride: dbOverride}
 }
 
-// Root returns the configured root, or "" when unset.
+// Root returns the configured library bundle path, or "" when unset.
 func (l *Library) Root() string {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.root
 }
 
-// Store returns the open store, or nil when no root has been configured.
+// ID returns the library identity, or "" when unset.
+func (l *Library) ID() string {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.id
+}
+
+// Name returns the library name, or "" when unset.
+func (l *Library) Name() string {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.name
+}
+
+// Store returns the open store, or nil when no library has been opened.
 func (l *Library) Store() *Store {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -55,22 +93,96 @@ func (l *Library) InboxDir() string {
 	return filepath.Join(root, "_inbox")
 }
 
-// SetRoot opens (creating if needed) the catalog and thumbnails directories
-// for root, replacing any previously configured library.
-func (l *Library) SetRoot(path string) error {
+// AttachmentsDir returns `<root>/attachments`, or "" when unset.
+func (l *Library) AttachmentsDir() string {
+	root := l.Root()
+	if root == "" {
+		return ""
+	}
+	return filepath.Join(root, "attachments")
+}
+
+// CreateLibrary creates a new library bundle at `<parentDir>/<name>.gildex`,
+// writes its manifest and system directories, and opens it.
+func (l *Library) CreateLibrary(name, parentDir string) error {
+	parent, err := filepath.Abs(parentDir)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(parent, 0o755); err != nil {
+		return err
+	}
+
+	name = sanitizeLibraryName(name)
+	bundle := filepath.Join(parent, name+".gildex")
+	if _, err := os.Stat(bundle); err == nil {
+		return &ValidationError{Message: "a library already exists at " + bundle}
+	}
+	if err := os.MkdirAll(bundle, 0o755); err != nil {
+		return err
+	}
+	if err := ensureBundleDirs(bundle); err != nil {
+		return err
+	}
+
+	m := manifest{
+		Name:          name,
+		ID:            NewID(),
+		SchemaVersion: librarySchemaVersion,
+		CreatedAt:     time.Now().UnixMilli(),
+		AppVersion:    appVersion,
+	}
+	if err := writeManifest(bundle, m); err != nil {
+		return err
+	}
+	return l.open(bundle, m)
+}
+
+// OpenLibrary opens an existing library bundle (or adopts a legacy root that
+// has a catalog.db but no manifest).
+func (l *Library) OpenLibrary(path string) error {
 	abs, err := filepath.Abs(path)
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(abs, 0o755); err != nil {
+	info, err := os.Stat(abs)
+	if err != nil {
 		return err
 	}
-	thumbDir := filepath.Join(abs, "thumbnails")
-	if err := os.MkdirAll(thumbDir, 0o755); err != nil {
-		return err
+	if !info.IsDir() {
+		return &ValidationError{Message: "library path is not a directory"}
 	}
 
-	dbPath := filepath.Join(abs, "catalog.db")
+	m, err := readManifest(abs)
+	if err != nil {
+		// Adopt a legacy prototype root: a directory with catalog.db but no
+		// manifest becomes a library in place.
+		if _, statErr := os.Stat(filepath.Join(abs, "catalog.db")); statErr != nil {
+			return &ValidationError{Message: "not a GILDEX library (missing " + manifestFileName + ")"}
+		}
+		m = manifest{
+			Name:          filepath.Base(abs),
+			ID:            NewID(),
+			SchemaVersion: librarySchemaVersion,
+			CreatedAt:     time.Now().UnixMilli(),
+			AppVersion:    appVersion,
+		}
+		if err := writeManifest(abs, m); err != nil {
+			return err
+		}
+	} else if m.SchemaVersion > librarySchemaVersion {
+		return &ValidationError{Message: "library was created by a newer GILDEX version"}
+	}
+
+	if err := ensureBundleDirs(abs); err != nil {
+		return err
+	}
+	return l.open(abs, m)
+}
+
+// open sets the fields and opens (creating if needed) the store for a bundle.
+func (l *Library) open(bundle string, m manifest) error {
+	dbPath := filepath.Join(bundle, "catalog.db")
 	if l.dbOverride != "" {
 		dbPath = l.dbOverride
 		if !filepath.IsAbs(dbPath) {
@@ -79,15 +191,16 @@ func (l *Library) SetRoot(path string) error {
 			}
 		}
 	}
-
-	st, err := Open(dbPath, abs)
+	st, err := Open(dbPath, bundle)
 	if err != nil {
 		return err
 	}
 
 	l.mu.Lock()
 	old := l.store
-	l.root = abs
+	l.root = bundle
+	l.id = m.ID
+	l.name = m.Name
 	l.store = st
 	l.mu.Unlock()
 
@@ -113,7 +226,12 @@ func (l *Library) Close() error {
 func (l *Library) Status() (model.LibraryStatus, error) {
 	root := l.Root()
 	st := l.Store()
-	status := model.LibraryStatus{Root: root, RootSet: root != ""}
+	status := model.LibraryStatus{
+		ID:      l.ID(),
+		Name:    l.Name(),
+		Root:    root,
+		RootSet: root != "",
+	}
 	if st == nil {
 		return status, nil
 	}
@@ -121,9 +239,56 @@ func (l *Library) Status() (model.LibraryStatus, error) {
 	if err != nil {
 		return status, err
 	}
+	sources, err := st.SourceCount()
+	if err != nil {
+		return status, err
+	}
 	status.ItemCount = counts.Items
 	status.SessionCount = counts.Sessions
 	status.TagCount = counts.Tags
 	status.CollectionCount = counts.Collections
+	status.SourceCount = sources
 	return status, nil
+}
+
+func sanitizeLibraryName(name string) string {
+	name = strings.TrimSpace(strings.ReplaceAll(name, string(filepath.Separator), " "))
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "Library"
+	}
+	return name
+}
+
+func ensureBundleDirs(bundle string) error {
+	for _, sub := range []string{"thumbnails", "attachments", "_inbox"} {
+		if err := os.MkdirAll(filepath.Join(bundle, sub), 0o755); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func manifestPath(bundle string) string {
+	return filepath.Join(bundle, manifestFileName)
+}
+
+func writeManifest(bundle string, m manifest) error {
+	data, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(manifestPath(bundle), append(data, '\n'), 0o644)
+}
+
+func readManifest(bundle string) (manifest, error) {
+	var m manifest
+	data, err := os.ReadFile(manifestPath(bundle))
+	if err != nil {
+		return m, err
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return m, err
+	}
+	return m, nil
 }

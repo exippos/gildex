@@ -64,13 +64,35 @@ func Status() model.ImportStatus {
 	}
 }
 
-// Start begins an import job. Only one job may run at a time.
+// Start begins an import of specific paths (e.g. files uploaded into the
+// inbox). Items are library-local: source id nil, paths relative to the root.
 func Start(lib *store.Library, paths []string) error {
 	st := lib.Store()
 	if st == nil {
 		return ErrNoRoot
 	}
-	root := lib.Root()
+	return start(lib, nil, lib.Root(), paths)
+}
+
+// ScanSource imports every media file under one source's folder. Items are
+// tagged with the source id and their paths are source-relative.
+func ScanSource(lib *store.Library, sourceID string) error {
+	st := lib.Store()
+	if st == nil {
+		return ErrNoRoot
+	}
+	src, err := st.GetSource(sourceID)
+	if err != nil {
+		return err
+	}
+	if src == nil {
+		return store.ErrNoSource
+	}
+	return start(lib, &sourceID, src.Path, []string{src.Path})
+}
+
+// start begins a job. Only one job may run at a time.
+func start(lib *store.Library, sourceID *string, base string, paths []string) error {
 	thumbDir := lib.ThumbDir()
 
 	job.mu.Lock()
@@ -86,11 +108,11 @@ func Start(lib *store.Library, paths []string) error {
 	job.duplicates = nil
 	job.mu.Unlock()
 
-	go run(st, root, thumbDir, paths)
+	go run(lib.Store(), base, thumbDir, sourceID, paths)
 	return nil
 }
 
-func run(st *store.Store, root, thumbDir string, paths []string) {
+func run(st *store.Store, root, thumbDir string, sourceID *string, paths []string) {
 	defer func() {
 		job.mu.Lock()
 		job.running = false
@@ -107,7 +129,7 @@ func run(st *store.Store, root, thumbDir string, paths []string) {
 	job.mu.Unlock()
 
 	for _, f := range files {
-		if err := processFile(st, thumbDir, f); err != nil {
+		if err := processFile(st, thumbDir, sourceID, f); err != nil {
 			log.Printf("gildex: import %s: %v", f.rel, err)
 		}
 		job.mu.Lock()
@@ -121,6 +143,11 @@ func run(st *store.Store, root, thumbDir string, paths []string) {
 		return
 	}
 	setStage("index")
+	if sourceID != nil {
+		if err := st.TouchSource(*sourceID); err != nil {
+			log.Printf("gildex: touch source %s: %v", *sourceID, err)
+		}
+	}
 }
 
 func setStage(stage string) {
@@ -249,6 +276,16 @@ func relWithin(root, abs string) (string, bool) {
 	return rel, true
 }
 
+func sameSource(a, b *string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
 func classify(file string) (model.Kind, string) {
 	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(file), "."))
 	switch ext {
@@ -299,7 +336,7 @@ func hashFile(path string) (string, int64, error) {
 	return hex.EncodeToString(h.Sum(nil)), n, nil
 }
 
-func processFile(st *store.Store, thumbDir string, f fileEntry) error {
+func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry) error {
 	setStage("hash")
 	hash, size, err := hashFile(f.abs)
 	if err != nil {
@@ -326,7 +363,9 @@ func processFile(st *store.Store, thumbDir string, f fileEntry) error {
 			thumbName = hash + ".jpg"
 		}
 		addDuplicate(model.Duplicate{ID: existing.ID, Name: path.Base(f.rel), Kind: kind, Thumb: thumbName})
-		if existing.RelativePath != f.rel {
+		// Move detection is within a source only (D1); the same file seen from a
+		// different source is a duplicate, not a move.
+		if existing.RelativePath != f.rel && sameSource(existing.SourceID, sourceID) {
 			return st.UpdateItemPath(existing.ID, f.rel)
 		}
 	}
@@ -346,6 +385,7 @@ func processFile(st *store.Store, thumbDir string, f fileEntry) error {
 	item := store.ImportItem{
 		ContentHash:  hash,
 		RelativePath: f.rel,
+		SourceID:     sourceID,
 		Kind:         kind,
 		Format:       format,
 		FileSize:     size,

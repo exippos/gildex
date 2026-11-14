@@ -38,11 +38,32 @@ const (
 	OwnerCollection OwnerType = "collection"
 )
 
+// SourceMode is how a source is (re)scanned: once = one-time import, watch =
+// periodically rechecked and synced.
+type SourceMode string
+
+const (
+	SourceOnce  SourceMode = "once"
+	SourceWatch SourceMode = "watch"
+)
+
+// Source is an ingest-configuration entity: a media folder referenced in place.
+// Distinct from the "folders" browse view (D6); see D43.
+type Source struct {
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	Path       string     `json:"path"`
+	Mode       SourceMode `json:"mode"`
+	AddedAt    int64      `json:"addedAt"`
+	LastScanAt *int64     `json:"lastScanAt"`
+}
+
 // Item is the catalog unit. Fields carry the JSON names the frontend consumes.
 type Item struct {
 	ID             string            `json:"id"`
 	ContentHash    string            `json:"contentHash"`
 	RelativePath   string            `json:"relativePath"`
+	SourceID       *string           `json:"sourceId"`
 	Kind           Kind              `json:"kind"`
 	Format         string            `json:"format"`
 	FileSize       int64             `json:"fileSize"`
@@ -113,21 +134,28 @@ type Note struct {
 }
 
 // FolderNode is a directory in the browse view (D6). Directories only.
+// SourceID is set for nodes under a media source and nil for library-local
+// (inbox) nodes; Path is source-relative (or library-relative when SourceID is
+// nil).
 type FolderNode struct {
 	Name      string       `json:"name"`
 	Path      string       `json:"path"`
+	SourceID  *string      `json:"sourceId"`
 	ItemCount int          `json:"itemCount"`
 	Children  []FolderNode `json:"children"`
 }
 
 // LibraryStatus summarizes the catalog for the status endpoint.
 type LibraryStatus struct {
+	ID              string `json:"id"`
+	Name            string `json:"name"`
 	Root            string `json:"root"`
 	RootSet         bool   `json:"rootSet"`
 	ItemCount       int    `json:"itemCount"`
 	SessionCount    int    `json:"sessionCount"`
 	TagCount        int    `json:"tagCount"`
 	CollectionCount int    `json:"collectionCount"`
+	SourceCount     int    `json:"sourceCount"`
 }
 
 // Duplicate describes a file whose content hash was already cataloged.

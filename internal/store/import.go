@@ -13,6 +13,7 @@ import (
 type ImportItem struct {
 	ContentHash    string
 	RelativePath   string
+	SourceID       *string
 	Kind           model.Kind
 	Format         string
 	FileSize       int64
@@ -38,6 +39,7 @@ type ImportItem struct {
 type Existing struct {
 	ID           string
 	RelativePath string
+	SourceID     *string
 	ManualFields map[string]bool
 }
 
@@ -45,14 +47,16 @@ type Existing struct {
 func (s *Store) FindByHash(hash string) (*Existing, error) {
 	var e Existing
 	var manual string
-	err := s.db.QueryRow(`SELECT id, relative_path, manual_fields FROM items WHERE content_hash = ?`, hash).
-		Scan(&e.ID, &e.RelativePath, &manual)
+	var sourceID sql.NullString
+	err := s.db.QueryRow(`SELECT id, relative_path, source_id, manual_fields FROM items WHERE content_hash = ?`, hash).
+		Scan(&e.ID, &e.RelativePath, &sourceID, &manual)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
+	e.SourceID = nullString(sourceID)
 	e.ManualFields = splitManual(manual)
 	return &e, nil
 }
@@ -93,13 +97,13 @@ func (s *Store) UpsertImport(it ImportItem) error {
 		_, err = tx.Exec(`INSERT INTO items (
 			id, content_hash, relative_path, kind, format, file_size, timestamp, width, height,
 			duration, favorite, rating, status, state, session_id, prompt, negative_prompt,
-			model_name, seed, steps, sampler, cfg_scale, generated_at, thumbnail_path, phash, manual_fields
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 'draft', 'present', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '')`,
+			model_name, seed, steps, sampler, cfg_scale, generated_at, thumbnail_path, phash, manual_fields, source_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 'draft', 'present', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)`,
 			id, it.ContentHash, it.RelativePath, string(it.Kind), it.Format, it.FileSize,
 			it.Timestamp, it.Width, it.Height, floatArg(it.Duration),
 			strArg(it.Prompt), strArg(it.NegativePrompt), strArg(it.ModelName),
 			intArg(it.Seed), intArg(it.Steps), strArg(it.Sampler), floatArg(it.CFGScale),
-			intArg(it.GeneratedAt), it.ThumbnailPath, it.PHash,
+			intArg(it.GeneratedAt), it.ThumbnailPath, it.PHash, strArg(it.SourceID),
 		)
 		if err != nil {
 			return err
@@ -111,12 +115,12 @@ func (s *Store) UpsertImport(it ImportItem) error {
 		sets := []string{
 			"relative_path = ?", "kind = ?", "format = ?", "file_size = ?",
 			"timestamp = ?", "width = ?", "height = ?", "duration = ?",
-			"thumbnail_path = ?", "phash = ?", "state = 'present'",
+			"thumbnail_path = ?", "phash = ?", "state = 'present'", "source_id = ?",
 		}
 		args := []any{
 			it.RelativePath, string(it.Kind), it.Format, it.FileSize,
 			it.Timestamp, it.Width, it.Height, floatArg(it.Duration),
-			it.ThumbnailPath, it.PHash,
+			it.ThumbnailPath, it.PHash, strArg(it.SourceID),
 		}
 		addOpt := func(field, col string, value any) {
 			if manualSet[field] {

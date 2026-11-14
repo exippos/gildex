@@ -35,12 +35,18 @@ func parseItemQuery(r *http.Request) (store.ItemQuery, error) {
 		SessionID:    v.Get("sessionId"),
 		CollectionID: v.Get("collectionId"),
 		Folder:       v.Get("folder"),
+		SourceID:     v.Get("sourceId"),
 		Q:            v.Get("q"),
 		Kind:         v.Get("kind"),
 		Status:       v.Get("status"),
 		Limit:        200,
 		Sort:         v.Get("sort"),
 		Dir:          v.Get("dir"),
+	}
+	if v.Get("sourceNull") != "" {
+		if b, err := strconv.ParseBool(v.Get("sourceNull")); err == nil {
+			q.SourceNull = b
+		}
 	}
 	if q.Sort == "" {
 		q.Sort = "time"

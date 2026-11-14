@@ -59,7 +59,17 @@ CREATE TABLE IF NOT EXISTS items (
   generated_at    INTEGER,
   thumbnail_path  TEXT NOT NULL DEFAULT '',
   phash           INTEGER NOT NULL DEFAULT 0,
-  manual_fields   TEXT NOT NULL DEFAULT ''
+  manual_fields   TEXT NOT NULL DEFAULT '',
+  source_id       TEXT
+);
+
+CREATE TABLE IF NOT EXISTS sources (
+  id           TEXT PRIMARY KEY,
+  name         TEXT NOT NULL,
+  path         TEXT NOT NULL,
+  mode         TEXT NOT NULL DEFAULT 'once',
+  added_at     INTEGER NOT NULL,
+  last_scan_at INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -160,6 +170,7 @@ func migrate(db *sql.DB) error {
 	columns := []struct{ table, column, ddl string }{
 		{"sessions", "cover_item_id", `ALTER TABLE sessions ADD COLUMN cover_item_id TEXT`},
 		{"collections", "cover_item_id", `ALTER TABLE collections ADD COLUMN cover_item_id TEXT`},
+		{"items", "source_id", `ALTER TABLE items ADD COLUMN source_id TEXT`},
 	}
 	for _, c := range columns {
 		ok, err := hasColumn(db, c.table, c.column)
@@ -172,6 +183,11 @@ func migrate(db *sql.DB) error {
 		if _, err := db.Exec(c.ddl); err != nil {
 			return err
 		}
+	}
+	// The source_id index lives here (not in the schema string) so it is only
+	// created after the column exists on upgraded databases.
+	if _, err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_items_source ON items(source_id)`); err != nil {
+		return err
 	}
 	return nil
 }
@@ -226,7 +242,7 @@ func NewID() string {
 const itemCols = `i.id, i.content_hash, i.relative_path, i.kind, i.format, i.file_size,
 	i.timestamp, i.width, i.height, i.duration, i.favorite, i.rating, i.status, i.state,
 	i.session_id, i.prompt, i.negative_prompt, i.model_name, i.seed, i.steps, i.sampler,
-	i.cfg_scale, i.generated_at, i.thumbnail_path`
+	i.cfg_scale, i.generated_at, i.thumbnail_path, i.source_id`
 
 func scanItem(sc interface{ Scan(dest ...any) error }) (*model.Item, error) {
 	var (
@@ -240,12 +256,13 @@ func scanItem(sc interface{ Scan(dest ...any) error }) (*model.Item, error) {
 		seed, steps, generatedAt sql.NullInt64
 		sampler                  sql.NullString
 		cfg                      sql.NullFloat64
+		sourceID                 sql.NullString
 	)
 	err := sc.Scan(
 		&it.ID, &it.ContentHash, &it.RelativePath, &kind, &format, &it.FileSize,
 		&it.Timestamp, &it.Width, &it.Height, &duration, &favorite, &it.Rating, &status, &state,
 		&sessionID, &prompt, &negative, &modelN, &seed, &steps, &sampler,
-		&cfg, &generatedAt, &it.ThumbnailPath,
+		&cfg, &generatedAt, &it.ThumbnailPath, &sourceID,
 	)
 	if err != nil {
 		return nil, err
@@ -265,6 +282,7 @@ func scanItem(sc interface{ Scan(dest ...any) error }) (*model.Item, error) {
 	it.Sampler = nullString(sampler)
 	it.CFGScale = nullFloat(cfg)
 	it.GeneratedAt = nullInt(generatedAt)
+	it.SourceID = nullString(sourceID)
 	it.Extra = map[string]string{}
 	return &it, nil
 }

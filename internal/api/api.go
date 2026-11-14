@@ -22,7 +22,17 @@ func New(lib *store.Library) *API { return &API{lib: lib} }
 // Register wires every API route onto mux.
 func (a *API) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/status", a.handleStatus)
-	mux.HandleFunc("POST /api/library/root", a.handleSetRoot)
+	mux.HandleFunc("POST /api/library", a.handleCreateLibrary)
+	mux.HandleFunc("POST /api/library/open", a.handleOpenLibrary)
+
+	mux.HandleFunc("GET /api/sources", a.handleSources)
+	mux.HandleFunc("POST /api/sources", a.handleAddSource)
+	mux.HandleFunc("PATCH /api/sources/{id}", a.handleUpdateSource)
+	mux.HandleFunc("DELETE /api/sources/{id}", a.handleDeleteSource)
+	mux.HandleFunc("POST /api/sources/{id}/scan", a.handleScanSource)
+
+	mux.HandleFunc("GET /api/fs/list", a.handleFSList)
+	mux.HandleFunc("GET /api/fs/roots", a.handleFSRoots)
 
 	mux.HandleFunc("POST /api/import", a.handleImport)
 	mux.HandleFunc("POST /api/import/upload", a.handleImportUpload)
@@ -104,29 +114,6 @@ func handleStatusError(w http.ResponseWriter, err error) {
 }
 
 func (a *API) handleStatus(w http.ResponseWriter, r *http.Request) {
-	status, err := a.lib.Status()
-	if err != nil {
-		handleStatusError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, status)
-}
-
-func (a *API) handleSetRoot(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		Path string `json:"path"`
-	}
-	if !decodeJSON(w, r, &body) {
-		return
-	}
-	if body.Path == "" {
-		writeError(w, http.StatusBadRequest, "path is required")
-		return
-	}
-	if err := a.lib.SetRoot(body.Path); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
 	status, err := a.lib.Status()
 	if err != nil {
 		handleStatusError(w, err)

@@ -42,10 +42,9 @@ func (a *API) handleMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	root := a.lib.Root()
-	abs := filepath.Join(root, filepath.FromSlash(item.RelativePath))
-	if !withinRoot(root, abs) {
-		writeError(w, http.StatusBadRequest, "invalid media path")
+	abs, err := st.ResolveItemPath(item)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "media file not found on disk")
 		return
 	}
 
@@ -65,14 +64,6 @@ func (a *API) handleMedia(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", `inline; filename="`+sanitizeFilename(filepath.Base(abs))+`"`)
 	w.Header().Set("Cache-Control", "private, max-age=3600")
 	http.ServeContent(w, r, info.Name(), info.ModTime(), f)
-}
-
-func withinRoot(root, abs string) bool {
-	rel, err := filepath.Rel(root, abs)
-	if err != nil {
-		return false
-	}
-	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 func mediaContentType(item *model.Item) string {

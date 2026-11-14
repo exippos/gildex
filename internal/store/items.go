@@ -14,6 +14,8 @@ type ItemQuery struct {
 	SessionID    string
 	CollectionID string
 	Folder       string
+	SourceID     string
+	SourceNull   bool
 	Tags         []string
 	Untagged     bool
 	Q            string
@@ -77,6 +79,13 @@ func (s *Store) QueryItems(q ItemQuery) (model.ItemPage, error) {
 	if folder := strings.Trim(strings.ReplaceAll(q.Folder, `\`, "/"), "/"); folder != "" && folder != "." {
 		where = append(where, `i.relative_path LIKE ? ESCAPE '\'`)
 		args = append(args, escapeLike(folder)+"/%")
+	}
+	if q.SourceID != "" {
+		where = append(where, "i.source_id = ?")
+		args = append(args, q.SourceID)
+	}
+	if q.SourceNull {
+		where = append(where, "i.source_id IS NULL")
 	}
 	for _, tag := range q.Tags {
 		if tag = strings.TrimSpace(tag); tag == "" {
