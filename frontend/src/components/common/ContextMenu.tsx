@@ -239,6 +239,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
       aria-label="Item actions"
       style={{ left: pos.left, top: pos.top, visibility: pos.ready ? 'visible' : 'hidden' }}
       onKeyDown={onKeyDown}
+      onContextMenu={(event) => event.preventDefault()}
     >
       {items.map((entry, index) => {
         if (entry.kind === 'separator') {
