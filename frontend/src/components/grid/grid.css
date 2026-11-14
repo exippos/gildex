@@ -497,24 +497,46 @@
   left: 9px;
   z-index: 2;
   display: flex;
-  gap: 4px;
+  gap: 5px;
   pointer-events: none;
 }
 
+/* metallic disc: gold on the dark themes, copper on ivory — glossed like a
+   stamped coin so it reads clearly over any poster. */
 .group-tile-kind {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--control);
-  border: 1px solid var(--gilt-border);
-  color: var(--gilt-bright);
+  border: 1px solid var(--gilt-hi);
+  background: linear-gradient(155deg, var(--gilt-hi) 0%, var(--gilt-core) 46%, var(--gilt-lo) 100%);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 0 10px var(--accent-glow);
+  color: var(--on-gilt);
+  overflow: hidden;
+}
+
+/* glossy top shine */
+.group-tile-kind::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.12) 42%,
+    transparent 60%
+  );
+  pointer-events: none;
 }
 
 .group-tile-kind svg {
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
   display: block;
 }
 
@@ -522,7 +544,7 @@
   display: flex;
   align-items: center;
   gap: 1.5px;
-  height: 10px;
+  height: 12px;
 }
 
 .group-tile-kind-bars span {
@@ -532,16 +554,16 @@
 }
 
 .group-tile-kind-bars span:nth-child(1) {
-  height: 5px;
+  height: 6px;
 }
 .group-tile-kind-bars span:nth-child(2) {
-  height: 10px;
+  height: 12px;
 }
 .group-tile-kind-bars span:nth-child(3) {
-  height: 7px;
+  height: 8px;
 }
 .group-tile-kind-bars span:nth-child(4) {
-  height: 4px;
+  height: 5px;
 }
 
 /* the open (gilded) tile hides its own artwork chrome */
