@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/jpeg"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/image/draw"
 )
@@ -36,15 +37,26 @@ func GenerateAt(img image.Image, dst string, maxSide int) error {
 	resized := image.NewRGBA(image.Rect(0, 0, nw, nh))
 	draw.ApproxBiLinear.Scale(resized, resized.Bounds(), img, b, draw.Src, nil)
 
-	f, err := os.Create(dst)
+	// Write atomically via a temp file so a concurrent write of the same
+	// thumbnail (duplicate content) or a crash never leaves a partial JPEG.
+	tmp, err := os.CreateTemp(filepath.Dir(dst), ".thumb-*.jpg")
 	if err != nil {
 		return err
 	}
-	if err := jpeg.Encode(f, resized, &jpeg.Options{Quality: 85}); err != nil {
-		f.Close()
+	if err := jpeg.Encode(tmp, resized, &jpeg.Options{Quality: 85}); err != nil {
+		tmp.Close()
+		os.Remove(tmp.Name())
 		return err
 	}
-	return f.Close()
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmp.Name())
+		return err
+	}
+	if err := os.Rename(tmp.Name(), dst); err != nil {
+		os.Remove(tmp.Name())
+		return err
+	}
+	return nil
 }
 
 func maxInt(a, b int) int {

@@ -16,7 +16,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -168,13 +170,13 @@ func run(st *store.Store, root, thumbDir string, sourceID *string, paths []strin
 	job.total = len(files)
 	job.mu.Unlock()
 
-	for _, f := range files {
-		if err := processFile(st, thumbDir, sourceID, f); err != nil {
-			log.Printf("gildex: import %s: %v", f.rel, err)
+	setStage("process")
+	if workers := workerCount(); workers <= 1 {
+		for _, f := range files {
+			processOne(st, thumbDir, sourceID, f)
 		}
-		job.mu.Lock()
-		job.done++
-		job.mu.Unlock()
+	} else {
+		processParallel(st, thumbDir, sourceID, files, workers)
 	}
 
 	setStage("cluster")
@@ -191,6 +193,49 @@ func run(st *store.Store, root, thumbDir string, sourceID *string, paths []strin
 			log.Printf("gildex: touch source %s: %v", *sourceID, err)
 		}
 	}
+}
+
+// workerCount returns the number of concurrent file-processing workers,
+// defaulting to runtime.NumCPU() and overridable via GILDEX_WORKERS.
+func workerCount() int {
+	if v := strings.TrimSpace(os.Getenv("GILDEX_WORKERS")); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	return runtime.NumCPU()
+}
+
+// processOne handles a single file and advances the job counter.
+func processOne(st *store.Store, thumbDir string, sourceID *string, f fileEntry) {
+	if err := processFile(st, thumbDir, sourceID, f); err != nil {
+		log.Printf("gildex: import %s: %v", f.rel, err)
+	}
+	job.mu.Lock()
+	job.done++
+	job.mu.Unlock()
+}
+
+// processParallel fans files out to a fixed pool of workers. Per-file DB access
+// is serialized by the store's single connection, so this is safe; duplicate
+// content is handled by UpsertImport's upsert semantics.
+func processParallel(st *store.Store, thumbDir string, sourceID *string, files []fileEntry, workers int) {
+	var wg sync.WaitGroup
+	ch := make(chan fileEntry)
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for f := range ch {
+				processOne(st, thumbDir, sourceID, f)
+			}
+		}()
+	}
+	for _, f := range files {
+		ch <- f
+	}
+	close(ch)
+	wg.Wait()
 }
 
 // logSummary reports a one-line per-stage breakdown of a finished job.
@@ -410,7 +455,6 @@ func hashFile(path string) (string, int64, error) {
 }
 
 func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry) error {
-	setStage("hash")
 	t0 := time.Now()
 	hash, size, err := hashFile(f.abs)
 	job.addStage("hash", time.Since(t0))
@@ -418,7 +462,6 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 		return err
 	}
 
-	setStage("index")
 	t0 = time.Now()
 	tombstoned, err := st.TombstoneExists(hash)
 	if err != nil {
@@ -472,7 +515,6 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 	}
 
 	if kind == model.KindImage {
-		setStage("extract")
 		t0 = time.Now()
 		img := decodeImage(f.abs)
 		job.addStage("decode", time.Since(t0))
@@ -499,7 +541,6 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 		// Poster thumbnail + hover-play frame strip + duration, via ffmpeg on
 		// PATH (D18, D33). Degrades silently to the placeholder when ffmpeg is
 		// absent or the extraction fails — the item still imports.
-		setStage("extract")
 		t0 = time.Now()
 		res, err := video.Extract(f.abs, thumbDir, hash, videoFrames)
 		job.addStage("video", time.Since(t0))
@@ -521,7 +562,6 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 	}
 
 	if format == "png" {
-		setStage("parse")
 		t0 = time.Now()
 		res, err := metadata.ParseFile(f.abs)
 		job.addStage("metadata", time.Since(t0))
@@ -547,8 +587,6 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 		}
 	}
 
-	setStage("timestamp")
-	setStage("index")
 	t0 = time.Now()
 	err = st.UpsertImport(item)
 	job.addStage("db", time.Since(t0))
