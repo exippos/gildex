@@ -13,6 +13,10 @@ func (s *Store) Collections() ([]model.Collection, error) {
 	rows, err := s.db.Query(`
 		SELECT c.id, c.name, c.description,
 			(SELECT COUNT(*) FROM collection_item ci WHERE ci.collection_id = c.id),
+			(SELECT COUNT(*) FROM collection_item ci JOIN items i ON i.id = ci.item_id
+				WHERE ci.collection_id = c.id AND i.kind = 'video'),
+			(SELECT COUNT(*) FROM collection_item ci JOIN items i ON i.id = ci.item_id
+				WHERE ci.collection_id = c.id AND i.kind = 'audio'),
 			COALESCE(
 				(SELECT i.thumbnail_path FROM items i
 					WHERE i.id = c.cover_item_id AND i.thumbnail_path <> ''
@@ -37,7 +41,7 @@ func (s *Store) Collections() ([]model.Collection, error) {
 			c     model.Collection
 			cover sql.NullString
 		)
-		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.ThumbnailPath, &cover); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount, &c.ThumbnailPath, &cover); err != nil {
 			return nil, err
 		}
 		c.CoverItemID = nullString(cover)
@@ -55,6 +59,10 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 	err := s.db.QueryRow(`
 		SELECT c.id, c.name, c.description,
 			(SELECT COUNT(*) FROM collection_item ci WHERE ci.collection_id = c.id),
+			(SELECT COUNT(*) FROM collection_item ci JOIN items i ON i.id = ci.item_id
+				WHERE ci.collection_id = c.id AND i.kind = 'video'),
+			(SELECT COUNT(*) FROM collection_item ci JOIN items i ON i.id = ci.item_id
+				WHERE ci.collection_id = c.id AND i.kind = 'audio'),
 			COALESCE(
 				(SELECT i.thumbnail_path FROM items i
 					WHERE i.id = c.cover_item_id AND i.thumbnail_path <> ''
@@ -67,7 +75,7 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 				''),
 			c.cover_item_id
 		FROM collections c WHERE c.id = ?`, id).
-		Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.ThumbnailPath, &cover)
+		Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount, &c.ThumbnailPath, &cover)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}

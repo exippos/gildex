@@ -489,6 +489,66 @@
   }
 }
 
+/* ---- group kind badges (video / audio present) ---- */
+
+.group-tile-kinds {
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.group-tile-kind {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--control);
+  border: 1px solid var(--gilt-border);
+  color: var(--gilt-bright);
+}
+
+.group-tile-kind svg {
+  width: 11px;
+  height: 11px;
+  display: block;
+}
+
+.group-tile-kind-bars {
+  display: flex;
+  align-items: center;
+  gap: 1.5px;
+  height: 10px;
+}
+
+.group-tile-kind-bars span {
+  width: 2px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.group-tile-kind-bars span:nth-child(1) {
+  height: 5px;
+}
+.group-tile-kind-bars span:nth-child(2) {
+  height: 10px;
+}
+.group-tile-kind-bars span:nth-child(3) {
+  height: 7px;
+}
+.group-tile-kind-bars span:nth-child(4) {
+  height: 4px;
+}
+
+/* the open (gilded) tile hides its own artwork chrome */
+.group-tile.is-open .group-tile-kinds {
+  opacity: 0;
+}
+
 /* ---- tile placeholders (no thumbnail) ---- */
 
 .tile-glyph {

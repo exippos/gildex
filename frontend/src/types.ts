@@ -56,6 +56,8 @@ export interface Session {
   startsAt: number
   endsAt: number
   itemCount: number
+  videoCount: number
+  audioCount: number
   thumbnailPath: string
   coverItemId: string | null
 }
@@ -77,6 +79,8 @@ export interface Collection {
   name: string
   description: string
   itemCount: number
+  videoCount: number
+  audioCount: number
   thumbnailPath: string
   coverItemId: string | null
 }

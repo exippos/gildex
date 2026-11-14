@@ -16,6 +16,8 @@ func (s *Store) Sessions() ([]model.Session, error) {
 	rows, err := s.db.Query(`
 		SELECT s.id, s.label, s.starts_at, s.ends_at, s.cover_item_id,
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id),
+			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id AND i.kind = 'video'),
+			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id AND i.kind = 'audio'),
 			COALESCE(
 				(SELECT i.thumbnail_path FROM items i
 					WHERE i.id = s.cover_item_id AND i.session_id = s.id AND i.thumbnail_path <> ''),
@@ -36,7 +38,7 @@ func (s *Store) Sessions() ([]model.Session, error) {
 			sess  model.Session
 			cover sql.NullString
 		)
-		if err := rows.Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover, &sess.ItemCount, &sess.ThumbnailPath); err != nil {
+		if err := rows.Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover, &sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath); err != nil {
 			return nil, err
 		}
 		sess.CoverItemID = nullString(cover)
@@ -54,6 +56,8 @@ func (s *Store) GetSession(id string) (*model.Session, error) {
 	err := s.db.QueryRow(`
 		SELECT s.id, s.label, s.starts_at, s.ends_at, s.cover_item_id,
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id),
+			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id AND i.kind = 'video'),
+			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id AND i.kind = 'audio'),
 			COALESCE(
 				(SELECT i.thumbnail_path FROM items i
 					WHERE i.id = s.cover_item_id AND i.session_id = s.id AND i.thumbnail_path <> ''),
@@ -62,7 +66,7 @@ func (s *Store) GetSession(id string) (*model.Session, error) {
 					ORDER BY i.timestamp DESC LIMIT 1),
 				'')
 		FROM sessions s WHERE s.id = ?`, id).
-		Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover, &sess.ItemCount, &sess.ThumbnailPath)
+		Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover, &sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}

@@ -41,6 +41,8 @@ interface Group {
   /** User-picked label image, if any. */
   coverId: string | null
   items: Item[]
+  videoCount: number
+  audioCount: number
 }
 
 type Slot =
@@ -82,6 +84,12 @@ function makeGroup(
   total?: number,
   coverId: string | null = null,
 ): Group {
+  let videoCount = 0
+  let audioCount = 0
+  for (const item of items) {
+    if (item.kind === 'video') videoCount++
+    else if (item.kind === 'audio') audioCount++
+  }
   return {
     key: `${source}:${id || 'unsorted'}`,
     source,
@@ -94,6 +102,8 @@ function makeGroup(
     fallback: items[0]?.kind ?? null,
     coverId,
     items,
+    videoCount,
+    audioCount,
   }
 }
 
@@ -116,17 +126,19 @@ function sessionGroups(items: Item[], sessions: Session[]): Group[] {
     const groupItems = bySession.get(session.id)
     if (!groupItems?.length) continue
     bySession.delete(session.id)
-    groups.push(
-      makeGroup(
-        'session',
-        session.id,
-        session.label,
-        groupItems,
-        session.thumbnailPath,
-        session.itemCount,
-        session.coverItemId,
-      ),
+    const group = makeGroup(
+      'session',
+      session.id,
+      session.label,
+      groupItems,
+      session.thumbnailPath,
+      session.itemCount,
+      session.coverItemId,
     )
+    // Catalog counts are authoritative over the (possibly truncated) page.
+    group.videoCount = session.videoCount
+    group.audioCount = session.audioCount
+    groups.push(group)
   }
   // Items whose session is missing from the catalog list still get a tile.
   for (const [id, groupItems] of bySession) {
@@ -148,7 +160,11 @@ function collectionGroup(collection: Collection, cached: Item[] | undefined): Gr
     collection.coverItemId,
   )
   // Before the first fetch there are no items to count, so trust the catalog.
-  if (!cached) group.count = collection.itemCount
+  if (!cached) {
+    group.count = collection.itemCount
+    group.videoCount = collection.videoCount
+    group.audioCount = collection.audioCount
+  }
   return group
 }
 
@@ -328,6 +344,27 @@ function GroupTile({
           </>
         ) : (
           <TileFallback kind={group.fallback} />
+        )}
+        {(group.videoCount > 0 || group.audioCount > 0) && (
+          <span className="group-tile-kinds" aria-hidden="true">
+            {group.videoCount > 0 && (
+              <span className="group-tile-kind">
+                <svg viewBox="0 0 24 24">
+                  <path d="M8 5.5 19 12 8 18.5Z" fill="currentColor" />
+                </svg>
+              </span>
+            )}
+            {group.audioCount > 0 && (
+              <span className="group-tile-kind">
+                <span className="group-tile-kind-bars">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              </span>
+            )}
+          </span>
         )}
         <span className="group-tile-scrim" aria-hidden="true" />
         <span className="group-tile-text">

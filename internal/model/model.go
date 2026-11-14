@@ -96,6 +96,8 @@ type Session struct {
 	StartsAt      int64   `json:"startsAt"`
 	EndsAt        int64   `json:"endsAt"`
 	ItemCount     int     `json:"itemCount"`
+	VideoCount    int     `json:"videoCount"` // items of kind video in this session
+	AudioCount    int     `json:"audioCount"` // items of kind audio in this session
 	ThumbnailPath string  `json:"thumbnailPath"`
 	CoverItemID   *string `json:"coverItemId"` // user-picked label image, nil = derived
 }
@@ -119,6 +121,8 @@ type Collection struct {
 	Name          string  `json:"name"`
 	Description   string  `json:"description"`
 	ItemCount     int     `json:"itemCount"`
+	VideoCount    int     `json:"videoCount"` // items of kind video in this collection
+	AudioCount    int     `json:"audioCount"` // items of kind audio in this collection
 	ThumbnailPath string  `json:"thumbnailPath"`
 	CoverItemID   *string `json:"coverItemId"` // user-picked label image, nil = derived
 }
