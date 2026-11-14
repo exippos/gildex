@@ -9,7 +9,7 @@ Draft prototype of the GILDEX catalog, built against `../docs_v2/`.
 **Scope (P0, per `04-features.md` §1 and Vision §11):** manual import, sessions-first
 browsing, quick preview, story view + notes inspector, batch tagging + tag filter,
 collections, and a snappy virtualized grid. **Out:** regions, references, attachments,
-lineage, watcher, auto-tagging, hover-play frames, audio/video polish.
+lineage, watcher, auto-tagging, audio polish.
 
 ## Stack
 
@@ -18,7 +18,7 @@ lineage, watcher, auto-tagging, hover-play frames, audio/video polish.
 | Backend | Go (module `gildex`), single binary, local HTTP service |
 | DB | SQLite via `modernc.org/sqlite` (pure Go) |
 | Stills decode | Go `image` + `x/image` (PNG/JPEG/WebP/GIF) |
-| Video/audio | classified, no ffmpeg in the prototype — placeholder thumb |
+| Video/audio | video via ffmpeg on PATH (poster thumb + hover-play frame strip, degrades to placeholder); audio placeholder thumb |
 | Metadata parse | PNG `tEXt` chunks: A1111 `parameters`, ComfyUI `prompt`/`workflow` |
 | Near-dup | 64-bit dHash (pure Go), Hamming ≤ 10 groups |
 | Frontend | React + TypeScript + Vite, Zustand, custom virtualized grid |
@@ -110,7 +110,8 @@ carries `id`, `name`, and `sourceCount`.
 ### Import pipeline (D3, D9, D12, D20, D33)
 
 discover → SHA-256 hash → parse metadata (A1111/ComfyUI PNG chunks) → classify
-kind/format → dimensions (Go image) → thumbnail JPEG (512px, `<root>/thumbnails/<hash>.jpg`)
+kind/format → dimensions (Go image) → thumbnail JPEG (512px, `<root>/thumbnails/<hash>.jpg`;
+video also gets a poster + 8-frame hover strip via ffmpeg when on PATH)
 → dHash → timestamp (file birth/mtime) → cluster time-gap sessions (2h default) →
 index. Idempotent: re-import never overwrites `manual` user edits (D41).
 Remove-from-catalog writes a content-hash tombstone and never deletes disk files (D4).
@@ -118,6 +119,5 @@ Remove-from-catalog writes a content-hash tombstone and never deletes disk files
 ### Deviations from the full spec (prototype only)
 
 - Search uses `LIKE` (case-insensitive), not FTS5 — FTS5 is the v1 hardening (D23).
-- Video/audio items import with a placeholder thumb (no ffmpeg; P2 polish).
-- Hover-play frame strips are omitted (P2, D18).
+- Video items import with a poster thumbnail + hover-play frame strip when ffmpeg is on PATH, and a placeholder otherwise; audio still imports with a placeholder thumb (D17/D18/D33).
 - No regions / references / attachments / lineage / watcher (D8, D28).
