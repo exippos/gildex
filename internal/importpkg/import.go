@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	_ "golang.org/x/image/bmp"
 	_ "golang.org/x/image/webp"
@@ -40,6 +41,12 @@ var ErrRunning = errors.New("import already running")
 // ErrNoRoot is returned when no library root has been configured.
 var ErrNoRoot = errors.New("library root not set")
 
+// stageStat accumulates wall time spent in one pipeline stage.
+type stageStat struct {
+	count int
+	dur   time.Duration
+}
+
 type jobState struct {
 	mu         sync.Mutex
 	running    bool
@@ -48,9 +55,24 @@ type jobState struct {
 	stage      string
 	err        string
 	duplicates []model.Duplicate
+	startedAt  time.Time
+	stages     map[string]stageStat
 }
 
 var job jobState
+
+// addStage records one file's time in a named stage.
+func (j *jobState) addStage(name string, d time.Duration) {
+	j.mu.Lock()
+	if j.stages == nil {
+		j.stages = map[string]stageStat{}
+	}
+	s := j.stages[name]
+	s.count++
+	s.dur += d
+	j.stages[name] = s
+	j.mu.Unlock()
+}
 
 // Status returns a snapshot of the import job.
 func Status() model.ImportStatus {
@@ -58,13 +80,20 @@ func Status() model.ImportStatus {
 	defer job.mu.Unlock()
 	dups := make([]model.Duplicate, len(job.duplicates))
 	copy(dups, job.duplicates)
+	var rate float64
+	if !job.startedAt.IsZero() {
+		if elapsed := time.Since(job.startedAt).Seconds(); elapsed > 0 && job.done > 0 {
+			rate = float64(job.done) / elapsed
+		}
+	}
 	return model.ImportStatus{
-		Running:    job.running,
-		Total:      job.total,
-		Done:       job.done,
-		Stage:      job.stage,
-		Error:      job.err,
-		Duplicates: dups,
+		Running:     job.running,
+		Total:       job.total,
+		Done:        job.done,
+		Stage:       job.stage,
+		Error:       job.err,
+		ItemsPerSec: rate,
+		Duplicates:  dups,
 	}
 }
 
@@ -110,6 +139,8 @@ func start(lib *store.Library, sourceID *string, base string, paths []string) er
 	job.stage = "discover"
 	job.err = ""
 	job.duplicates = nil
+	job.startedAt = time.Now()
+	job.stages = map[string]stageStat{}
 	job.mu.Unlock()
 
 	go run(lib.Store(), base, thumbDir, sourceID, paths)
@@ -117,13 +148,18 @@ func start(lib *store.Library, sourceID *string, base string, paths []string) er
 }
 
 func run(st *store.Store, root, thumbDir string, sourceID *string, paths []string) {
+	start := time.Now()
 	defer func() {
 		job.mu.Lock()
 		job.running = false
+		total := job.total
 		job.mu.Unlock()
+		logSummary(total, start)
 	}()
 
+	t0 := time.Now()
 	files, err := discover(root, thumbDir, paths)
+	job.addStage("discover", time.Since(t0))
 	if err != nil {
 		setError(err)
 		return
@@ -142,16 +178,49 @@ func run(st *store.Store, root, thumbDir string, sourceID *string, paths []strin
 	}
 
 	setStage("cluster")
+	t0 = time.Now()
 	if err := st.ReclusterSessions(); err != nil {
+		job.addStage("cluster", time.Since(t0))
 		setError(err)
 		return
 	}
+	job.addStage("cluster", time.Since(t0))
 	setStage("index")
 	if sourceID != nil {
 		if err := st.TouchSource(*sourceID); err != nil {
 			log.Printf("gildex: touch source %s: %v", *sourceID, err)
 		}
 	}
+}
+
+// logSummary reports a one-line per-stage breakdown of a finished job.
+func logSummary(total int, start time.Time) {
+	job.mu.Lock()
+	stages := make(map[string]stageStat, len(job.stages))
+	for name, s := range job.stages {
+		stages[name] = s
+	}
+	job.mu.Unlock()
+
+	elapsed := time.Since(start)
+	rate := 0.0
+	if secs := elapsed.Seconds(); secs > 0 {
+		rate = float64(total) / secs
+	}
+
+	names := make([]string, 0, len(stages))
+	for name := range stages {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	parts := make([]string, 0, len(names))
+	for _, name := range names {
+		s := stages[name]
+		parts = append(parts, fmt.Sprintf("%s=%s×%d", name, s.dur.Round(time.Millisecond), s.count))
+	}
+
+	log.Printf("gildex: import done: %d files in %s (%.1f files/s) — %s",
+		total, elapsed.Round(time.Millisecond), rate, strings.Join(parts, " "))
 }
 
 func setStage(stage string) {
@@ -342,21 +411,26 @@ func hashFile(path string) (string, int64, error) {
 
 func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry) error {
 	setStage("hash")
+	t0 := time.Now()
 	hash, size, err := hashFile(f.abs)
+	job.addStage("hash", time.Since(t0))
 	if err != nil {
 		return err
 	}
 
 	setStage("index")
+	t0 = time.Now()
 	tombstoned, err := st.TombstoneExists(hash)
 	if err != nil {
 		return err
 	}
 	if tombstoned {
+		job.addStage("dedup", time.Since(t0))
 		return nil
 	}
 
 	existing, err := st.FindByHash(hash)
+	job.addStage("dedup", time.Since(t0))
 	if err != nil {
 		return err
 	}
@@ -399,14 +473,23 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 
 	if kind == model.KindImage {
 		setStage("extract")
-		if img := decodeImage(f.abs); img != nil {
+		t0 = time.Now()
+		img := decodeImage(f.abs)
+		job.addStage("decode", time.Since(t0))
+		if img != nil {
 			b := img.Bounds()
 			item.Width = b.Dx()
 			item.Height = b.Dy()
+
+			t0 = time.Now()
 			item.PHash = phash.Compute(img)
+			job.addStage("phash", time.Since(t0))
 
 			thumbName := hash + ".jpg"
-			if err := thumb.Generate(img, filepath.Join(thumbDir, thumbName)); err != nil {
+			t0 = time.Now()
+			err := thumb.Generate(img, filepath.Join(thumbDir, thumbName))
+			job.addStage("thumb", time.Since(t0))
+			if err != nil {
 				log.Printf("gildex: thumbnail %s: %v", f.rel, err)
 			} else {
 				item.ThumbnailPath = thumbName
@@ -417,7 +500,9 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 		// PATH (D18, D33). Degrades silently to the placeholder when ffmpeg is
 		// absent or the extraction fails — the item still imports.
 		setStage("extract")
+		t0 = time.Now()
 		res, err := video.Extract(f.abs, thumbDir, hash, videoFrames)
+		job.addStage("video", time.Since(t0))
 		if err != nil {
 			log.Printf("gildex: video extract %s: %v", f.rel, err)
 		}
@@ -437,7 +522,9 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 
 	if format == "png" {
 		setStage("parse")
+		t0 = time.Now()
 		res, err := metadata.ParseFile(f.abs)
+		job.addStage("metadata", time.Since(t0))
 		if err == nil {
 			item.Prompt = res.Prompt
 			item.NegativePrompt = res.NegativePrompt
@@ -462,7 +549,10 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 
 	setStage("timestamp")
 	setStage("index")
-	return st.UpsertImport(item)
+	t0 = time.Now()
+	err = st.UpsertImport(item)
+	job.addStage("db", time.Since(t0))
+	return err
 }
 
 func decodeImage(path string) image.Image {

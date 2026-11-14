@@ -169,12 +169,13 @@ type Duplicate struct {
 
 // ImportStatus is the async import job's progress.
 type ImportStatus struct {
-	Running    bool        `json:"running"`
-	Total      int         `json:"total"`
-	Done       int         `json:"done"`
-	Stage      string      `json:"stage"`
-	Error      string      `json:"error"`
-	Duplicates []Duplicate `json:"duplicates"`
+	Running     bool        `json:"running"`
+	Total       int         `json:"total"`
+	Done        int         `json:"done"`
+	Stage       string      `json:"stage"`
+	Error       string      `json:"error"`
+	ItemsPerSec float64     `json:"itemsPerSec"` // live throughput, 0 before first item
+	Duplicates  []Duplicate `json:"duplicates"`
 }
 
 // ItemPage is a slice of the item query result.

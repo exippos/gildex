@@ -302,6 +302,9 @@ export function Ingest() {
               {importProgress && importProgress.total > 0
                 ? ` · ${importProgress.done} / ${importProgress.total}`
                 : ''}
+              {importProgress && importProgress.itemsPerSec > 0
+                ? ` · ${importProgress.itemsPerSec.toFixed(1)}/s`
+                : ''}
             </p>
             <div className="ingest-progress" aria-hidden="true">
               <span style={{ width: `${percent}%` }} />

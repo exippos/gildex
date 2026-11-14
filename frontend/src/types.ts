@@ -124,6 +124,7 @@ export interface ImportStatus {
   done: number
   stage: string
   error: string
+  itemsPerSec: number
   duplicates: ImportDuplicate[]
 }
 

@@ -243,7 +243,7 @@ interface AppState {
   closeLibraryModal: () => void
 }
 
-const EMPTY_PROGRESS: ImportStatus = { running: false, total: 0, done: 0, stage: '', error: '', duplicates: [] }
+const EMPTY_PROGRESS: ImportStatus = { running: false, total: 0, done: 0, stage: '', error: '', itemsPerSec: 0, duplicates: [] }
 
 export const useStore = create<AppState>((set, get) => ({
   library: null,
