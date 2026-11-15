@@ -7,12 +7,14 @@ import { Inspector } from './components/inspector/Inspector'
 import { GroupEditor } from './components/groups/GroupEditor'
 import { CollectionPicker } from './components/collections/CollectionPicker'
 import { LibraryWizard } from './components/library/LibraryWizard'
+import { SettingsModal } from './components/settings/SettingsModal'
 
 export default function App() {
   const init = useStore((s) => s.init)
   const inspector = useStore((s) => s.inspector)
   const groupEditor = useStore((s) => s.groupEditor)
   const collectionPicker = useStore((s) => s.collectionPicker)
+  const settingsModal = useStore((s) => s.settingsModal)
 
   useEffect(() => {
     void init()
@@ -24,6 +26,7 @@ export default function App() {
       {inspector && <Inspector />}
       {groupEditor && <GroupEditor />}
       {collectionPicker && <CollectionPicker />}
+      {settingsModal && <SettingsModal />}
       <LibraryWizard />
     </>
   )

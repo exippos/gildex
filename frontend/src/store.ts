@@ -11,10 +11,12 @@ import type {
   ImportStatus,
   Item,
   ItemSort,
+  LibrarySettings,
   LibraryStatus,
   Note,
   OwnerType,
   Session,
+  SettingsSection,
   SortDir,
   Source,
   SourceMode,
@@ -102,6 +104,19 @@ function readEffects(): EffectsMode {
 const initialEffects = readEffects()
 document.documentElement.setAttribute('data-effects', initialEffects)
 
+const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = { sessionGapMinutes: 120 }
+const DEFAULT_CELL_SIZE = 168
+
+function readCellSize(): number {
+  try {
+    const raw = Number(localStorage.getItem('gildex-cell-size'))
+    if (Number.isFinite(raw) && raw >= 80 && raw <= 320) return raw
+  } catch {
+    /* ignore */
+  }
+  return DEFAULT_CELL_SIZE
+}
+
 interface AppState {
   // library / import
   library: LibraryStatus | null
@@ -138,6 +153,8 @@ interface AppState {
   // collection id + query key -> one page of that collection's items
   collectionItems: Record<string, Item[]>
   collectionLoading: Record<string, boolean>
+  // library-scoped preferences from the catalog DB
+  librarySettings: LibrarySettings
 
   // selection
   selection: string[]
@@ -164,6 +181,9 @@ interface AppState {
 
   // library modal (creation / open wizard)
   libraryModal: 'create' | 'open' | null
+
+  // settings modal: open section, null when closed
+  settingsModal: SettingsSection | null
 
   // presentation
   theme: Theme
@@ -245,6 +265,12 @@ interface AppState {
 
   openLibraryModal: (mode: 'create' | 'open') => void
   closeLibraryModal: () => void
+
+  openSettings: (section?: SettingsSection) => void
+  closeSettings: () => void
+  loadSettings: () => Promise<void>
+  updateSettings: (patch: { sessionGapMinutes?: number }) => Promise<LibrarySettings>
+  reclusterSessions: () => Promise<void>
 }
 
 const EMPTY_PROGRESS: ImportStatus = { running: false, total: 0, done: 0, stage: '', error: '', itemsPerSec: 0, duplicates: [] }
@@ -266,7 +292,7 @@ export const useStore = create<AppState>((set, get) => ({
   search: '',
   sort: 'time',
   sortDir: 'desc',
-  cellSize: 168,
+  cellSize: readCellSize(),
   items: [],
   itemsTotal: 0,
   loadingItems: false,
@@ -279,6 +305,7 @@ export const useStore = create<AppState>((set, get) => ({
   sources: [],
   collectionItems: {},
   collectionLoading: {},
+  librarySettings: DEFAULT_LIBRARY_SETTINGS,
 
   selection: [],
   lastSelectedId: null,
@@ -296,6 +323,7 @@ export const useStore = create<AppState>((set, get) => ({
   notes: [],
 
   libraryModal: null,
+  settingsModal: null,
 
   theme: initialTheme,
   setTheme: (theme) => {
@@ -397,14 +425,16 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   refreshCatalog: async () => {
-    const [library, sessions, tagList, collections, folders, sources] = await Promise.all([
-      api.status(),
-      api.sessions(),
-      api.tags(),
-      api.collections(),
-      api.folders(),
-      api.sources(),
-    ])
+    const [library, sessions, tagList, collections, folders, sources, librarySettings] =
+      await Promise.all([
+        api.status(),
+        api.sessions(),
+        api.tags(),
+        api.collections(),
+        api.folders(),
+        api.sources(),
+        api.settings(),
+      ])
     set({
       library,
       sessions,
@@ -413,6 +443,7 @@ export const useStore = create<AppState>((set, get) => ({
       collections,
       folders,
       sources,
+      librarySettings,
     })
     await get().loadItems()
   },
@@ -513,7 +544,14 @@ export const useStore = create<AppState>((set, get) => ({
     set({ sortDir })
     void get().loadItems()
   },
-  setCellSize: (cellSize) => set({ cellSize }),
+  setCellSize: (cellSize) => {
+    try {
+      localStorage.setItem('gildex-cell-size', String(cellSize))
+    } catch {
+      /* ignore */
+    }
+    set({ cellSize })
+  },
   toggleTagFilter: (name) => {
     const cur = get().activeTagFilters
     let next: string[]
@@ -780,6 +818,23 @@ export const useStore = create<AppState>((set, get) => ({
     await api.deleteNote(id)
     const { inspector } = get()
     if (inspector) await get().loadNotes(inspector.ownerType, inspector.ownerId)
+  },
+
+  openSettings: (section = 'appearance') => set({ settingsModal: section }),
+  closeSettings: () => set({ settingsModal: null }),
+
+  loadSettings: async () => {
+    const settings = await api.settings()
+    set({ librarySettings: settings })
+  },
+  updateSettings: async (patch) => {
+    const settings = await api.updateSettings(patch)
+    set({ librarySettings: settings })
+    return settings
+  },
+  reclusterSessions: async () => {
+    await api.reclusterSessions()
+    await get().refreshCatalog()
   },
 
   openLibraryModal: (mode) => set({ libraryModal: mode }),

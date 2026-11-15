@@ -22,6 +22,8 @@ func New(lib *store.Library) *API { return &API{lib: lib} }
 // Register wires every API route onto mux.
 func (a *API) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/status", a.handleStatus)
+	mux.HandleFunc("GET /api/settings", a.handleSettings)
+	mux.HandleFunc("PATCH /api/settings", a.handleUpdateSettings)
 	mux.HandleFunc("POST /api/library", a.handleCreateLibrary)
 	mux.HandleFunc("POST /api/library/open", a.handleOpenLibrary)
 
@@ -44,6 +46,7 @@ func (a *API) Register(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH /api/items/{id}", a.handlePatchItem)
 
 	mux.HandleFunc("GET /api/sessions", a.handleSessions)
+	mux.HandleFunc("POST /api/sessions/recluster", a.handleReclusterSessions)
 	mux.HandleFunc("PATCH /api/sessions/{id}", a.handleUpdateSession)
 
 	mux.HandleFunc("GET /api/tags", a.handleTags)

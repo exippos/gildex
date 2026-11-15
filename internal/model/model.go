@@ -151,6 +151,11 @@ type FolderNode struct {
 	Children  []FolderNode `json:"children"`
 }
 
+// Settings carries library-scoped preferences.
+type Settings struct {
+	SessionGapMinutes int `json:"sessionGapMinutes"`
+}
+
 // LibraryStatus summarizes the catalog for the status endpoint.
 type LibraryStatus struct {
 	ID              string `json:"id"`
@@ -163,6 +168,8 @@ type LibraryStatus struct {
 	TagCount        int    `json:"tagCount"`
 	CollectionCount int    `json:"collectionCount"`
 	SourceCount     int    `json:"sourceCount"`
+	AppVersion      string `json:"appVersion"`
+	SchemaVersion   int    `json:"schemaVersion"`
 }
 
 // Duplicate describes a file whose content hash was already cataloged.

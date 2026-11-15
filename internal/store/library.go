@@ -18,8 +18,8 @@ const manifestFileName = "library.gildex.json"
 // librarySchemaVersion is bumped when the on-disk bundle layout changes.
 const librarySchemaVersion = 1
 
-// appVersion is recorded in new manifests; informational only.
-const appVersion = "0.1.0"
+// AppVersion is recorded in new manifests; informational only.
+const AppVersion = "0.1.0"
 
 type manifest struct {
 	Name          string `json:"name"`
@@ -41,6 +41,8 @@ type Library struct {
 	store      *Store
 	dbOverride string
 	statePath  string
+
+	schemaVersion int
 }
 
 // NewLibrary creates an unconfigured library. dbOverride, when non-empty,
@@ -83,6 +85,13 @@ func (l *Library) LastLibrary() string {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	return l.last
+}
+
+// SchemaVersion returns the open library's manifest schema version, or 0.
+func (l *Library) SchemaVersion() int {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.schemaVersion
 }
 
 // persistLast writes the last-opened library path to the app state file. It is
@@ -156,7 +165,7 @@ func (l *Library) CreateLibrary(name, parentDir string) error {
 		ID:            NewID(),
 		SchemaVersion: librarySchemaVersion,
 		CreatedAt:     time.Now().UnixMilli(),
-		AppVersion:    appVersion,
+		AppVersion:    AppVersion,
 	}
 	if err := writeManifest(bundle, m); err != nil {
 		return err
@@ -191,7 +200,7 @@ func (l *Library) OpenLibrary(path string) error {
 			ID:            NewID(),
 			SchemaVersion: librarySchemaVersion,
 			CreatedAt:     time.Now().UnixMilli(),
-			AppVersion:    appVersion,
+			AppVersion:    AppVersion,
 		}
 		if err := writeManifest(abs, m); err != nil {
 			return err
@@ -229,6 +238,7 @@ func (l *Library) open(bundle string, m manifest) error {
 	l.name = m.Name
 	l.last = bundle
 	l.store = st
+	l.schemaVersion = m.SchemaVersion
 	l.mu.Unlock()
 
 	if old != nil {
@@ -255,11 +265,13 @@ func (l *Library) Status() (model.LibraryStatus, error) {
 	root := l.Root()
 	st := l.Store()
 	status := model.LibraryStatus{
-		ID:          l.ID(),
-		Name:        l.Name(),
-		Root:        root,
-		RootSet:     root != "",
-		LastLibrary: l.LastLibrary(),
+		ID:            l.ID(),
+		Name:          l.Name(),
+		Root:          root,
+		RootSet:       root != "",
+		LastLibrary:   l.LastLibrary(),
+		AppVersion:    AppVersion,
+		SchemaVersion: l.SchemaVersion(),
 	}
 	if st == nil {
 		return status, nil

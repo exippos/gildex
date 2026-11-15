@@ -8,6 +8,7 @@ import type {
   ItemPage,
   ItemPatch,
   ItemQuery,
+  LibrarySettings,
   LibraryStatus,
   Note,
   OwnerType,
@@ -79,6 +80,11 @@ export const api = {
   createLibrary: (name: string, directory: string) =>
     request<LibraryStatus>('POST', '/library', { name, directory }),
   openLibrary: (path: string) => request<LibraryStatus>('POST', '/library/open', { path }),
+
+  settings: () => request<LibrarySettings>('GET', '/settings'),
+  updateSettings: (patch: { sessionGapMinutes?: number }) =>
+    request<LibrarySettings>('PATCH', '/settings', patch),
+  reclusterSessions: () => request<void>('POST', '/sessions/recluster'),
 
   sources: () => request<Source[]>('GET', '/sources'),
   addSource: (body: { path: string; name?: string; mode?: SourceMode }) =>

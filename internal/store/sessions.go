@@ -9,8 +9,6 @@ import (
 	"gildex/internal/model"
 )
 
-const sessionGapMS int64 = 7200000 // 2 hours
-
 // Sessions lists clusters ordered newest first.
 func (s *Store) Sessions() ([]model.Session, error) {
 	rows, err := s.db.Query(`
@@ -196,6 +194,7 @@ func (s *Store) ReclusterSessions() error {
 		return err
 	}
 
+	gapMS := s.SessionGapMS()
 	clusters := [][]itemTime{}
 	for _, t := range times {
 		if len(clusters) == 0 {
@@ -203,7 +202,7 @@ func (s *Store) ReclusterSessions() error {
 			continue
 		}
 		current := clusters[len(clusters)-1]
-		if t.ts-current[len(current)-1].ts > sessionGapMS {
+		if t.ts-current[len(current)-1].ts > gapMS {
 			clusters = append(clusters, []itemTime{t})
 		} else {
 			clusters[len(clusters)-1] = append(current, t)

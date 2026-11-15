@@ -1,0 +1,231 @@
+/* SourceManager — reusable list of a library's media sources.
+   Self-contained: does not rely on the Ingest workspace stylesheet. */
+
+.source-manager-heading {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gilt);
+  font-weight: 600;
+}
+
+.source-manager-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.source-manager-empty {
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.source-manager-error {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.source-manager-list {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.source-manager-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+}
+
+.source-manager-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.source-manager-row-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source-manager-row-path {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source-manager-row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.source-manager-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--control);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.source-manager-mode:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--control-hover);
+  color: var(--text);
+}
+
+.source-manager-mode.is-watch {
+  border-color: var(--gilt-border);
+  background: var(--gilt-dim);
+  color: var(--gilt);
+}
+
+.source-manager-mode.is-watch:hover:not(:disabled) {
+  border-color: var(--gilt);
+  color: var(--gilt-bright);
+}
+
+.source-manager-mode-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.source-manager-mode.is-watch .source-manager-mode-dot {
+  opacity: 1;
+  box-shadow: 0 0 6px var(--gilt);
+}
+
+.source-manager-btn {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--control);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.source-manager-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--control-hover);
+  color: var(--text);
+}
+
+.source-manager-btn.is-danger {
+  color: var(--danger);
+}
+
+.source-manager-btn.is-danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.source-manager-mode:disabled,
+.source-manager-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.source-manager-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.source-manager-actions button {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border-color: var(--border-subtle);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.source-manager-actions button:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--control-hover);
+  color: var(--text);
+}
+
+.source-manager-actions button.is-primary {
+  border-color: var(--gilt-fill-border);
+  background: var(--gilt-fill);
+  color: var(--on-gilt);
+}
+
+.source-manager-actions button.is-primary:hover:not(:disabled) {
+  background: var(--gilt-fill);
+  border-color: var(--gilt-bright);
+  color: var(--on-gilt);
+  filter: brightness(1.06);
+}
+
+.source-manager-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Narrow panes (settings modal content is ~540px): stack name/path and let
+   the action row wrap instead of overflowing. */
+@media (max-width: 520px) {
+  .source-manager-row-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .source-manager-row-path {
+    flex: 0 1 auto;
+    max-width: 100%;
+  }
+}

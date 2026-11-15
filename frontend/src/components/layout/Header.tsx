@@ -2,7 +2,7 @@
 // on the right.
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../store'
-import { THEMES, THEME_LABELS, type Theme } from '../../theme'
+import { THEMES, THEME_LABELS, THEME_SHORT_LABELS, type Theme } from '../../theme'
 import type { Workspace } from '../../types'
 import { SearchBar } from '../search/SearchBar'
 import './header.css'
@@ -23,6 +23,7 @@ export function Header() {
   const setEffects = useStore((s) => s.setEffects)
   const effectsOn = effects === 'full'
   const openLibraryModal = useStore((s) => s.openLibraryModal)
+  const openSettings = useStore((s) => s.openSettings)
 
   const [fileMenuOpen, setFileMenuOpen] = useState(false)
   const fileMenuRef = useRef<HTMLDivElement | null>(null)
@@ -151,11 +152,11 @@ export function Header() {
             value={theme}
             onChange={(event) => setTheme(event.target.value as Theme)}
             aria-label="UI theme"
-            title="UI theme"
+            title={THEME_LABELS[theme]}
           >
             {THEMES.map((id) => (
-              <option key={id} value={id}>
-                {THEME_LABELS[id]}
+              <option key={id} value={id} title={THEME_LABELS[id]}>
+                {THEME_SHORT_LABELS[id]}
               </option>
             ))}
           </select>
@@ -186,6 +187,27 @@ export function Header() {
             />
           </svg>
           {!effectsOn && <span className="effects-slash" aria-hidden="true" />}
+        </button>
+
+        <button
+          type="button"
+          className="settings-toggle"
+          onClick={() => openSettings()}
+          aria-label="Settings"
+          title="Settings"
+          aria-haspopup="dialog"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="3.2" />
+            <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1" />
+          </svg>
         </button>
       </div>
     </header>

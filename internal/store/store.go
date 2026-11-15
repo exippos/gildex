@@ -106,6 +106,11 @@ CREATE TABLE IF NOT EXISTS collection_item (
   PRIMARY KEY (collection_id, item_id)
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS notes (
   id         TEXT PRIMARY KEY,
   owner_type TEXT NOT NULL,

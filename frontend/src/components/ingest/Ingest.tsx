@@ -1,12 +1,11 @@
-// Ingest workspace: manage the library's media sources, drop files/folders to
-// copy them into _inbox, and watch import progress.
+// Ingest workspace: drop files/folders to copy them into _inbox, watch import
+// progress, and mount the reusable media-source manager.
 import { useEffect, useRef, useState } from 'react'
 import type { DragEvent as ReactDragEvent } from 'react'
 import { useStore } from '../../store'
 import { thumbUrl } from '../../api'
 import type { DroppedFile } from '../../api'
-import type { SourceMode } from '../../types'
-import { PathPicker } from '../fs/PathPicker'
+import { SourceManager } from '../sources/SourceManager'
 import './ingest.css'
 
 async function readEntry(entry: FileSystemEntry, base: string): Promise<DroppedFile[]> {
@@ -55,27 +54,15 @@ async function collectDroppedFiles(dt: DataTransfer): Promise<DroppedFile[]> {
   return out
 }
 
-function describeError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
-}
-
 export function Ingest() {
   const library = useStore((s) => s.library)
   const importing = useStore((s) => s.importing)
   const importProgress = useStore((s) => s.importProgress)
-  const importError = useStore((s) => s.importError)
   const sources = useStore((s) => s.sources)
-  const addSource = useStore((s) => s.addSource)
-  const updateSource = useStore((s) => s.updateSource)
-  const removeSource = useStore((s) => s.removeSource)
-  const scanSource = useStore((s) => s.scanSource)
   const importFiles = useStore((s) => s.importFiles)
   const openLibraryModal = useStore((s) => s.openLibraryModal)
   const openInspector = useStore((s) => s.openInspector)
 
-  const [picking, setPicking] = useState(false)
-  const [busySourceId, setBusySourceId] = useState<string | null>(null)
-  const [sourceError, setSourceError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const dragDepth = useRef(0)
 
@@ -92,39 +79,6 @@ export function Ingest() {
 
   const rootSet = Boolean(library?.rootSet)
   const canDrop = rootSet && !importing
-
-  const runSourceAction = async (id: string, action: () => Promise<void>) => {
-    setSourceError(null)
-    setBusySourceId(id)
-    try {
-      await action()
-    } catch (error: unknown) {
-      setSourceError(describeError(error))
-    } finally {
-      setBusySourceId(null)
-    }
-  }
-
-  const toggleMode = (id: string, mode: SourceMode) => {
-    void runSourceAction(id, () => updateSource(id, { mode }))
-  }
-
-  const handleRemove = (id: string) => {
-    const ok = window.confirm('Remove this source? Its items will be marked missing.')
-    if (!ok) return
-    void runSourceAction(id, () => removeSource(id))
-  }
-
-  const handleAddSource = async (path: string) => {
-    setPicking(false)
-    setSourceError(null)
-    try {
-      const id = await addSource(path)
-      if (id) await scanSource(id)
-    } catch (error: unknown) {
-      setSourceError(describeError(error))
-    }
-  }
 
   const handleDragEnter = (event: ReactDragEvent<HTMLDivElement>) => {
     event.preventDefault()
@@ -207,90 +161,7 @@ export function Ingest() {
 
         {rootSet && (
           <section className="ingest-card">
-            <h2 className="ingest-heading">media sources</h2>
-            <p className="ingest-hint">
-              folders gildex catalogues from. once imports a folder a single time; watch keeps it
-              in sync.
-            </p>
-
-            {sources.length === 0 ? (
-              <p className="ingest-hint ingest-sources-empty">no sources yet</p>
-            ) : (
-              <ul className="ingest-sources-list">
-                {sources.map((source) => {
-                  const rowBusy = importing || busySourceId === source.id
-                  return (
-                    <li key={source.id} className="ingest-source">
-                      <div className="ingest-source-head">
-                        <span className="ingest-source-name" title={source.name}>
-                          {source.name}
-                        </span>
-                        <span className="ingest-source-path" title={source.path}>
-                          {source.path}
-                        </span>
-                      </div>
-                      <div className="ingest-source-actions">
-                        <button
-                          type="button"
-                          className={`ingest-source-mode${
-                            source.mode === 'watch' ? ' is-watch' : ''
-                          }`}
-                          title={
-                            source.mode === 'watch'
-                              ? 'watching for changes — click for one-time import'
-                              : 'one-time import — click to keep in sync'
-                          }
-                          aria-label={`Import mode: ${source.mode}. Click to switch to ${
-                            source.mode === 'once' ? 'watch' : 'once'
-                          }.`}
-                          onClick={() =>
-                            toggleMode(source.id, source.mode === 'once' ? 'watch' : 'once')
-                          }
-                          disabled={rowBusy}
-                        >
-                          <span className="ingest-source-mode-dot" aria-hidden="true" />
-                          {source.mode}
-                        </button>
-                        <button
-                          type="button"
-                          className="ingest-source-btn"
-                          onClick={() =>
-                            void runSourceAction(source.id, () => scanSource(source.id))
-                          }
-                          disabled={rowBusy}
-                        >
-                          Rescan
-                        </button>
-                        <button
-                          type="button"
-                          className="ingest-source-btn is-danger"
-                          onClick={() => handleRemove(source.id)}
-                          disabled={rowBusy}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-
-            <div className="ingest-actions">
-              <button
-                type="button"
-                className="is-primary"
-                onClick={() => {
-                  setSourceError(null)
-                  setPicking(true)
-                }}
-                disabled={importing}
-              >
-                Add source
-              </button>
-            </div>
-            {sourceError && <p className="ingest-error">{sourceError}</p>}
-            {importError && <p className="ingest-error">{importError}</p>}
+            <SourceManager />
           </section>
         )}
 
@@ -362,14 +233,6 @@ export function Ingest() {
           </p>
         )}
       </div>
-
-      {picking && (
-        <PathPicker
-          title="Choose a media folder"
-          onSelect={(path) => void handleAddSource(path)}
-          onCancel={() => setPicking(false)}
-        />
-      )}
     </div>
   )
 }

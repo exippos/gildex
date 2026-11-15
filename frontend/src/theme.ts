@@ -11,6 +11,14 @@ export const THEME_LABELS: Record<Theme, string> = {
   copper: 'Ivory copper',
 }
 
+// Compact labels for the header theme picker.
+export const THEME_SHORT_LABELS: Record<Theme, string> = {
+  gilded: 'Gilded',
+  'dark-bento': 'Bento',
+  sage: 'Sage',
+  copper: 'Copper',
+}
+
 const STORAGE_KEY = 'gildex-ui-theme'
 const DEFAULT_THEME: Theme = 'gilded'
 

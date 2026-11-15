@@ -10,6 +10,12 @@ export type OwnerType = 'item' | 'session' | 'collection'
 export type ItemSort = 'time' | 'filename' | 'size' | 'session'
 export type SortDir = 'asc' | 'desc'
 export type SourceMode = 'once' | 'watch'
+export type SettingsSection = 'appearance' | 'library' | 'sources' | 'behavior' | 'about'
+
+// Library-scoped preferences stored in the .gildex catalog DB.
+export interface LibrarySettings {
+  sessionGapMinutes: number
+}
 
 export interface Source {
   id: string
@@ -115,6 +121,8 @@ export interface LibraryStatus {
   tagCount: number
   collectionCount: number
   sourceCount: number
+  appVersion: string
+  schemaVersion: number
 }
 
 export interface ImportDuplicate {
