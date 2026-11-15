@@ -316,15 +316,16 @@
   position: relative;
 }
 
-.rail-row-wrap .rail-row {
-  padding-right: 38px;
+/* the edit control rides the title line, so the meta row (date + count) keeps
+   the full row width instead of colliding with it */
+.rail-row-wrap .rail-row-title {
+  padding-right: 44px;
 }
 
 .rail-row-edit {
   position: absolute;
-  top: 50%;
+  top: 6px;
   right: 6px;
-  transform: translateY(-50%);
   padding: 1px 5px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
