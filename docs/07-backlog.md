@@ -5,6 +5,9 @@
 
 # 1. Core
 - [X] Library creation: File -> New -> Library Creation Wizard (.gildex directory bundle + manifest + system dirs)
+- [ ] Video support
+    - [ ] Animated animations on hover
+    - [ ]
 
 ## 1.1 Ingest
 - [X] Drag-n-Drop ingest
@@ -16,6 +19,7 @@
 
 # 2. UX
 ## 2.1 Gallery
+- [ ] Keyboard navigation
 - [X] "ALL" view
 - [X] Maximise vertical spave on gallery view
     - [X] Remove Session|collection|folders|tags from gallery view
@@ -27,7 +31,9 @@
 - [X] Left side panel for session view thumbnails
 - [X] Collapsible side panels controlls
 - [ ] Session split for AI gen and regular media (based on ai gen metadata)
-    - [ ] Left side panel for session view split into AI/regular 
+    - [ ] Left side panel for session view split into AI/regular
+- [X] Open last
+- [ ] Animated images badge
 
 ### Group items
 - [X] Collection/Session Edit
@@ -35,15 +41,16 @@
     - [X] Edit name, remove items from session/collection, add files to session manually
     - [X] Set an image as a group item image lable
     - [ ] Side panel "edit" button bad placement
+- [ ] "Select" all items in group for batch operations
 
 ### Tags
 - [X] Add "untagged" tag
-- [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545" 
-
-
-- [ ] Preview (right side) panel refocus
-    - [ ] Focus on filename, triage (rating/type/favorite), metadata (timestamp, resolution), gen param, prompts
-- [ ] Model index search 
+- [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545"
+- [X] Preview (right side) panel refocus
+    - [X] Focus on filename, triage (rating/type/favorite), metadata (timestamp, resolution), gen param, prompts
+- [ ] Model index search
+- [ ] Add multiple tags at once (do not close tagging menu after adding a tag)
+- [ ] On tag list (on the side panel), the "clear N active" should not move the tag list.
 
 
 # 2.2 Flair
