@@ -230,6 +230,7 @@ interface AppState {
 
   saveItem: (id: string, patch: Partial<Item>) => Promise<void>
   toggleFavorite: (id: string) => Promise<void>
+  tagItem: (id: string, add: string[], remove: string[]) => Promise<void>
 
   createTag: (name: string) => Promise<void>
   createCollection: (name: string, description: string, itemIds?: string[]) => Promise<string | null>
@@ -731,6 +732,10 @@ export const useStore = create<AppState>((set, get) => ({
     if (!item) return
     await api.updateItem(id, { favorite: !item.favorite })
     await get().loadItems()
+  },
+  tagItem: async (id, add, remove) => {
+    await api.batch({ ids: [id], addTags: add, removeTags: remove })
+    await get().refreshCatalog()
   },
 
   createTag: async (name) => {

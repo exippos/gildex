@@ -12,6 +12,7 @@ import {
   formatRange,
 } from '../format'
 import { BatchPreview } from './BatchPreview'
+import { TagEditor } from './TagEditor'
 import './right-preview.css'
 
 const STATUSES: ReadonlyArray<{ id: Status; label: string }> = [
@@ -65,6 +66,8 @@ function ItemPreview({ item }: { item: Item }) {
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const saveItem = useStore((s) => s.saveItem)
   const openInspector = useStore((s) => s.openInspector)
+  const tags = useStore((s) => s.tags)
+  const tagItem = useStore((s) => s.tagItem)
 
   const fileName = item.relativePath.split('/').filter(Boolean).pop() ?? item.relativePath
   const dimensions =
@@ -148,6 +151,19 @@ function ItemPreview({ item }: { item: Item }) {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="preview-section">
+        <div className="preview-section-label display">tags</div>
+        <TagEditor
+          tags={tags}
+          stateFor={(name) => ({
+            on: item.tags.includes(name) ? 1 : 0,
+            total: 1,
+          })}
+          onAdd={(name) => void tagItem(item.id, [name], [])}
+          onRemove={(name) => void tagItem(item.id, [], [name])}
+        />
       </div>
 
       <div className="preview-section preview-actions">

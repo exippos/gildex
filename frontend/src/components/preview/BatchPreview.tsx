@@ -1,16 +1,15 @@
 // Batch preview (right panel) — appears when two or more items are selected.
 // Persistent batch surface: tag without the menu closing, plus triage and
 // destructive actions. Mirrors the floating BatchToolbar but stays open.
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { thumbUrl } from '../../api'
 import { useStore } from '../../store'
 import type { Status } from '../../types'
 import { STATUSES } from '../grid/statuses'
+import { TagEditor } from './TagEditor'
 import './batch-preview.css'
 
 const MAX_THUMBS = 12
-
-type Cover = 'none' | 'some' | 'all'
 
 export function BatchPreview() {
   const selection = useStore((s) => s.selection)
@@ -23,9 +22,6 @@ export function BatchPreview() {
   const openCollectionPicker = useStore((s) => s.openCollectionPicker)
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
 
-  const [tagFilter, setTagFilter] = useState('')
-  const [newTagName, setNewTagName] = useState('')
-
   const selectedSet = useMemo(() => new Set(selection), [selection])
   const selectedItems = useMemo(
     () => items.filter((item) => selectedSet.has(item.id)),
@@ -35,20 +31,12 @@ export function BatchPreview() {
   const count = selection.length
   const total = selectedItems.length
 
-  const visibleTags = useMemo(() => {
-    const needle = tagFilter.trim().toLowerCase()
-    if (!needle) return tags
-    return tags.filter((tag) => tag.name.toLowerCase().includes(needle))
-  }, [tags, tagFilter])
-
-  const coverage = (tagName: string): { on: number; cover: Cover } => {
-    if (total === 0) return { on: 0, cover: 'none' }
+  const onCount = (tagName: string) => {
     let on = 0
     for (const item of selectedItems) {
       if (item.tags.includes(tagName)) on++
     }
-    const cover: Cover = on === 0 ? 'none' : on === total ? 'all' : 'some'
-    return { on, cover }
+    return on
   }
 
   const allFavorite =
@@ -64,23 +52,6 @@ export function BatchPreview() {
 
   const thumbs = selectedItems.slice(0, MAX_THUMBS)
   const overflow = Math.max(0, count - MAX_THUMBS)
-
-  const addTag = (name: string) => {
-    const trimmed = name.trim()
-    if (!trimmed) return
-    void batchTag([trimmed], [], { keep: true })
-  }
-
-  const removeTag = (name: string) => {
-    void batchTag([], [name], { keep: true })
-  }
-
-  const createAndAdd = () => {
-    const name = newTagName.trim()
-    if (!name) return
-    setNewTagName('')
-    addTag(name)
-  }
 
   const setRating = (rating: number) => {
     void batchSet({ rating: uniformRating === rating ? 0 : rating }, { keep: true })
@@ -135,77 +106,13 @@ export function BatchPreview() {
 
       <div className="preview-section">
         <div className="preview-section-label display">tags</div>
-
-        <input
-          className="batch-tag-filter"
-          type="search"
-          value={tagFilter}
-          onChange={(event) => setTagFilter(event.target.value)}
-          placeholder="filter tags"
-          aria-label="Filter tags"
+        <TagEditor
+          tags={tags}
+          stateFor={(name) => ({ on: onCount(name), total })}
+          onAdd={(name) => void batchTag([name], [], { keep: true })}
+          onRemove={(name) => void batchTag([], [name], { keep: true })}
+          showCounts
         />
-
-        <div className="batch-tag-list">
-          {visibleTags.map((tag) => {
-            const { on, cover } = coverage(tag.name)
-            return (
-              <div className="batch-tag-row" key={tag.id}>
-                <span
-                  className={`batch-tag-cover${cover === 'all' ? ' is-all' : cover === 'some' ? ' is-some' : ''}`}
-                  aria-hidden="true"
-                />
-                <span className="batch-tag-name" title={tag.name}>
-                  {tag.name}
-                </span>
-                <span className="batch-tag-count">
-                  {on}/{total}
-                </span>
-                <button
-                  type="button"
-                  className="batch-tag-add"
-                  title={`Add “${tag.name}” to all`}
-                  aria-label={`Add tag ${tag.name} to all`}
-                  disabled={cover === 'all'}
-                  onClick={() => addTag(tag.name)}
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  className="batch-tag-remove"
-                  title={`Remove “${tag.name}” from all`}
-                  aria-label={`Remove tag ${tag.name} from all`}
-                  disabled={cover === 'none'}
-                  onClick={() => removeTag(tag.name)}
-                >
-                  −
-                </button>
-              </div>
-            )
-          })}
-          {visibleTags.length === 0 && (
-            <div className="batch-tag-empty">no tags match</div>
-          )}
-        </div>
-
-        <div className="batch-tag-create">
-          <input
-            type="text"
-            value={newTagName}
-            onChange={(event) => setNewTagName(event.target.value)}
-            placeholder="add or create tag"
-            aria-label="New tag name"
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault()
-                createAndAdd()
-              }
-            }}
-          />
-          <button type="button" onClick={createAndAdd} disabled={!newTagName.trim()}>
-            add
-          </button>
-        </div>
       </div>
 
       <div className="preview-section">
