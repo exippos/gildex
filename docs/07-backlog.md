@@ -10,16 +10,18 @@
     - [ ]
 
 ## 1.1 Ingest
+- [ ] Sessions only for generated items (decided by metadata)
 - [X] Drag-n-Drop ingest
 - [X] Ingest | Gallery | Timeline tabs
 - [X] Ingest duplication thumbnails + links to existing files
-- [ ] Sessions only for generated items (decided by metadata)
 - [X] Media sources: add/remove, once vs watch toggle, rescan
 - [X] Background source watcher (polling; fsnotify is v1 hardening)
 
 # 2. UX
 ## 2.1 Gallery
 - [ ] Keyboard navigation
+- [ ] Animated images badge
+- [ ] Thumbnails too low resolution
 - [X] "ALL" view
 - [X] Maximise vertical spave on gallery view
     - [X] Remove Session|collection|folders|tags from gallery view
@@ -33,27 +35,32 @@
 - [ ] Session split for AI gen and regular media (based on ai gen metadata)
     - [ ] Left side panel for session view split into AI/regular
 - [X] Open last
-- [ ] Animated images badge
+- [X] Preview (right side) panel refocus
+    - [X] Focus on filename, triage (rating/type/favorite), metadata (timestamp, resolution), gen param, prompts
+    - [ ] Tags field
 
-### Group items
+### 2.2 Group items
+- [ ] "Select" all items in group for batch operations
 - [X] Collection/Session Edit
     - [X] Drag items to create collections
     - [X] Edit name, remove items from session/collection, add files to session manually
     - [X] Set an image as a group item image lable
     - [ ] Side panel "edit" button bad placement
-- [ ] "Select" all items in group for batch operations
 
-### Tags
-- [X] Add "untagged" tag
-- [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545"
-- [X] Preview (right side) panel refocus
-    - [X] Focus on filename, triage (rating/type/favorite), metadata (timestamp, resolution), gen param, prompts
-- [ ] Model index search
+
+### 2.3 Tags
 - [ ] Add multiple tags at once (do not close tagging menu after adding a tag)
 - [ ] On tag list (on the side panel), the "clear N active" should not move the tag list.
+- [X] Add "untagged" tag
+- [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545"
 
 
-# 2.2 Flair
+
+### Other
+
+
+
+# 3 Flair
 - [ ] Animations
 - [ ] Material shaders
 - [ ] Glass shaders
