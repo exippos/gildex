@@ -59,14 +59,10 @@
 .preview-media img,
 .preview-media video {
   display: block;
-  max-width: 100%;
-  max-height: 320px;
+  width: 100%;
+  height: auto;
   object-fit: contain;
   border-radius: var(--radius-sm);
-}
-
-.preview-media video {
-  width: 100%;
 }
 
 .preview-media.is-audio {

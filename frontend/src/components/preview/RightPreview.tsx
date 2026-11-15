@@ -75,10 +75,9 @@ function ItemPreview({ item }: { item: Item }) {
   if (item.sampler) params.push(item.sampler)
   if (item.cfgScale !== null) params.push(`cfg ${item.cfgScale}`)
 
-  const hasGeneration = Boolean(
-    item.prompt ||
-      item.negativePrompt ||
-      item.modelName ||
+  const hasPrompt = Boolean(item.prompt || item.negativePrompt)
+  const hasParams = Boolean(
+    item.modelName ||
       item.seed !== null ||
       item.steps !== null ||
       item.sampler ||
@@ -96,33 +95,6 @@ function ItemPreview({ item }: { item: Item }) {
         <div className="preview-sub">
           {item.kind} · {item.format || 'unknown'} · {formatDateTime(item.timestamp)}
         </div>
-      </div>
-
-      {hasGeneration && (
-        <div className="preview-section">
-          <div className="preview-section-label display">generation</div>
-          {item.prompt && <div className="preview-prompt-box">{item.prompt}</div>}
-          {item.negativePrompt && (
-            <div className="preview-prompt-box preview-negative-box">
-              <span className="preview-neg-label">negative</span>
-              {item.negativePrompt}
-            </div>
-          )}
-          {params.length > 0 && <div className="preview-params">{params.join(' · ')}</div>}
-        </div>
-      )}
-
-      <div className="preview-section">
-        <div className="preview-section-label display">file</div>
-        <dl className="preview-meta">
-          <MetaRow label="kind" value={item.kind} />
-          <MetaRow label="format" value={item.format} />
-          <MetaRow label="dimensions" value={dimensions} />
-          <MetaRow label="size" value={formatBytes(item.fileSize)} />
-          <MetaRow label="duration" value={formatDuration(item.duration)} />
-          <MetaRow label="added" value={formatDateTime(item.timestamp)} />
-          {item.state === 'missing' && <MetaRow label="state" value="missing" />}
-        </dl>
       </div>
 
       <div className="preview-section">
@@ -186,6 +158,39 @@ function ItemPreview({ item }: { item: Item }) {
           Inspect
         </button>
       </div>
+
+      <div className="preview-section">
+        <div className="preview-section-label display">file</div>
+        <dl className="preview-meta">
+          <MetaRow label="kind" value={item.kind} />
+          <MetaRow label="format" value={item.format} />
+          <MetaRow label="dimensions" value={dimensions} />
+          <MetaRow label="size" value={formatBytes(item.fileSize)} />
+          <MetaRow label="duration" value={formatDuration(item.duration)} />
+          <MetaRow label="added" value={formatDateTime(item.timestamp)} />
+          {item.state === 'missing' && <MetaRow label="state" value="missing" />}
+        </dl>
+      </div>
+
+      {hasParams && (
+        <div className="preview-section">
+          <div className="preview-section-label display">generation</div>
+          <div className="preview-params">{params.join(' · ')}</div>
+        </div>
+      )}
+
+      {hasPrompt && (
+        <div className="preview-section">
+          <div className="preview-section-label display">prompt</div>
+          {item.prompt && <div className="preview-prompt-box">{item.prompt}</div>}
+          {item.negativePrompt && (
+            <div className="preview-prompt-box preview-negative-box">
+              <span className="preview-neg-label">negative</span>
+              {item.negativePrompt}
+            </div>
+          )}
+        </div>
+      )}
     </>
   )
 }
