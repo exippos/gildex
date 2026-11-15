@@ -81,7 +81,27 @@ surface, D7). Owner-polymorphic by current selection:
 - Widths, active surface, and density preset are **remembered per surface**.
 - Panel split-lines carry the gilt hairline + stepped tick (see design language).
 
-## 6. Explicitly not here
+## 6. Settings
+
+The header gear opens a centered settings panel (the same flat-panel language as
+the Library wizard), with a fixed section nav:
+
+| Section | Contents |
+|---|---|
+| **Appearance** | Theme cards, effects mode, default gallery zoom |
+| **Library** | Current name/root/bundle id, schema and app version, counts; create/open actions |
+| **Sources** | Shared media-source manager (add, rescan, watch/once, remove) |
+| **Behavior** | Session inactivity gap (D20) with **Save** and a separate **Apply & recluster** action |
+| **About** | App/schema version, library id, local-only note |
+
+Persistence is split: theme, effects, and zoom are device preferences
+(`localStorage`); the session gap lives in the library catalog (`settings`
+table), so it travels with the `.gildex` bundle. The compact theme picker and
+effects toggle stay in the header for quick access; the gear is the single
+settings entry point. pHash similarity (D39) stays out until near-duplicate
+grouping exists.
+
+## 7. Explicitly not here
 
 The deep **inspector** (notes, regions, references, attachments) is a separate
 screen / detached window (D7). The **batch toolbar** floats over the grid when a

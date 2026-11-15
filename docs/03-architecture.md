@@ -100,6 +100,17 @@ limitation); integrity is enforced in the application layer (D10).
 - **`lineage_edge`** — `(parent_id, child_id, edge_type)`. **Deferred** (D11);
   modeled now only to confirm it is separate from references.
 
+### 3.7 Library settings
+
+- **`settings`** — `(key, value)`. Library-scoped preferences stored inside the
+  catalog so they travel with the `.gildex` bundle. Typed access lives in
+  `internal/store/settings.go`; unknown keys are ignored. Current key:
+  `sessionGapMinutes` (default 120, range 15–1440, D20). A pHash threshold key
+  (`phashThreshold`, D39) is reserved until similarity grouping ships.
+
+Device-scoped presentation preferences (theme, effects, grid zoom) do **not**
+belong here; they stay in browser `localStorage`.
+
 ## 4. Storage layout
 
 - **Catalog DB** — `modernc.org/sqlite`, FTS5 virtual tables for the searchable
@@ -110,6 +121,8 @@ limitation); integrity is enforced in the application layer (D10).
 - **Attachments** — copied into `attachments/<hash>/`, immutable; files removed
   only by explicit confirmed cleanup (D15).
 - **Inbox** — `_inbox/` under the root, watched and referenced in place (D40).
+- **Settings** — library-scoped preferences in the `catalog.db` settings table;
+  presentation preferences in browser `localStorage`.
 
 ## 5. Import & indexing pipeline
 

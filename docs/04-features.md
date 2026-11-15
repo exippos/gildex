@@ -64,6 +64,20 @@ Breadth is secondary.
 - Zero network; URL references open in system browser (D5).
 - Undo for last N actions + restore-from-trash (D27).
 
+### 2.9 Settings
+- One header entry point (⚙) opening a sectioned settings panel: Appearance,
+  Library, Sources, Behavior, About.
+- **Device preferences** in `localStorage`: theme, effects mode, gallery zoom.
+- **Library preferences** in the catalog DB, portable with the `.gildex`
+  bundle: session inactivity gap (D20, default 2 h, adjustable), applied by an
+  explicit **Apply & recluster** action.
+- Library info (name, root, bundle id, schema/app version, counts) plus
+  create/open actions. Media-source management is shared with the Ingest
+  workspace.
+- pHash similarity threshold (D39) is deferred until near-duplicate grouping
+  exists; session-gap reclustering warns that manual session assignments may be
+  recomputed.
+
 ## 3. Deferred (post-v1) — D28
 
 Lineage (`lineage_edge`), auto-tagging, embeddings/semantic search, multi-library,
@@ -78,6 +92,7 @@ regions, advanced query syntax, consolidated/archive export, eco mode.
 | P1 | References → Attachments → Regions | D26 |
 | P1 | Sessions, tags, collections, batch toolbar | D20–D24 |
 | P1 | Search (tags + FTS), favorite/rating/status | D23, D22 |
+| P1 | Settings: appearance, library, sources, session gap | D20, D39 |
 | P2 | Watcher (inbox), pHash grouping slider | D16, D2/D39 |
 | P2 | Audio/video polish, hover-play | D17, D18 |
 | Later | Everything in §3 | D28 |

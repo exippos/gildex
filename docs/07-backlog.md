@@ -57,7 +57,15 @@
 - [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545"
 
 ### Settings menu
-- [ ] Settings menu
+- [X] Settings menu
+    - [X] Header gear + compact theme picker
+    - [X] Appearance: theme, effects, grid zoom (device-local)
+    - [X] Library: info, versions, counts, create/open
+    - [X] Sources: shared manager with Ingest
+    - [X] Behavior: session gap (library-local) + apply & recluster
+    - [X] About
+    - [ ] pHash similarity threshold (with near-duplicate grouping)
+    - [ ] Protect manual session assignments across recluster
 
 ### Other
 
