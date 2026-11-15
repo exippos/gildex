@@ -22,6 +22,7 @@
 - [ ] Keyboard navigation
 - [ ] Animated images badge
 - [ ] Thumbnails too low resolution
+- [ ] Item metadata on hover (rating, status, etc) 
 - [X] "ALL" view
 - [X] Maximise vertical spave on gallery view
     - [X] Remove Session|collection|folders|tags from gallery view
@@ -37,7 +38,9 @@
 - [X] Open last
 - [X] Preview (right side) panel refocus
     - [X] Focus on filename, triage (rating/type/favorite), metadata (timestamp, resolution), gen param, prompts
-    - [ ] Tags field
+    - [X] Tags field
+- [X] Batch operations preview side panel
+    - [X] Batch tags 
 
 ### 2.2 Group items
 - [ ] "Select" all items in group for batch operations
@@ -47,14 +50,14 @@
     - [X] Set an image as a group item image lable
     - [ ] Side panel "edit" button bad placement
 
-
 ### 2.3 Tags
 - [ ] Add multiple tags at once (do not close tagging menu after adding a tag)
 - [ ] On tag list (on the side panel), the "clear N active" should not move the tag list.
 - [X] Add "untagged" tag
 - [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545"
 
-
+### Settings menu
+- [ ] Settings menu
 
 ### Other
 
