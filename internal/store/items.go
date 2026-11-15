@@ -186,9 +186,16 @@ func (s *Store) QueryItems(q ItemQuery) (model.ItemPage, error) {
 	if err != nil {
 		return page, err
 	}
+	tags, err := s.loadTags(ids)
+	if err != nil {
+		return page, err
+	}
 	for i := range page.Items {
 		if extra, ok := extras[page.Items[i].ID]; ok {
 			page.Items[i].Extra = extra
+		}
+		if t, ok := tags[page.Items[i].ID]; ok {
+			page.Items[i].Tags = t
 		}
 	}
 	return page, nil
@@ -210,6 +217,13 @@ func (s *Store) GetItem(id string) (*model.Item, error) {
 	}
 	if extra, ok := extras[id]; ok {
 		it.Extra = extra
+	}
+	tags, err := s.loadTags([]string{id})
+	if err != nil {
+		return nil, err
+	}
+	if t, ok := tags[id]; ok {
+		it.Tags = t
 	}
 	return it, nil
 }

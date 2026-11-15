@@ -1,0 +1,215 @@
+/* Batch preview — persistent batch surface in the right panel. Reuses the
+   panel's gilt tokens and the shared triage controls from right-preview.css. */
+
+.batch-overflow {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  background: var(--control);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gilt);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- tag editor ---- */
+
+.batch-tag-filter {
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  background: var(--surface-inset);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.batch-tag-filter::placeholder,
+.batch-tag-create input::placeholder {
+  color: var(--text-faint);
+}
+
+.batch-tag-filter:focus-visible,
+.batch-tag-create input:focus-visible {
+  border-color: var(--gilt);
+  outline: none;
+}
+
+.batch-tag-list {
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.batch-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 4px;
+  font-size: 12px;
+}
+
+.batch-tag-row + .batch-tag-row {
+  border-top: 1px solid var(--hairline);
+}
+
+.batch-tag-cover {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+}
+
+.batch-tag-cover.is-all {
+  background: var(--gilt);
+  border-color: var(--gilt);
+}
+
+.batch-tag-cover.is-some {
+  background: var(--gilt-dim);
+  border-color: var(--gilt);
+}
+
+.batch-tag-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.batch-tag-count {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.batch-tag-add,
+.batch-tag-remove {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.batch-tag-add:hover:not(:disabled) {
+  border-color: var(--gilt);
+  color: var(--gilt-bright);
+}
+
+.batch-tag-remove:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.batch-tag-add:disabled,
+.batch-tag-remove:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.batch-tag-empty {
+  padding: 10px 4px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.batch-tag-create {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.batch-tag-create input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 8px;
+  font-size: 11px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+
+.batch-tag-create button {
+  flex: 0 0 auto;
+  padding: 4px 12px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  background: var(--gilt-dim);
+  color: var(--gilt-bright);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.batch-tag-create button:hover:not(:disabled) {
+  border-color: var(--gilt);
+  background: var(--control-hover);
+  color: var(--gilt-bright);
+}
+
+.batch-tag-create button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---- actions ---- */
+
+.batch-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.batch-remove {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.batch-remove:hover {
+  background: var(--danger);
+  color: var(--on-gilt);
+}
+
+.batch-clear {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.batch-clear:hover {
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}

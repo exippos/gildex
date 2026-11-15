@@ -47,6 +47,7 @@ export interface Item {
   generatedAt: number | null
   thumbnailPath: string // "<hash>.jpg" or ""
   frameCount: number // prerendered hover-play frames, 0 = none
+  tags: string[] // assigned tag names
   extra: Record<string, string>
 }
 

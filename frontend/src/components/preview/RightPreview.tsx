@@ -11,6 +11,7 @@ import {
   formatDuration,
   formatRange,
 } from '../format'
+import { BatchPreview } from './BatchPreview'
 import './right-preview.css'
 
 const STATUSES: ReadonlyArray<{ id: Status; label: string }> = [
@@ -321,12 +322,15 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
   const activeFolder = useStore((s) => s.activeFolder)
   const activeTagFilters = useStore((s) => s.activeTagFilters)
   const itemsTotal = useStore((s) => s.itemsTotal)
+  const selection = useStore((s) => s.selection)
 
   const found = previewItemId ? items.find((item) => item.id === previewItemId) ?? null : null
   const lastItemRef = useRef<Item | null>(null)
   if (found) lastItemRef.current = found
   const item =
     found ?? (lastItemRef.current && lastItemRef.current.id === previewItemId ? lastItemRef.current : null)
+
+  const isBatch = selection.length >= 2
 
   const session =
     !item && surface === 'sessions' && activeSessionId
@@ -338,7 +342,8 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
       : null
 
   let kicker = 'preview'
-  if (item) kicker = 'item'
+  if (isBatch) kicker = 'batch'
+  else if (item) kicker = 'item'
   else if (session) kicker = 'session'
   else if (collection) kicker = 'collection'
 
@@ -349,15 +354,17 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
       </div>
 
       <div className="preview-body">
-        {item && <ItemPreview item={item} />}
+        {isBatch && <BatchPreview />}
 
-        {!item && session && <SessionPreview session={session} items={items} />}
+        {!isBatch && item && <ItemPreview item={item} />}
 
-        {!item && !session && collection && (
+        {!isBatch && !item && session && <SessionPreview session={session} items={items} />}
+
+        {!isBatch && !item && !session && collection && (
           <CollectionPreview collection={collection} items={items} />
         )}
 
-        {!item && !session && !collection && (
+        {!isBatch && !item && !session && !collection && (
           <div className="preview-section preview-minimal">
             {surface === 'all' ? (
               <>

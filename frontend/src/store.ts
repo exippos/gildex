@@ -219,8 +219,11 @@ interface AppState {
   openCollectionPicker: (itemIds: string[]) => void
   closeCollectionPicker: () => void
 
-  batchTag: (add: string[], remove: string[]) => Promise<void>
-  batchSet: (patch: { favorite?: boolean; rating?: number; status?: Status }) => Promise<void>
+  batchTag: (add: string[], remove: string[], opts?: { keep?: boolean }) => Promise<void>
+  batchSet: (
+    patch: { favorite?: boolean; rating?: number; status?: Status },
+    opts?: { keep?: boolean },
+  ) => Promise<void>
   batchRemove: () => Promise<void>
   addToCollection: (collectionId: string, itemIds: string[]) => Promise<void>
   removeFromCollection: (collectionId: string, itemId: string) => Promise<void>
@@ -667,14 +670,14 @@ export const useStore = create<AppState>((set, get) => ({
   openCollectionPicker: (itemIds) => set({ collectionPicker: { itemIds } }),
   closeCollectionPicker: () => set({ collectionPicker: null }),
 
-  batchTag: async (add, remove) => {
+  batchTag: async (add, remove, opts) => {
     const ids = get().selection
     if (!ids.length) return
     await api.batch({ ids, addTags: add, removeTags: remove })
-    get().clearSelection()
+    if (!opts?.keep) get().clearSelection()
     await get().refreshCatalog()
   },
-  batchSet: async (patch) => {
+  batchSet: async (patch, opts) => {
     const ids = get().selection
     if (!ids.length) return
     await api.batch({ ids, ...patch })
@@ -689,7 +692,7 @@ export const useStore = create<AppState>((set, get) => ({
       }
       return { collectionItems }
     })
-    get().clearSelection()
+    if (!opts?.keep) get().clearSelection()
     await get().refreshCatalog()
   },
   batchRemove: async () => {

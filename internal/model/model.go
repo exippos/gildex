@@ -86,6 +86,7 @@ type Item struct {
 	GeneratedAt    *int64            `json:"generatedAt"`
 	ThumbnailPath  string            `json:"thumbnailPath"` // "<hash>.jpg" or "" if none
 	FrameCount     int               `json:"frameCount"`    // prerendered hover-play frames, 0 = none
+	Tags           []string          `json:"tags"`          // assigned tag names, never null
 	Extra          map[string]string `json:"extra"`         // tier-3 metadata_kv, never null
 }
 

@@ -285,8 +285,40 @@ func scanItem(sc interface{ Scan(dest ...any) error }) (*model.Item, error) {
 	it.CFGScale = nullFloat(cfg)
 	it.GeneratedAt = nullInt(generatedAt)
 	it.SourceID = nullString(sourceID)
+	it.Tags = []string{}
 	it.Extra = map[string]string{}
 	return &it, nil
+}
+
+// loadTags returns, per item id, its assigned tag names sorted case-insensitively.
+func (s *Store) loadTags(ids []string) (map[string][]string, error) {
+	out := make(map[string][]string, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		args[i] = id
+	}
+	rows, err := s.db.Query(`
+		SELECT it.item_id, t.name
+		FROM item_tag it
+		JOIN tags t ON t.id = it.tag_id
+		WHERE it.item_id IN (`+placeholders+`)
+		ORDER BY t.name COLLATE NOCASE ASC`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id, name string
+		if err := rows.Scan(&id, &name); err != nil {
+			return nil, err
+		}
+		out[id] = append(out[id], name)
+	}
+	return out, rows.Err()
 }
 
 func (s *Store) loadExtras(ids []string) (map[string]map[string]string, error) {
