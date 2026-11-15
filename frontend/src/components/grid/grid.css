@@ -135,6 +135,40 @@
   stroke-width: 1;
 }
 
+/* expand/collapse: the silhouette fades in on expand, out on collapse. */
+@keyframes outline-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes outline-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.group-outline.is-entering {
+  animation: outline-enter 160ms ease-out both;
+}
+
+.group-outline.is-exiting {
+  animation: outline-exit 120ms ease-in both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group-outline.is-entering,
+  .group-outline.is-exiting {
+    animation: none;
+  }
+}
+
 /* ---- group tiles: collapsed sessions / collections ----------------------
    A cell-sized stacked deck: poster in front, up to two item thumbnails
    peeking out bottom-right, label and meta laid over a scrim. */

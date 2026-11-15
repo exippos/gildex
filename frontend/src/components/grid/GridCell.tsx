@@ -14,6 +14,7 @@ interface GridCellProps {
   item: Item
   selected: boolean
   isCover?: boolean
+  phase?: 'enter' | 'exit'
   style: CSSProperties
   onMenu?: (x: number, y: number) => void
 }
@@ -143,7 +144,7 @@ function RatingDots({ rating }: { rating: number }) {
   )
 }
 
-export function GridCell({ item, selected, isCover = false, style, onMenu }: GridCellProps) {
+export function GridCell({ item, selected, isCover = false, phase, style, onMenu }: GridCellProps) {
   const setSelected = useStore((s) => s.setSelected)
   const selectRange = useStore((s) => s.selectRange)
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
@@ -163,7 +164,7 @@ export function GridCell({ item, selected, isCover = false, style, onMenu }: Gri
   return (
     <button
       type="button"
-      className={`grid-cell${selected ? ' is-selected' : ''}`}
+      className={`grid-cell${selected ? ' is-selected' : ''}${phase ? ` is-${phase === 'enter' ? 'entering' : 'exiting'}` : ''}`}
       style={style}
       aria-pressed={selected}
       aria-label={`${item.kind} ${item.relativePath}`}

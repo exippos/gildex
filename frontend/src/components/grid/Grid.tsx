@@ -23,6 +23,15 @@ const OVERSCAN_ROWS = 2
 const COMPACT_BELOW = 120
 // Item cells sit a touch smaller than the group tiles that anchor them.
 const ITEM_SCALE = 0.86
+// Group expand/collapse entrance/exit timing (ms).
+const ENTER_MS = 160
+const EXIT_MS = 120
+const STAGGER_MS = 16
+const MAX_STAGGER = 12
+const REDUCED_MOTION =
+  typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false
 
 type GroupSource = 'session' | 'collection'
 
@@ -47,7 +56,7 @@ interface Group {
 
 type Slot =
   | { kind: 'tile'; key: string; group: Group; open: boolean }
-  | { kind: 'cell'; key: string; group: Group | null; item: Item }
+  | { kind: 'cell'; key: string; group: Group | null; item: Item; order: number }
 
 type MenuTarget =
   | { kind: 'cell'; x: number; y: number; item: Item; group: Group | null }
@@ -418,7 +427,11 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const [viewportH, setViewportH] = useState(0)
   const [scrollTop, setScrollTop] = useState(0)
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
+  const [entering, setEntering] = useState<Set<string>>(() => new Set())
+  const [exiting, setExiting] = useState<Set<string>>(() => new Set())
   const [menu, setMenu] = useState<MenuTarget | null>(null)
+  const enterTimers = useRef<Map<string, number>>(new Map())
+  const exitTimers = useRef<Map<string, number>>(new Map())
 
   useEffect(() => {
     const el = scrollRef.current
@@ -444,6 +457,12 @@ export function Grid({ cellSize }: { cellSize: number }) {
   // Collapse all groups when the query changes.
   useEffect(() => {
     setExpanded(new Set())
+    setEntering(new Set())
+    setExiting(new Set())
+    enterTimers.current.forEach((timer) => window.clearTimeout(timer))
+    enterTimers.current.clear()
+    exitTimers.current.forEach((timer) => window.clearTimeout(timer))
+    exitTimers.current.clear()
   }, [queryKey])
 
   // Escape or losing focus clears the selection (wired here, once).
@@ -463,6 +482,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
   useEffect(() => {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+      enterTimers.current.forEach((timer) => window.clearTimeout(timer))
+      exitTimers.current.forEach((timer) => window.clearTimeout(timer))
     }
   }, [])
 
@@ -557,14 +578,21 @@ export function Grid({ cellSize }: { cellSize: number }) {
       for (const group of groups) {
         const open = expanded.has(group.key)
         const start = slots.length
-        slots.push({ kind: 'tile', key: `tile:${group.key}`, group, open })
+        slots.push({
+          kind: 'tile',
+          key: `tile:${group.key}`,
+          group,
+          open: open && !exiting.has(group.key),
+        })
         if (open) {
+          let order = 0
           for (const item of group.items) {
             slots.push({
               kind: 'cell',
               key: `cell:${group.key}:${item.id}`,
               group,
               item,
+              order: order++,
             })
           }
           outlines.push(
@@ -574,7 +602,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
       }
     } else {
       for (const item of items) {
-        slots.push({ kind: 'cell', key: `cell:${item.id}`, group: null, item })
+        slots.push({ kind: 'cell', key: `cell:${item.id}`, group: null, item, order: 0 })
       }
     }
 
@@ -592,7 +620,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
       viewportH,
     )
     return { rows, outlines, height, empty: slots.length === 0 }
-  }, [groupMode, groups, items, cols, cellW, rowStep, expanded, viewportH])
+  }, [groupMode, groups, items, cols, cellW, rowStep, expanded, exiting, viewportH])
 
   const visible = useMemo(() => {
     if (width <= 0 || viewportH <= 0) return [] as GridRow[]
@@ -604,17 +632,86 @@ export function Grid({ cellSize }: { cellSize: number }) {
 
   const selectedSet = useMemo(() => new Set(selection), [selection])
 
+  const expandGroup = (key: string, count: number) => {
+    setEntering((prev) => {
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+    setExiting((prev) => {
+      if (!prev.has(key)) return prev
+      const next = new Set(prev)
+      next.delete(key)
+      return next
+    })
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+
+    const timer = enterTimers.current.get(key)
+    if (timer !== undefined) window.clearTimeout(timer)
+    const delay = ENTER_MS + Math.min(count, MAX_STAGGER) * STAGGER_MS
+    enterTimers.current.set(
+      key,
+      window.setTimeout(() => {
+        setEntering((prev) => {
+          if (!prev.has(key)) return prev
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
+        enterTimers.current.delete(key)
+      }, delay),
+    )
+  }
+
+  const collapseGroup = (key: string) => {
+    setExiting((prev) => {
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+
+    const timer = exitTimers.current.get(key)
+    if (timer !== undefined) window.clearTimeout(timer)
+    exitTimers.current.set(
+      key,
+      window.setTimeout(() => {
+        setExpanded((prev) => {
+          if (!prev.has(key)) return prev
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
+        setExiting((prev) => {
+          if (!prev.has(key)) return prev
+          const next = new Set(prev)
+          next.delete(key)
+          return next
+        })
+        exitTimers.current.delete(key)
+      }, REDUCED_MOTION ? 0 : EXIT_MS),
+    )
+  }
+
   const toggleGroup = (group: Group) => {
-    const open = expanded.has(group.key)
+    const open = expanded.has(group.key) && !exiting.has(group.key)
     if (!open && group.source === 'collection' && !collectionItems[cacheKey(group.id)]) {
       void loadCollectionItems(group.id)
     }
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(group.key)) next.delete(group.key)
-      else next.add(group.key)
-      return next
-    })
+    if (open) {
+      collapseGroup(group.key)
+    } else {
+      // Re-expanding during a collapse cancels the pending exit and keeps it open.
+      const timer = exitTimers.current.get(group.key)
+      if (timer !== undefined) {
+        window.clearTimeout(timer)
+        exitTimers.current.delete(group.key)
+      }
+      expandGroup(group.key, group.items.length)
+    }
   }
 
   // A cancelable view change leaves no stale menu floating over new content.
@@ -819,13 +916,23 @@ export function Grid({ cellSize }: { cellSize: number }) {
                   <stop offset="1" stopColor="currentColor" stopOpacity="0.18" />
                 </linearGradient>
               </defs>
-              {layout.outlines.map((outline) => (
-                <g key={outline.key}>
-                  <path className="group-outline-fill" d={outline.path} />
-                  <path className="group-outline-tint" d={outline.path} />
-                  <path className="group-outline-edge" d={outline.path} />
-                </g>
-              ))}
+              {layout.outlines.map((outline) => {
+                const phase = exiting.has(outline.key)
+                  ? 'exit'
+                  : entering.has(outline.key)
+                    ? 'enter'
+                    : undefined
+                const outlineClass = phase
+                  ? `group-outline is-${phase === 'enter' ? 'entering' : 'exiting'}`
+                  : undefined
+                return (
+                  <g key={outline.key} className={outlineClass}>
+                    <path className="group-outline-fill" d={outline.path} />
+                    <path className="group-outline-tint" d={outline.path} />
+                    <path className="group-outline-edge" d={outline.path} />
+                  </g>
+                )
+              })}
             </svg>
           )}
 
@@ -875,15 +982,31 @@ export function Grid({ cellSize }: { cellSize: number }) {
                     />
                   )
                 }
+                const group = slot.group
+                const phase = group
+                  ? exiting.has(group.key)
+                    ? 'exit'
+                    : entering.has(group.key)
+                      ? 'enter'
+                      : undefined
+                  : undefined
+                const cellStyle: CSSProperties =
+                  phase === 'enter'
+                    ? {
+                        ...style,
+                        animationDelay: `${Math.min(slot.order, MAX_STAGGER) * STAGGER_MS}ms`,
+                      }
+                    : style
                 return (
                   <GridCell
                     key={slot.key}
                     item={slot.item}
                     selected={selectedSet.has(slot.item.id)}
-                    isCover={slot.group?.coverId === slot.item.id}
-                    style={style}
+                    isCover={group?.coverId === slot.item.id}
+                    phase={phase}
+                    style={cellStyle}
                     onMenu={(x, y) =>
-                      setMenu({ kind: 'cell', x, y, item: slot.item, group: slot.group })
+                      setMenu({ kind: 'cell', x, y, item: slot.item, group })
                     }
                   />
                 )
