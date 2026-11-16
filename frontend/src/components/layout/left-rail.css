@@ -234,6 +234,16 @@
   line-height: 1.5;
 }
 
+/* convention family heading inside the flat tag list */
+.rail-tag-family {
+  padding: 10px 10px 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 /* dense one-liner: › name .......... count */
 .rail-tag-row::before {
   content: '›';

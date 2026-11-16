@@ -515,6 +515,14 @@
   color: var(--text-faint);
 }
 
+.settings-note code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--surface-inset);
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
 /* ---- about ---- */
 
 .settings-about-list {

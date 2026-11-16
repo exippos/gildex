@@ -1,5 +1,5 @@
 // Left rail: nav (surface switcher) + per-surface content. Frosted fixed chrome.
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import type { CSSProperties, DragEvent } from 'react'
 import { useStore, UNTAGGED_FILTER } from '../../store'
 import { thumbUrl } from '../../api'
@@ -7,6 +7,7 @@ import type { Surface } from '../../types'
 import { FolderTree } from '../folders/FolderTree'
 import { formatRange } from '../format'
 import { readDraggedItemIds } from '../groups/drag'
+import { familyLabel, groupTags } from '../tags'
 import './left-rail.css'
 
 const TABS: ReadonlyArray<{ id: Surface; label: string }> = [
@@ -49,6 +50,8 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
     if (!needle) return tags
     return tags.filter((tag) => tag.name.toLowerCase().includes(needle))
   }, [tags, tagQuery])
+  const tagGroups = useMemo(() => groupTags(visibleTags), [visibleTags])
+  const showTagFamilies = tagGroups.some((group) => group.family)
 
   const chooseSurface = (next: Surface) => {
     setSurface(next)
@@ -344,19 +347,26 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                 <span className="rail-row-title">untagged</span>
                 <span className="rail-row-count">{untaggedCount}</span>
               </button>
-              {visibleTags.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  className={`rail-row rail-tag-row${
-                    activeTagFilters.includes(tag.name) ? ' is-active' : ''
-                  }`}
-                  aria-pressed={activeTagFilters.includes(tag.name)}
-                  onClick={() => toggleTagFilter(tag.name)}
-                >
-                  <span className="rail-row-title">{tag.name}</span>
-                  <span className="rail-row-count">{tag.itemCount}</span>
-                </button>
+              {tagGroups.map((group) => (
+                <Fragment key={group.family || 'general'}>
+                  {showTagFamilies && (
+                    <div className="rail-tag-family">{familyLabel(group.family)}</div>
+                  )}
+                  {group.tags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`rail-row rail-tag-row${
+                        activeTagFilters.includes(tag.name) ? ' is-active' : ''
+                      }`}
+                      aria-pressed={activeTagFilters.includes(tag.name)}
+                      onClick={() => toggleTagFilter(tag.name)}
+                    >
+                      <span className="rail-row-title">{tag.name}</span>
+                      <span className="rail-row-count">{tag.itemCount}</span>
+                    </button>
+                  ))}
+                </Fragment>
               ))}
               {visibleTags.length === 0 && <div className="rail-hint">no tags match</div>}
             </div>

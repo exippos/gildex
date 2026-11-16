@@ -16,6 +16,7 @@ import type {
   Source,
   SourceMode,
   Tag,
+  TagImportSummary,
   TagList,
 } from './types'
 
@@ -52,6 +53,28 @@ async function upload<T>(path: string, form: FormData): Promise<T> {
     throw new Error(msg)
   }
   return (await res.json()) as T
+}
+
+async function download(path: string, filename: string): Promise<void> {
+  const res = await fetch(`/api${path}`)
+  if (!res.ok) {
+    let msg = `${res.status} ${res.statusText}`
+    try {
+      const data = await res.json()
+      if (data && typeof data.error === 'string') msg = data.error
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg)
+  }
+  const url = URL.createObjectURL(await res.blob())
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.append(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
 }
 
 function qs(params: Record<string, string | number | boolean | undefined | null>): string {
@@ -141,6 +164,9 @@ export const api = {
   tags: () => request<TagList>('GET', '/tags'),
   createTag: (name: string) => request<Tag>('POST', '/tags', { name }),
   deleteTag: (id: string) => request<void>('DELETE', `/tags/${id}`),
+  exportTags: () => download('/tags/export', 'gildex-tags.json'),
+  importTags: (names: string[]) =>
+    request<TagImportSummary>('POST', '/tags/import', { names }),
 
   collections: () => request<Collection[]>('GET', '/collections'),
   createCollection: (body: { name: string; description?: string }) =>

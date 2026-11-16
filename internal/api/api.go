@@ -51,6 +51,8 @@ func (a *API) Register(mux *http.ServeMux) {
 
 	mux.HandleFunc("GET /api/tags", a.handleTags)
 	mux.HandleFunc("POST /api/tags", a.handleCreateTag)
+	mux.HandleFunc("GET /api/tags/export", a.handleExportTags)
+	mux.HandleFunc("POST /api/tags/import", a.handleImportTags)
 	mux.HandleFunc("DELETE /api/tags/{id}", a.handleDeleteTag)
 
 	mux.HandleFunc("GET /api/collections", a.handleCollections)

@@ -40,6 +40,7 @@ const SECTIONS: ReadonlyArray<{ id: SettingsSection; label: string }> = [
   { id: 'appearance', label: 'Appearance' },
   { id: 'library', label: 'Library' },
   { id: 'sources', label: 'Sources' },
+  { id: 'tags', label: 'Tags' },
   { id: 'behavior', label: 'Behavior' },
   { id: 'about', label: 'About' },
 ]
@@ -63,6 +64,45 @@ function humanizeGap(minutes: number): string {
   if (hours && rest) return `${hours} h ${rest} min`
   if (hours) return `${hours} h`
   return `${rest} min`
+}
+
+// Import accepts the canonical export envelope, a bare array of names, or a
+// one-per-line text list with '#' comments. Families are part of the name.
+function parseTagFile(text: string): string[] {
+  const trimmed = text.trim()
+  if (!trimmed) return []
+
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    let data: unknown
+    try {
+      data = JSON.parse(trimmed)
+    } catch {
+      throw new Error('invalid JSON file')
+    }
+    let list: unknown[] | null = null
+    if (Array.isArray(data)) {
+      list = data
+    } else if (data && typeof data === 'object') {
+      const envelope = data as { tags?: unknown; names?: unknown }
+      if (Array.isArray(envelope.tags)) list = envelope.tags
+      else if (Array.isArray(envelope.names)) list = envelope.names
+    }
+    if (!list) throw new Error('no tag list found in JSON')
+    return list
+      .map((entry) => {
+        if (typeof entry === 'string') return entry
+        if (entry && typeof entry === 'object' && typeof (entry as { name?: unknown }).name === 'string') {
+          return (entry as { name: string }).name
+        }
+        return ''
+      })
+      .filter((name) => name.trim() !== '')
+  }
+
+  return trimmed
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line !== '' && !line.startsWith('#'))
 }
 
 // Shared empty state for every library-scoped section.
@@ -99,6 +139,9 @@ export function SettingsModal() {
   const setEffects = useStore((s) => s.setEffects)
   const cellSize = useStore((s) => s.cellSize)
   const setCellSize = useStore((s) => s.setCellSize)
+  const tags = useStore((s) => s.tags)
+  const exportTags = useStore((s) => s.exportTags)
+  const importTags = useStore((s) => s.importTags)
   const openLibraryModal = useStore((s) => s.openLibraryModal)
 
   const [active, setActive] = useState<SettingsSection>(section ?? 'appearance')
@@ -106,9 +149,13 @@ export function SettingsModal() {
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [tagBusy, setTagBusy] = useState(false)
+  const [tagStatus, setTagStatus] = useState<string | null>(null)
+  const [tagError, setTagError] = useState<string | null>(null)
   const [swatches, setSwatches] = useState<Partial<Record<Theme, SwatchPalette>>>({})
 
   const closeRef = useRef<HTMLButtonElement | null>(null)
+  const tagFileRef = useRef<HTMLInputElement | null>(null)
 
   // The store section can change while the modal is open (menu entry points);
   // clicking the internal nav only moves the local tab.
@@ -192,6 +239,44 @@ export function SettingsModal() {
       setError(errorMessage(err))
     } finally {
       setBusy(false)
+    }
+  }
+
+  const exportVocabulary = async () => {
+    if (tagBusy) return
+    setTagBusy(true)
+    setTagError(null)
+    setTagStatus(null)
+    try {
+      await exportTags()
+      setTagStatus(`exported ${tags.length} tags`)
+    } catch (err) {
+      setTagError(errorMessage(err))
+    } finally {
+      setTagBusy(false)
+    }
+  }
+
+  const importVocabulary = async (file: File) => {
+    if (tagBusy) return
+    setTagBusy(true)
+    setTagError(null)
+    setTagStatus(null)
+    try {
+      const names = parseTagFile(await file.text())
+      if (names.length === 0) {
+        setTagError('no tag names found in the file')
+        return
+      }
+      const summary = await importTags(names)
+      setTagStatus(
+        `imported ${summary.created} new · ${summary.existing} already existed · ${summary.ignored} skipped`,
+      )
+    } catch (err) {
+      setTagError(errorMessage(err))
+    } finally {
+      setTagBusy(false)
+      if (tagFileRef.current) tagFileRef.current.value = ''
     }
   }
 
@@ -411,6 +496,90 @@ export function SettingsModal() {
               <div className="settings-section">
                 {library?.rootSet ? (
                   <SourceManager />
+                ) : (
+                  <NoLibrary
+                    onCreate={() => openLibrary('create')}
+                    onOpen={() => openLibrary('open')}
+                  />
+                )}
+              </div>
+            )}
+
+            {active === 'tags' && (
+              <div className="settings-section">
+                {library?.rootSet ? (
+                  <>
+                    <div className="settings-section-head">
+                      <span className="settings-eyebrow">tags</span>
+                      <h3>vocabulary</h3>
+                      <p className="settings-hint">
+                        move the tag list between libraries or share it. only names travel; item
+                        assignments stay in this catalog.
+                      </p>
+                    </div>
+
+                    <div className="settings-row">
+                      <span className="settings-label">export</span>
+                      <p className="settings-hint">
+                        {tags.length} tags. the file is versioned JSON with names, families and
+                        informational item counts.
+                      </p>
+                      <div className="settings-actions">
+                        <button
+                          type="button"
+                          className="settings-btn"
+                          onClick={() => void exportVocabulary()}
+                          disabled={tagBusy || tags.length === 0}
+                        >
+                          Export vocabulary…
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="settings-row">
+                      <span className="settings-label">import</span>
+                      <p className="settings-hint">
+                        merge from JSON or a one-per-line text list (# starts a comment). existing
+                        tags are kept; nothing is renamed or deleted.
+                      </p>
+                      <div className="settings-actions">
+                        <button
+                          type="button"
+                          className="settings-btn"
+                          onClick={() => tagFileRef.current?.click()}
+                          disabled={tagBusy}
+                        >
+                          Import vocabulary…
+                        </button>
+                        <input
+                          ref={tagFileRef}
+                          type="file"
+                          accept=".json,.txt,application/json,text/plain"
+                          hidden
+                          onChange={(event) => {
+                            const file = event.target.files?.[0]
+                            if (file) void importVocabulary(file)
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {tagError && (
+                      <p className="settings-error" role="alert">
+                        {tagError}
+                      </p>
+                    )}
+                    {tagStatus && (
+                      <p className="settings-status" role="status" aria-live="polite">
+                        {tagStatus}
+                      </p>
+                    )}
+
+                    <p className="settings-note">
+                      Families are derived from the name: <code>artist:foo</code> groups under
+                      artist.
+                    </p>
+                  </>
                 ) : (
                   <NoLibrary
                     onCreate={() => openLibrary('create')}

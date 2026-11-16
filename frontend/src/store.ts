@@ -23,6 +23,7 @@ import type {
   Status,
   Surface,
   Tag,
+  TagImportSummary,
   Workspace,
 } from './types'
 
@@ -253,6 +254,8 @@ interface AppState {
   tagItem: (id: string, add: string[], remove: string[]) => Promise<void>
 
   createTag: (name: string) => Promise<void>
+  exportTags: () => Promise<void>
+  importTags: (names: string[]) => Promise<TagImportSummary>
   createCollection: (name: string, description: string, itemIds?: string[]) => Promise<string | null>
   updateCollection: (id: string, patch: { name?: string; description?: string }) => Promise<void>
   updateSession: (id: string, patch: { label?: string }) => Promise<void>
@@ -779,6 +782,14 @@ export const useStore = create<AppState>((set, get) => ({
   createTag: async (name) => {
     await api.createTag(name)
     await get().refreshCatalog()
+  },
+  exportTags: async () => {
+    await api.exportTags()
+  },
+  importTags: async (names) => {
+    const summary = await api.importTags(names)
+    await get().refreshCatalog()
+    return summary
   },
   createCollection: async (name, description, itemIds = []) => {
     const c = await api.createCollection({ name, description })

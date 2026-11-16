@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"gildex/internal/model"
 	"gildex/internal/store"
@@ -105,4 +106,60 @@ func (a *API) handleDeleteTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+const tagExportFormat = "gildex.tags"
+
+func (a *API) handleExportTags(w http.ResponseWriter, r *http.Request) {
+	st := a.requireStore(w)
+	if st == nil {
+		return
+	}
+	tags, err := st.Tags()
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	entries := make([]model.TagExportEntry, len(tags))
+	for i, tag := range tags {
+		entries[i] = model.TagExportEntry{
+			Name:      tag.Name,
+			Family:    tag.Family,
+			ItemCount: tag.ItemCount,
+		}
+	}
+	w.Header().Set("Content-Disposition", `attachment; filename="gildex-tags.json"`)
+	writeJSON(w, http.StatusOK, model.TagExport{
+		Format:     tagExportFormat,
+		Version:    1,
+		ExportedAt: time.Now().UnixMilli(),
+		Tags:       entries,
+	})
+}
+
+func (a *API) handleImportTags(w http.ResponseWriter, r *http.Request) {
+	st := a.requireStore(w)
+	if st == nil {
+		return
+	}
+	var body struct {
+		Names []string `json:"names"`
+	}
+	if !decodeJSON(w, r, &body) {
+		return
+	}
+	if len(body.Names) == 0 {
+		writeError(w, http.StatusBadRequest, "no tag names")
+		return
+	}
+	if len(body.Names) > 20000 {
+		writeError(w, http.StatusBadRequest, "too many tag names (max 20000)")
+		return
+	}
+	summary, err := st.ImportTags(body.Names)
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, summary)
 }

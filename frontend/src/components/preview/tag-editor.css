@@ -41,6 +41,15 @@
   border-top: 1px solid var(--hairline);
 }
 
+.tag-editor-family {
+  padding: 8px 4px 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 .tag-editor-cover {
   flex: 0 0 auto;
   width: 5px;

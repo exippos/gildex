@@ -1,7 +1,8 @@
 // Popover tag picker for the batch toolbar. Lists the vocabulary with
 // add/remove semantics plus a create-new input.
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { useStore } from '../../store'
+import { familyLabel, groupTags } from '../tags'
 import './tag-picker.css'
 
 export function TagPicker({ onClose }: { onClose: () => void }) {
@@ -17,6 +18,8 @@ export function TagPicker({ onClose }: { onClose: () => void }) {
     if (!needle) return tags
     return tags.filter((tag) => tag.name.toLowerCase().includes(needle))
   }, [tags, filter])
+  const groups = useMemo(() => groupTags(visible), [visible])
+  const showFamilies = groups.some((group) => group.family)
 
   const add = (tagName: string) => {
     onClose()
@@ -48,31 +51,36 @@ export function TagPicker({ onClose }: { onClose: () => void }) {
       />
 
       <div className="tag-picker-list">
-        {visible.map((tag) => (
-          <div className="tag-picker-row" key={tag.id}>
-            <span className="tag-picker-name" title={tag.name}>
-              {tag.name}
-            </span>
-            <span className="tag-picker-count">{tag.itemCount}</span>
-            <button
-              type="button"
-              className="tag-picker-add"
-              title={`Add “${tag.name}”`}
-              aria-label={`Add tag ${tag.name}`}
-              onClick={() => add(tag.name)}
-            >
-              +
-            </button>
-            <button
-              type="button"
-              className="tag-picker-remove"
-              title={`Remove “${tag.name}”`}
-              aria-label={`Remove tag ${tag.name}`}
-              onClick={() => remove(tag.name)}
-            >
-              −
-            </button>
-          </div>
+        {groups.map((group) => (
+          <Fragment key={group.family || 'general'}>
+            {showFamilies && <div className="tag-picker-family">{familyLabel(group.family)}</div>}
+            {group.tags.map((tag) => (
+              <div className="tag-picker-row" key={tag.id}>
+                <span className="tag-picker-name" title={tag.name}>
+                  {tag.name}
+                </span>
+                <span className="tag-picker-count">{tag.itemCount}</span>
+                <button
+                  type="button"
+                  className="tag-picker-add"
+                  title={`Add “${tag.name}”`}
+                  aria-label={`Add tag ${tag.name}`}
+                  onClick={() => add(tag.name)}
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  className="tag-picker-remove"
+                  title={`Remove “${tag.name}”`}
+                  aria-label={`Remove tag ${tag.name}`}
+                  onClick={() => remove(tag.name)}
+                >
+                  −
+                </button>
+              </div>
+            ))}
+          </Fragment>
         ))}
         {visible.length === 0 && <div className="tag-picker-empty">no tags match</div>}
       </div>

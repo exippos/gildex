@@ -10,7 +10,13 @@ export type OwnerType = 'item' | 'session' | 'collection'
 export type ItemSort = 'time' | 'filename' | 'size' | 'session'
 export type SortDir = 'asc' | 'desc'
 export type SourceMode = 'once' | 'watch'
-export type SettingsSection = 'appearance' | 'library' | 'sources' | 'behavior' | 'about'
+export type SettingsSection =
+  | 'appearance'
+  | 'library'
+  | 'sources'
+  | 'tags'
+  | 'behavior'
+  | 'about'
 
 // Library-scoped preferences stored in the .gildex catalog DB.
 export interface LibrarySettings {
@@ -73,6 +79,7 @@ export interface Session {
 export interface Tag {
   id: string
   name: string
+  family: string // derived from the prefix before ':', "" when ungrouped
   itemCount: number
 }
 
@@ -80,6 +87,13 @@ export interface Tag {
 export interface TagList {
   tags: Tag[]
   untagged: number
+}
+
+// POST /api/tags/import: merge result for a vocabulary file.
+export interface TagImportSummary {
+  created: number
+  existing: number
+  ignored: number
 }
 
 export interface Collection {

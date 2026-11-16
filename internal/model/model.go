@@ -104,10 +104,13 @@ type Session struct {
 	CoverItemID   *string `json:"coverItemId"` // user-picked label image, nil = derived
 }
 
-// Tag is a flat user-owned vocabulary term (D6, D23).
+// Tag is a flat user-owned vocabulary term (D6, D23). Family is derived from
+// the name: the prefix before the first ':' (e.g. "artist" for "artist:foo"),
+// or "" for an ungrouped tag.
 type Tag struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
+	Family    string `json:"family"`
 	ItemCount int    `json:"itemCount"`
 }
 
@@ -115,6 +118,29 @@ type Tag struct {
 type TagList struct {
 	Tags     []Tag `json:"tags"`
 	Untagged int   `json:"untagged"`
+}
+
+// TagImportSummary reports the outcome of merging an imported vocabulary.
+type TagImportSummary struct {
+	Created  int `json:"created"`
+	Existing int `json:"existing"`
+	Ignored  int `json:"ignored"`
+}
+
+// TagExport is the portable vocabulary file format.
+type TagExport struct {
+	Format     string           `json:"format"`
+	Version    int              `json:"version"`
+	ExportedAt int64            `json:"exportedAt"`
+	Tags       []TagExportEntry `json:"tags"`
+}
+
+// TagExportEntry carries one tag. Counts and families are informational; an
+// import only reads the name.
+type TagExportEntry struct {
+	Name      string `json:"name"`
+	Family    string `json:"family,omitempty"`
+	ItemCount int    `json:"itemCount"`
 }
 
 // Collection is a user-authored, ordered index (D21).

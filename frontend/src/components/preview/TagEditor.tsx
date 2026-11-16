@@ -1,8 +1,9 @@
 // Shared tag editor for the right preview panel. Used by both the single-item
 // and batch views: lists the vocabulary with a coverage state per tag and
 // add/remove controls that never close the surface.
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import type { Tag } from '../../types'
+import { familyLabel, groupTags } from '../tags'
 import './tag-editor.css'
 
 export interface TagEditorState {
@@ -35,6 +36,8 @@ export function TagEditor({
     if (!needle) return tags
     return tags.filter((tag) => tag.name.toLowerCase().includes(needle))
   }, [tags, filter])
+  const groups = useMemo(() => groupTags(visible), [visible])
+  const showFamilies = groups.some((group) => group.family)
 
   const create = () => {
     const next = name.trim()
@@ -55,46 +58,51 @@ export function TagEditor({
       />
 
       <div className="tag-editor-list">
-        {visible.map((tag) => {
-          const { on, total } = stateFor(tag.name)
-          const cover = on === 0 ? 'none' : on >= total ? 'all' : 'some'
-          return (
-            <div className="tag-editor-row" key={tag.id}>
-              <span
-                className={`tag-editor-cover${cover === 'all' ? ' is-all' : cover === 'some' ? ' is-some' : ''}`}
-                aria-hidden="true"
-              />
-              <span className="tag-editor-name" title={tag.name}>
-                {tag.name}
-              </span>
-              {showCounts && (
-                <span className="tag-editor-count">
-                  {on}/{total}
-                </span>
-              )}
-              <button
-                type="button"
-                className="tag-editor-add"
-                title={`Add “${tag.name}”`}
-                aria-label={`Add tag ${tag.name}`}
-                disabled={cover === 'all'}
-                onClick={() => onAdd(tag.name)}
-              >
-                +
-              </button>
-              <button
-                type="button"
-                className="tag-editor-remove"
-                title={`Remove “${tag.name}”`}
-                aria-label={`Remove tag ${tag.name}`}
-                disabled={cover === 'none'}
-                onClick={() => onRemove(tag.name)}
-              >
-                −
-              </button>
-            </div>
-          )
-        })}
+        {groups.map((group) => (
+          <Fragment key={group.family || 'general'}>
+            {showFamilies && <div className="tag-editor-family">{familyLabel(group.family)}</div>}
+            {group.tags.map((tag) => {
+              const { on, total } = stateFor(tag.name)
+              const cover = on === 0 ? 'none' : on >= total ? 'all' : 'some'
+              return (
+                <div className="tag-editor-row" key={tag.id}>
+                  <span
+                    className={`tag-editor-cover${cover === 'all' ? ' is-all' : cover === 'some' ? ' is-some' : ''}`}
+                    aria-hidden="true"
+                  />
+                  <span className="tag-editor-name" title={tag.name}>
+                    {tag.name}
+                  </span>
+                  {showCounts && (
+                    <span className="tag-editor-count">
+                      {on}/{total}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="tag-editor-add"
+                    title={`Add “${tag.name}”`}
+                    aria-label={`Add tag ${tag.name}`}
+                    disabled={cover === 'all'}
+                    onClick={() => onAdd(tag.name)}
+                  >
+                    +
+                  </button>
+                  <button
+                    type="button"
+                    className="tag-editor-remove"
+                    title={`Remove “${tag.name}”`}
+                    aria-label={`Remove tag ${tag.name}`}
+                    disabled={cover === 'none'}
+                    onClick={() => onRemove(tag.name)}
+                  >
+                    −
+                  </button>
+                </div>
+              )
+            })}
+          </Fragment>
+        ))}
         {visible.length === 0 && <div className="tag-editor-empty">no tags match</div>}
       </div>
 

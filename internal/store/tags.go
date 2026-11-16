@@ -27,6 +27,7 @@ func (s *Store) Tags() ([]model.Tag, error) {
 		if err := rows.Scan(&tag.ID, &tag.Name, &tag.ItemCount); err != nil {
 			return nil, err
 		}
+		tag.Family = tagFamily(tag.Name)
 		out = append(out, tag)
 	}
 	return out, rows.Err()
@@ -67,6 +68,7 @@ func (s *Store) GetTag(id string) (*model.Tag, error) {
 	if err != nil {
 		return nil, err
 	}
+	tag.Family = tagFamily(tag.Name)
 	return &tag, nil
 }
 
@@ -109,4 +111,69 @@ func ensureTag(q querier, name string) (string, error) {
 
 func ensureTagTx(tx *sql.Tx, name string) (string, error) {
 	return ensureTag(tx, name)
+}
+
+// ImportTags merges names into the vocabulary. Names are case-insensitive
+// identities, so existing tags are left untouched; nothing is renamed,
+// unassigned, or deleted. Families are derived from the name.
+func (s *Store) ImportTags(names []string) (model.TagImportSummary, error) {
+	var out model.TagImportSummary
+	tx, err := s.db.Begin()
+	if err != nil {
+		return out, err
+	}
+	defer tx.Rollback()
+
+	for _, raw := range names {
+		name := strings.TrimSpace(raw)
+		if !validTagName(name) {
+			out.Ignored++
+			continue
+		}
+		res, err := tx.Exec(
+			`INSERT INTO tags (id, name) VALUES (?, ?) ON CONFLICT(name) DO NOTHING`,
+			NewID(), name,
+		)
+		if err != nil {
+			return out, err
+		}
+		if n, _ := res.RowsAffected(); n > 0 {
+			out.Created++
+		} else {
+			out.Existing++
+		}
+	}
+	return out, tx.Commit()
+}
+
+// tagFamily derives the display family from a "family:name" tag. The prefix
+// must look like a namespace (a letter followed by letters/digits/_/-), so
+// ordinary names containing a colon are left ungrouped.
+func tagFamily(name string) string {
+	i := strings.IndexByte(name, ':')
+	if i <= 0 || i == len(name)-1 {
+		return ""
+	}
+	prefix := name[:i]
+	if len(prefix) > 32 {
+		return ""
+	}
+	for j := 0; j < len(prefix); j++ {
+		c := prefix[j]
+		switch {
+		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z':
+		case j > 0 && c >= '0' && c <= '9':
+		case j > 0 && (c == '_' || c == '-'):
+		default:
+			return ""
+		}
+	}
+	return strings.ToLower(prefix)
+}
+
+func validTagName(name string) bool {
+	if name == "" || len(name) > 200 {
+		return false
+	}
+	return !strings.ContainsAny(name, "\r\n\t")
 }
