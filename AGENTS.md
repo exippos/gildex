@@ -29,13 +29,11 @@ These rules govern how work is divided across models.
 
 ## Git & prototype pipeline
 
-`main` is the stable baseline. Prototypes never land on it by accident.
+`main` is the working branch. Commit directly to it unless stated otherwise.
 
-- **Layout.** One checkout, two branches only: `main` (stable baseline, tagged
-  `stable-pre-ui`) and `ui-flair` (the UI prototype).
-- **Branches.** Commit prototype work to `ui-flair`; do not create additional
-  branches. New experiments land there too, and `main` is only reached by an
-  explicitly approved merge.
+- **Layout.** One checkout, two branches: `main` (working branch) and
+  `ui-flair` (retired UI prototype — do not commit new work there).
+- **Branches.** Commit directly to `main`; do not create additional branches.
 - **Clean-tree gate.** `git status --porcelain` must be empty before creating,
   switching, or merging branches. Commit or stash first; never `git add -A`
   with untracked docs/design/scratch files present.
@@ -48,12 +46,9 @@ These rules govern how work is divided across models.
   any overlap. Subagents do not run builds or commits — the orchestrator
   integrates and verifies.
 - **Commit scope.** One concern per commit; code, docs, and design artifacts
-  live on separate branches/commits. No merge to `main` without explicit
-  approval.
-- **Proof before done.** Build the touched side and report `git status`,
-  `git log --oneline main..HEAD`, `git diff --stat main..HEAD`, and
-  `git rev-parse --short main` (must equal the baseline unless a merge was
-  approved).
+  live in separate commits.
+- **Proof before done.** Build the touched side and report `git status` and the
+  new commits (`git log --oneline -N`).
 
 ## UI references
 
@@ -63,7 +58,7 @@ at the repository root — no separate checkout:
 - `design/` — README plus the six `*-bento-ui.html` mockups and `refs/`
 - Catalogue, palette per mockup, and usage notes: `design/README.md`
 
-`design/` is tracked on `ui-flair` (absent when `main` is checked out).
+`design/` is tracked on `main`.
 
 Before changing UI, pick one mockup and name it in the task description; port
 its tokens rather than copying its CSS.
