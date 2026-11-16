@@ -7,7 +7,7 @@ import type { Surface } from '../../types'
 import { FolderTree } from '../folders/FolderTree'
 import { formatRange } from '../format'
 import { readDraggedItemIds } from '../groups/drag'
-import { familyLabel, groupTags } from '../tags'
+import { familyLabel, familyStyle, groupTags } from '../tags'
 import './left-rail.css'
 
 const TABS: ReadonlyArray<{ id: Surface; label: string }> = [
@@ -350,15 +350,21 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
               {tagGroups.map((group) => (
                 <Fragment key={group.family || 'general'}>
                   {showTagFamilies && (
-                    <div className="rail-tag-family">{familyLabel(group.family)}</div>
+                    <div
+                      className={`rail-tag-family${group.family ? ' is-family' : ''}`}
+                      style={familyStyle(group.family)}
+                    >
+                      {familyLabel(group.family)}
+                    </div>
                   )}
                   {group.tags.map((tag) => (
                     <button
                       key={tag.id}
                       type="button"
-                      className={`rail-row rail-tag-row${
+                      className={`rail-row rail-tag-row${tag.family ? ' is-family' : ''}${
                         activeTagFilters.includes(tag.name) ? ' is-active' : ''
                       }`}
+                      style={familyStyle(tag.family)}
                       aria-pressed={activeTagFilters.includes(tag.name)}
                       onClick={() => toggleTagFilter(tag.name)}
                     >

@@ -9,6 +9,12 @@
    shared; only palette, type and material tokens change. */
 
 :root {
+  /* Tag-family colours: the hue comes from the family, these tokens adapt the
+     saturation/lightness to the theme. */
+  --tag-family-sat: 58%;
+  --tag-family-light: 66%;
+  --tag-family-dim: 0.7;
+
   /* ---- structure (shared) ---- */
   --space: 4px;
   --radius-sm: 6px;
@@ -221,6 +227,10 @@ html[data-theme='sage'] {
    ======================================================================= */
 html[data-theme='copper'] {
   color-scheme: light;
+
+  --tag-family-sat: 46%;
+  --tag-family-light: 38%;
+  --tag-family-dim: 0.85;
 
   --bg: #faf7f2;
   --surface: #f3ede4;

@@ -3,7 +3,7 @@
 // add/remove controls that never close the surface.
 import { Fragment, useMemo, useState } from 'react'
 import type { Tag } from '../../types'
-import { familyLabel, groupTags } from '../tags'
+import { familyLabel, familyStyle, groupTags } from '../tags'
 import './tag-editor.css'
 
 export interface TagEditorState {
@@ -60,12 +60,23 @@ export function TagEditor({
       <div className="tag-editor-list">
         {groups.map((group) => (
           <Fragment key={group.family || 'general'}>
-            {showFamilies && <div className="tag-editor-family">{familyLabel(group.family)}</div>}
+            {showFamilies && (
+              <div
+                className={`tag-editor-family${group.family ? ' is-family' : ''}`}
+                style={familyStyle(group.family)}
+              >
+                {familyLabel(group.family)}
+              </div>
+            )}
             {group.tags.map((tag) => {
               const { on, total } = stateFor(tag.name)
               const cover = on === 0 ? 'none' : on >= total ? 'all' : 'some'
               return (
-                <div className="tag-editor-row" key={tag.id}>
+                <div
+                  className={`tag-editor-row${tag.family ? ' is-family' : ''}`}
+                  key={tag.id}
+                  style={familyStyle(tag.family)}
+                >
                   <span
                     className={`tag-editor-cover${cover === 'all' ? ' is-all' : cover === 'some' ? ' is-some' : ''}`}
                     aria-hidden="true"

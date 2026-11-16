@@ -2,7 +2,7 @@
 // add/remove semantics plus a create-new input.
 import { Fragment, useMemo, useState } from 'react'
 import { useStore } from '../../store'
-import { familyLabel, groupTags } from '../tags'
+import { familyLabel, familyStyle, groupTags } from '../tags'
 import './tag-picker.css'
 
 export function TagPicker({ onClose }: { onClose: () => void }) {
@@ -53,9 +53,20 @@ export function TagPicker({ onClose }: { onClose: () => void }) {
       <div className="tag-picker-list">
         {groups.map((group) => (
           <Fragment key={group.family || 'general'}>
-            {showFamilies && <div className="tag-picker-family">{familyLabel(group.family)}</div>}
+            {showFamilies && (
+              <div
+                className={`tag-picker-family${group.family ? ' is-family' : ''}`}
+                style={familyStyle(group.family)}
+              >
+                {familyLabel(group.family)}
+              </div>
+            )}
             {group.tags.map((tag) => (
-              <div className="tag-picker-row" key={tag.id}>
+              <div
+                className={`tag-picker-row${tag.family ? ' is-family' : ''}`}
+                key={tag.id}
+                style={familyStyle(tag.family)}
+              >
                 <span className="tag-picker-name" title={tag.name}>
                   {tag.name}
                 </span>

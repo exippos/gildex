@@ -230,8 +230,25 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
-  padding: 3px 9px 3px 10px;
+  padding: 3px 9px 3px 16px;
   line-height: 1.5;
+}
+
+/* family identity: a coloured rule at the row's edge, hue set inline */
+.rail-tag-row.is-family::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  border-radius: 1px;
+  background: hsl(var(--tag-hue) var(--tag-family-sat) var(--tag-family-light));
+  opacity: var(--tag-family-dim);
+}
+
+.rail-tag-row.is-active::before {
+  opacity: 1;
 }
 
 /* convention family heading inside the flat tag list */
@@ -242,6 +259,22 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-muted);
+}
+
+.rail-tag-family.is-family {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: hsl(var(--tag-hue) var(--tag-family-sat) var(--tag-family-light));
+}
+
+.rail-tag-family.is-family::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  background: currentColor;
 }
 
 /* dense one-liner: › name .......... count */

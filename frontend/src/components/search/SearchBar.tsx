@@ -2,6 +2,7 @@
 // `/` focuses the input from anywhere outside a text field.
 import { useEffect, useRef } from 'react'
 import { useStore, tagFilterLabel } from '../../store'
+import { familyFromName, familyStyle } from '../tags'
 import './search-bar.css'
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -62,20 +63,25 @@ export function SearchBar() {
 
       {activeTagFilters.length > 0 && (
         <div className="search-chips" aria-label="Active tag filters">
-          {activeTagFilters.map((name) => (
-            <button
-              key={name}
-              type="button"
-              className="search-chip"
-              onClick={() => toggleTagFilter(name)}
-              aria-label={`Remove tag filter ${tagFilterLabel(name)}`}
-            >
-              <span className="search-chip-name">{tagFilterLabel(name)}</span>
-              <span className="search-chip-x" aria-hidden="true">
-                ×
-              </span>
-            </button>
-          ))}
+          {activeTagFilters.map((name) => {
+            const family = familyFromName(name)
+            return (
+              <button
+                key={name}
+                type="button"
+                className={`search-chip${family ? ' is-family' : ''}`}
+                style={familyStyle(family)}
+                onClick={() => toggleTagFilter(name)}
+                aria-label={`Remove tag filter ${tagFilterLabel(name)}`}
+              >
+                {family && <span className="search-chip-family" aria-hidden="true" />}
+                <span className="search-chip-name">{tagFilterLabel(name)}</span>
+                <span className="search-chip-x" aria-hidden="true">
+                  ×
+                </span>
+              </button>
+            )
+          })}
           {activeTagFilters.length > 1 && (
             <button type="button" className="search-chips-clear" onClick={clearTagFilters}>
               clear all
