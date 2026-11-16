@@ -60,7 +60,8 @@
     - [X] Drag items to create collections
     - [X] Edit name, remove items from session/collection, add files to session manually
     - [X] Set an image as a group item image lable
-    - [ ] Side panel "edit" button bad placement
+    - [X] Side panel "edit" button bad placement
+
 
 ### 2.3 Tags
 - [X] Add multiple tags at once (do not close tagging menu after adding a tag)
