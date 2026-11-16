@@ -1,5 +1,5 @@
 // Left rail: nav (surface switcher) + per-surface content. Frosted fixed chrome.
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, DragEvent } from 'react'
 import { useStore, UNTAGGED_FILTER } from '../../store'
 import { thumbUrl } from '../../api'
@@ -44,6 +44,15 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [createOver, setCreateOver] = useState(false)
   const [dragError, setDragError] = useState<string | null>(null)
+  const bodyRef = useRef<HTMLDivElement | null>(null)
+
+  // Returning to Sessions/Collections restores the remembered row; keep it in
+  // view instead of leaving the list scrolled somewhere else.
+  useEffect(() => {
+    if (surface !== 'sessions' && surface !== 'collections') return
+    const row = bodyRef.current?.querySelector<HTMLElement>('.rail-list .rail-row.is-active')
+    row?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [surface, activeSessionId, activeCollectionId])
 
   const visibleTags = useMemo(() => {
     const needle = tagQuery.trim().toLowerCase()
@@ -145,7 +154,7 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
         })}
       </div>
 
-      <div className="rail-body">
+      <div className="rail-body" ref={bodyRef}>
         {surface === 'all' && (
           <>
             <div className="rail-label">library</div>

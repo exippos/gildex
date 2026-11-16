@@ -169,6 +169,7 @@ export function FolderTree() {
   // Expansion is local UI state; the active folder lives in the store.
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
   const initialized = useRef(false)
+  const treeRef = useRef<HTMLDivElement | null>(null)
 
   const activeKey = `${activeSourceId ?? INBOX_SOURCE}::${activeFolder ?? ''}`
   const isRootActive = activeSourceId === null && activeFolder === null
@@ -209,6 +210,14 @@ export function FolderTree() {
     })
   }, [activeFolder, activeSourceId, folders])
 
+  // The remembered folder may sit deep in the tree. Expansion above is restored
+  // by the effect above; once the row renders, bring it back into view.
+  useEffect(() => {
+    if (activeFolder === null) return
+    const row = treeRef.current?.querySelector<HTMLElement>('.folder-name.is-active')
+    row?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [activeFolder, activeSourceId, expanded])
+
   const toggle = (key: string) => {
     setExpanded((current) => {
       const next = new Set(current)
@@ -230,7 +239,7 @@ export function FolderTree() {
 
   return (
     <div className="folder-tree-container">
-      <div className="folder-tree">
+      <div className="folder-tree" ref={treeRef}>
         <div className="folder-row folder-root-row">
           <span className="folder-chevron is-empty" aria-hidden="true" />
           <FolderIcon root />
