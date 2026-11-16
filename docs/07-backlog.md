@@ -47,6 +47,8 @@
     - [X] Missing items grayed-out original thumbnail
     - [ ] Relocate missing items option
     - [ ] Flag "missing" items after rescan (if not found on disk) 
+- [ ] Sort by rating, status, favorite
+- [ ] Remeber last selected session/collection/folder on tab change
 
 - [ ] Setting icon -> gear
 - [ ] Remove theme change pick from header
