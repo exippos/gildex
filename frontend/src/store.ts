@@ -285,6 +285,8 @@ interface AppState {
   selectRange: (id: string) => void
   clearSelection: () => void
   selectAllVisible: () => void
+  /** Select every loaded item in a session or collection group. */
+  selectGroupItems: (type: GroupType, id: string) => Promise<void>
 
   setPreviewItemId: (id: string | null) => void
   openInspector: (ownerType: OwnerType, ownerId: string, ownerLabel?: string) => Promise<void>
@@ -685,6 +687,22 @@ export const useStore = create<AppState>((set, get) => ({
   selectAllVisible: () => {
     const ids = get().items.map((i) => i.id)
     set({ selection: ids })
+  },
+  selectGroupItems: async (type, id) => {
+    let ids: string[]
+    if (type === 'session') {
+      ids = get()
+        .items.filter((item) => item.sessionId === id)
+        .map((item) => item.id)
+    } else {
+      // A collapsed collection tile may not have loaded its page yet.
+      const { search, activeTagFilters, sort, sortDir } = get()
+      const key = collectionItemsKey(id, search, activeTagFilters, sort, sortDir)
+      if (!get().collectionItems[key]) await get().loadCollectionItems(id)
+      ids = (get().collectionItems[key] ?? []).map((item) => item.id)
+    }
+    if (!ids.length) return
+    set({ selection: ids, lastSelectedId: ids[0] })
   },
 
   setPreviewItemId: (id) => set({ previewItemId: id }),

@@ -412,6 +412,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const selection = useStore((s) => s.selection)
   const loading = useStore((s) => s.loadingItems)
   const clearSelection = useStore((s) => s.clearSelection)
+  const selectGroupItems = useStore((s) => s.selectGroupItems)
   const addToGroup = useStore((s) => s.addToGroup)
   const batchSet = useStore((s) => s.batchSet)
   const batchRemove = useStore((s) => s.batchRemove)
@@ -768,6 +769,61 @@ export function Grid({ cellSize }: { cellSize: number }) {
     return targets
   }
 
+  type SelectionScope = {
+    source: GroupSource
+    id: string
+    label: string
+    count: number
+  }
+
+  // The group whose items "select all" should target for this context menu:
+  // the expanded tile, or the session/collection the grid is currently scoped to.
+  const selectionScope = (group: Group | null): SelectionScope | null => {
+    if (group?.id) {
+      return {
+        source: group.source,
+        id: group.id,
+        label: group.label,
+        count: group.count,
+      }
+    }
+    if (surface === 'sessions' && activeSessionId) {
+      const session = sessions.find((entry) => entry.id === activeSessionId)
+      if (session) {
+        return {
+          source: 'session',
+          id: session.id,
+          label: session.label,
+          count: session.itemCount,
+        }
+      }
+    }
+    if (surface === 'collections' && activeCollectionId) {
+      const collection = collections.find((entry) => entry.id === activeCollectionId)
+      if (collection) {
+        return {
+          source: 'collection',
+          id: collection.id,
+          label: collection.name,
+          count: collection.itemCount,
+        }
+      }
+    }
+    return null
+  }
+
+  const selectAllEntry = (scope: SelectionScope): MenuEntry[] => [
+    {
+      kind: 'item',
+      label: `Select all in ${scope.source} — ${scope.label}`,
+      hint: `${scope.count} ${scope.count === 1 ? 'item' : 'items'}`,
+      onSelect: () => {
+        void selectGroupItems(scope.source, scope.id)
+      },
+    },
+    { kind: 'separator' },
+  ]
+
   const buildCellMenu = (item: Item, group: Group | null): MenuEntry[] => {
     const entries: MenuEntry[] = []
     const targets = coverTargets(item, group)
@@ -793,6 +849,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
     }
 
     if (entries.length > 0) entries.push({ kind: 'separator' })
+
+    const scope = selectionScope(group)
+    if (scope) entries.push(...selectAllEntry(scope))
 
     // Batch actions act on the whole selection, as the floating toolbar does.
     const ids = selection.includes(item.id) ? selection : [item.id]
@@ -869,6 +928,14 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const buildTileMenu = (group: Group, open: boolean): MenuEntry[] => {
     const entries: MenuEntry[] = []
     if (group.id) {
+      entries.push(
+        ...selectAllEntry({
+          source: group.source,
+          id: group.id,
+          label: group.label,
+          count: group.count,
+        }),
+      )
       entries.push({
         kind: 'item',
         label: group.source === 'session' ? 'Edit session…' : 'Edit collection…',
