@@ -66,6 +66,7 @@
 - [X] Add "untagged" tag
 - [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545"
 - [X] Import/Export tag list
+- [X] Tag family colours (derived from the family name)
 
 ### Settings menu
 - [X] Settings menu
