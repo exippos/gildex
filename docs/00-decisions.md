@@ -504,5 +504,6 @@ without a second namespace field. Vocabulary-only transfer is safe across
 libraries because assignments are catalog-specific.
 
 **Affects.** Architecture §3.4; Vision §7.2; Feature list §2.2/§2.9; UI layout
-§2 and §6; README API table. Tag aliases/implications, family colors, and
-family-scoped filtering remain deferred.
+§2 and §6; README API table. Tag aliases/implications and user-assigned
+family colours remain deferred; colours are currently derived from the family
+name against the theme palette.

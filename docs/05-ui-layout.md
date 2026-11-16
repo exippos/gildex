@@ -45,8 +45,9 @@ Two stacked regions:
    - *Folders* — a path-tree browse view, **directories only** (no files).
    - *Tags* — a **scrollable vertical list** of tags, with a filter box above
      for large vocabularies. Convention families (`artist:`, `character:`, …)
-     render as small group headings: ungrouped first, then preferred families,
-     then the rest alphabetically.
+     render as small group headings with a derived accent colour; ungrouped
+     first, then preferred families, then the rest alphabetically. Each row
+     carries a muted bar in its family's colour.
    - *Sessions / Collections* — their respective lists.
    - *Timeline* — no list; the rail collapses to the nav section.
 

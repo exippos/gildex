@@ -84,8 +84,9 @@ Breadth is secondary.
 ## 3. Deferred (post-v1) — D28
 
 Lineage (`lineage_edge`), auto-tagging, embeddings/semantic search, multi-library,
-multiple roots, nested collections, tag aliases/implications, family colors,
-video regions, advanced query syntax, consolidated/archive export, eco mode.
+multiple roots, nested collections, tag aliases/implications, user-assigned
+family colours, video regions, advanced query syntax, consolidated/archive
+export, eco mode.
 
 ## 4. Priority summary
 

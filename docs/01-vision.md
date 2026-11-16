@@ -157,7 +157,8 @@ Prototype-level behavior:
   folders and not free-text fragments.
 - **Tag families are a naming convention**: the text before the first `:` groups
   tags for display (`artist:foo` → family `artist`). Families are free-form and
-  case-insensitive; there is no separate family entity.
+  case-insensitive; each gets a stable accent colour derived from its name, and
+  there is no separate family entity.
 - **Batch tagging is a first-class interaction**: select many items, apply or
   remove tags in one action, with a picker over existing tags plus quick create.
 - Tags drive filtering and search over the catalog.
