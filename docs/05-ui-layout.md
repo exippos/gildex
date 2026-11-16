@@ -83,8 +83,9 @@ surface, D7). Owner-polymorphic by current selection:
   (keypress); both resizable via the gilt-seam handle.
 - Widths, active surface, and density preset are **remembered per surface**.
 - The rail remembers the last selected session, collection, or folder for each
-  surface, so switching tabs returns to that row instead of "All". The
-  selection is in-memory and resets when a different library opens.
+  surface, so switching tabs returns to that row instead of "All" and scrolls
+  it into view. The selection is in-memory and resets when a different library
+  opens.
 - Panel split-lines carry the gilt hairline + stepped tick (see design language).
 
 ## 6. Settings
