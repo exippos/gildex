@@ -61,7 +61,7 @@
     - [ ] Side panel "edit" button bad placement
 
 ### 2.3 Tags
-- [ ] Add multiple tags at once (do not close tagging menu after adding a tag)
+- [X] Add multiple tags at once (do not close tagging menu after adding a tag)
 - [ ] On tag list (on the side panel), the "clear N active" should not move the tag list.
 - [X] Add "untagged" tag
 - [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545"
