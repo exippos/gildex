@@ -11,6 +11,7 @@ import {
   formatDuration,
   formatRange,
 } from '../format'
+import { resolveMediaPath } from '../paths'
 import { BatchPreview } from './BatchPreview'
 import { TagEditor } from './TagEditor'
 import './right-preview.css'
@@ -21,22 +22,37 @@ const STATUSES: ReadonlyArray<{ id: Status; label: string }> = [
   { id: 'final', label: 'final' },
 ]
 
-function MetaRow({ label, value }: { label: string; value: string }) {
+function MetaRow({ label, value, title }: { label: string; value: string; title?: string }) {
   if (!value) return null
   return (
     <>
       <dt>{label}</dt>
-      <dd>{value}</dd>
+      <dd title={title}>{value}</dd>
     </>
   )
 }
 
 function Media({ item }: { item: Item }) {
+  const sources = useStore((s) => s.sources)
+  const libraryRoot = useStore((s) => s.library?.root ?? '')
+  const path = resolveMediaPath(item, sources, libraryRoot)
+
   if (item.state === 'missing') {
+    const thumb = thumbUrl(item.thumbnailPath)
     return (
       <div className="preview-media preview-missing">
-        <span className="preview-danger-tick" aria-hidden="true" />
+        {thumb ? (
+          <div className="preview-missing-frame">
+            <img className="preview-missing-thumb" src={thumb} alt="" />
+          </div>
+        ) : (
+          <span className="preview-danger-tick" aria-hidden="true" />
+        )}
+        <span className="preview-danger-badge">missing</span>
         <span className="display">missing from disk</span>
+        <span className="preview-missing-path" title={path}>
+          {path}
+        </span>
       </div>
     )
   }
@@ -68,8 +84,11 @@ function ItemPreview({ item }: { item: Item }) {
   const openInspector = useStore((s) => s.openInspector)
   const tags = useStore((s) => s.tags)
   const tagItem = useStore((s) => s.tagItem)
+  const sources = useStore((s) => s.sources)
+  const libraryRoot = useStore((s) => s.library?.root ?? '')
 
   const fileName = item.relativePath.split('/').filter(Boolean).pop() ?? item.relativePath
+  const mediaPath = resolveMediaPath(item, sources, libraryRoot)
   const dimensions =
     item.width > 0 && item.height > 0 ? `${item.width} × ${item.height}` : ''
   const params: string[] = []
@@ -181,6 +200,7 @@ function ItemPreview({ item }: { item: Item }) {
         <dl className="preview-meta">
           <MetaRow label="kind" value={item.kind} />
           <MetaRow label="format" value={item.format} />
+          <MetaRow label="path" value={mediaPath} title={mediaPath} />
           <MetaRow label="dimensions" value={dimensions} />
           <MetaRow label="size" value={formatBytes(item.fileSize)} />
           <MetaRow label="duration" value={formatDuration(item.duration)} />

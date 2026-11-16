@@ -30,6 +30,7 @@ export interface Item {
   id: string
   contentHash: string
   relativePath: string
+  originPath: string // absolute path at last import; clue when the source is gone
   sourceId: string | null
   kind: Kind
   format: string

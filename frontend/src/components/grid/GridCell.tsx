@@ -8,6 +8,7 @@ import { frameUrl, thumbUrl } from '../../api'
 import type { Item } from '../../types'
 import { formatDuration } from '../format'
 import { setDraggedItems } from '../groups/drag'
+import { resolveMediaPath } from '../paths'
 import './grid-cell.css'
 
 interface GridCellProps {
@@ -56,7 +57,6 @@ function Placeholder({ item }: { item: Item }) {
     return (
       <span className="cell-placeholder is-missing">
         <MissingGlyph />
-        <span className="cell-danger-tick" aria-hidden="true" />
       </span>
     )
   }
@@ -149,9 +149,13 @@ export function GridCell({ item, selected, isCover = false, phase, style, onMenu
   const selectRange = useStore((s) => s.selectRange)
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
   const openInspector = useStore((s) => s.openInspector)
+  const sources = useStore((s) => s.sources)
+  const libraryRoot = useStore((s) => s.library?.root ?? '')
 
   const thumb = thumbUrl(item.thumbnailPath)
-  const canShowThumb = Boolean(thumb) && item.state !== 'missing'
+  const missing = item.state === 'missing'
+  const canShowThumb = Boolean(thumb)
+  const mediaPath = resolveMediaPath(item, sources, libraryRoot)
 
   // Right-clicking an item outside the current selection selects it first;
   // right-clicking inside the selection keeps the batch together.
@@ -164,12 +168,12 @@ export function GridCell({ item, selected, isCover = false, phase, style, onMenu
   return (
     <button
       type="button"
-      className={`grid-cell${selected ? ' is-selected' : ''}${phase ? ` is-${phase === 'enter' ? 'entering' : 'exiting'}` : ''}`}
+      className={`grid-cell${selected ? ' is-selected' : ''}${missing ? ' is-missing' : ''}${phase ? ` is-${phase === 'enter' ? 'entering' : 'exiting'}` : ''}`}
       style={style}
       aria-pressed={selected}
-      aria-label={`${item.kind} ${item.relativePath}`}
+      aria-label={`${item.kind} ${missing ? 'missing ' : ''}${mediaPath}`}
       aria-haspopup="menu"
-      title={item.relativePath}
+      title={mediaPath}
       draggable
       onDragStart={(event) => {
         // Dragging a selected cell carries the whole selection; dragging an
@@ -205,12 +209,27 @@ export function GridCell({ item, selected, isCover = false, phase, style, onMenu
       }}
     >
       {canShowThumb && thumb ? (
-        <HoverVideo item={item} thumb={thumb} />
+        missing ? (
+          <span className="cell-hover-video">
+            <img
+              className="cell-thumb is-missing"
+              src={thumb}
+              alt=""
+              loading="lazy"
+              draggable={false}
+            />
+          </span>
+        ) : (
+          <HoverVideo item={item} thumb={thumb} />
+        )
       ) : (
         <Placeholder item={item} />
       )}
 
       <span className="cell-hover" aria-hidden="true" />
+
+      {missing && <span className="cell-missing-frame" aria-hidden="true" />}
+      {missing && <span className="cell-missing-badge">missing</span>}
 
       {item.kind === 'video' && item.state !== 'missing' && (
         <span className="cell-badge" aria-hidden="true">

@@ -63,6 +63,7 @@ type Item struct {
 	ID             string            `json:"id"`
 	ContentHash    string            `json:"contentHash"`
 	RelativePath   string            `json:"relativePath"`
+	OriginPath     string            `json:"originPath"` // absolute path at last import; clue when the source is gone
 	SourceID       *string           `json:"sourceId"`
 	Kind           Kind              `json:"kind"`
 	Format         string            `json:"format"`

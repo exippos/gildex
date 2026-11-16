@@ -99,6 +99,47 @@
   font-size: 15px;
 }
 
+.preview-missing-frame {
+  width: 100%;
+  overflow: hidden;
+  border: 2px solid var(--danger);
+  border-radius: var(--radius-sm);
+}
+
+.preview-missing-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.85;
+}
+
+.preview-danger-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 2px 7px;
+  border: 1px solid var(--danger);
+  border-radius: 3px;
+  background: var(--scrim);
+  color: var(--danger);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.preview-missing-path {
+  width: 100%;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 /* ---- sections ---- */
 
 .preview-section {

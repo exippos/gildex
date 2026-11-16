@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { mediaUrl, thumbUrl } from '../../api'
 import { useStore } from '../../store'
 import type { Item, Status } from '../../types'
+import { resolveMediaPath } from '../paths'
 import './story-view.css'
 
 function basename(path: string): string {
@@ -37,6 +38,8 @@ const STATUSES: Status[] = ['draft', 'wip', 'final']
 export function StoryView({ item }: { item: Item }) {
   const saveItem = useStore((s) => s.saveItem)
   const toggleFavorite = useStore((s) => s.toggleFavorite)
+  const sources = useStore((s) => s.sources)
+  const libraryRoot = useStore((s) => s.library?.root ?? '')
 
   const statusId = useId()
   const [editing, setEditing] = useState(false)
@@ -49,6 +52,7 @@ export function StoryView({ item }: { item: Item }) {
 
   const missing = item.state === 'missing'
   const fileLabel = basename(item.relativePath) || item.id
+  const mediaPath = resolveMediaPath(item, sources, libraryRoot)
   const hasGeneration =
     Boolean(item.prompt) ||
     Boolean(item.negativePrompt) ||
@@ -309,6 +313,10 @@ export function StoryView({ item }: { item: Item }) {
             <dt>format</dt>
             <dd>{item.format ? item.format.toUpperCase() : item.kind}</dd>
           </div>
+          <div className="story-file-row">
+            <dt>path</dt>
+            <dd title={mediaPath}>{mediaPath}</dd>
+          </div>
           {item.width > 0 && item.height > 0 && (
             <div className="story-file-row">
               <dt>dimensions</dt>
@@ -339,10 +347,6 @@ export function StoryView({ item }: { item: Item }) {
             </dd>
           </div>
         </dl>
-
-        <p className="story-source">
-          <span className="display">source</span> {item.relativePath}
-        </p>
 
         {error && <p className="story-error">{error}</p>}
       </div>

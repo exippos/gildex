@@ -13,6 +13,7 @@ import (
 type ImportItem struct {
 	ContentHash    string
 	RelativePath   string
+	OriginPath     string
 	SourceID       *string
 	Kind           model.Kind
 	Format         string
@@ -63,8 +64,8 @@ func (s *Store) FindByHash(hash string) (*Existing, error) {
 }
 
 // UpdateItemPath records a moved file and marks the item present again.
-func (s *Store) UpdateItemPath(id, relativePath string) error {
-	_, err := s.db.Exec(`UPDATE items SET relative_path = ?, state = 'present' WHERE id = ?`, relativePath, id)
+func (s *Store) UpdateItemPath(id, relativePath, originPath string) error {
+	_, err := s.db.Exec(`UPDATE items SET relative_path = ?, origin_path = ?, state = 'present' WHERE id = ?`, relativePath, originPath, id)
 	return err
 }
 
@@ -96,11 +97,11 @@ func (s *Store) UpsertImport(it ImportItem) error {
 	case errors.Is(err, sql.ErrNoRows):
 		id = NewID()
 		_, err = tx.Exec(`INSERT INTO items (
-			id, content_hash, relative_path, kind, format, file_size, timestamp, width, height,
+			id, content_hash, relative_path, origin_path, kind, format, file_size, timestamp, width, height,
 			duration, favorite, rating, status, state, session_id, prompt, negative_prompt,
 			model_name, seed, steps, sampler, cfg_scale, generated_at, thumbnail_path, frame_count, phash, manual_fields, source_id
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 'draft', 'present', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)`,
-			id, it.ContentHash, it.RelativePath, string(it.Kind), it.Format, it.FileSize,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 'draft', 'present', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)`,
+			id, it.ContentHash, it.RelativePath, it.OriginPath, string(it.Kind), it.Format, it.FileSize,
 			it.Timestamp, it.Width, it.Height, floatArg(it.Duration),
 			strArg(it.Prompt), strArg(it.NegativePrompt), strArg(it.ModelName),
 			intArg(it.Seed), intArg(it.Steps), strArg(it.Sampler), floatArg(it.CFGScale),
@@ -114,12 +115,12 @@ func (s *Store) UpsertImport(it ImportItem) error {
 	default:
 		manualSet := splitManual(manual)
 		sets := []string{
-			"relative_path = ?", "kind = ?", "format = ?", "file_size = ?",
+			"relative_path = ?", "origin_path = ?", "kind = ?", "format = ?", "file_size = ?",
 			"timestamp = ?", "width = ?", "height = ?", "duration = ?",
 			"thumbnail_path = ?", "frame_count = ?", "phash = ?", "state = 'present'", "source_id = ?",
 		}
 		args := []any{
-			it.RelativePath, string(it.Kind), it.Format, it.FileSize,
+			it.RelativePath, it.OriginPath, string(it.Kind), it.Format, it.FileSize,
 			it.Timestamp, it.Width, it.Height, floatArg(it.Duration),
 			it.ThumbnailPath, it.FrameCount, it.PHash, strArg(it.SourceID),
 		}

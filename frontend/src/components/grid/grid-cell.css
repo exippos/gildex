@@ -76,13 +76,39 @@
   opacity: 0.8;
 }
 
-.cell-danger-tick {
+/* a missing item keeps its poster, desaturated, with a danger frame + badge */
+.cell-thumb.is-missing {
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.8;
+}
+
+.cell-missing-frame {
   position: absolute;
-  left: 8px;
+  inset: 0;
+  z-index: 2;
+  border: 2px solid var(--danger);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.cell-missing-badge {
+  position: absolute;
   top: 8px;
-  width: 3px;
-  height: 14px;
-  background: var(--danger);
+  left: 50%;
+  z-index: 3;
+  padding: 2px 6px;
+  border: 1px solid var(--danger);
+  border-radius: 3px;
+  background: var(--scrim);
+  color: var(--danger);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 /* D42: a few thin vertical bars of varying height, like a rough spectrogram. */

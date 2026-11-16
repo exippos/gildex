@@ -493,7 +493,7 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 		// Move detection is within a source only (D1); the same file seen from a
 		// different source is a duplicate, not a move.
 		if existing.RelativePath != f.rel && sameSource(existing.SourceID, sourceID) {
-			return st.UpdateItemPath(existing.ID, f.rel)
+			return st.UpdateItemPath(existing.ID, f.rel, filepath.ToSlash(f.abs))
 		}
 	}
 
@@ -512,6 +512,7 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 	item := store.ImportItem{
 		ContentHash:  hash,
 		RelativePath: f.rel,
+		OriginPath:   filepath.ToSlash(f.abs),
 		SourceID:     sourceID,
 		Kind:         kind,
 		Format:       format,

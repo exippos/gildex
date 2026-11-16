@@ -435,19 +435,6 @@
   background: var(--danger);
 }
 
-.story-source {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.45;
-  color: var(--text-muted);
-  overflow-wrap: anywhere;
-}
-.story-source .display {
-  color: var(--text-muted);
-  margin-right: 4px;
-  border-bottom: 1px solid var(--hairline);
-}
-
 .story-error {
   margin: 0;
   font-size: 11px;

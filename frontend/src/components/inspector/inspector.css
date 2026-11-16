@@ -203,15 +203,26 @@
   background: var(--surface);
 }
 .insp-thumb.is-missing {
-  opacity: 0.55;
+  border-color: var(--danger);
 }
-.insp-thumb-tick {
+.insp-thumb.is-missing img {
+  filter: grayscale(1) brightness(0.55);
+}
+.insp-missing-badge {
   position: absolute;
   left: 4px;
   bottom: 4px;
-  width: 2px;
-  height: 10px;
-  background: var(--danger);
+  padding: 1px 4px;
+  border: 1px solid var(--danger);
+  border-radius: 2px;
+  background: var(--scrim);
+  color: var(--danger);
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 
 .insp-note {

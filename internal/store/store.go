@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS items (
   id              TEXT PRIMARY KEY,
   content_hash    TEXT NOT NULL UNIQUE,
   relative_path   TEXT NOT NULL,
+  origin_path     TEXT NOT NULL DEFAULT '',
   kind            TEXT NOT NULL,
   format          TEXT NOT NULL,
   file_size       INTEGER NOT NULL DEFAULT 0,
@@ -178,6 +179,7 @@ func migrate(db *sql.DB) error {
 		{"collections", "cover_item_id", `ALTER TABLE collections ADD COLUMN cover_item_id TEXT`},
 		{"items", "source_id", `ALTER TABLE items ADD COLUMN source_id TEXT`},
 		{"items", "frame_count", `ALTER TABLE items ADD COLUMN frame_count INTEGER NOT NULL DEFAULT 0`},
+		{"items", "origin_path", `ALTER TABLE items ADD COLUMN origin_path TEXT NOT NULL DEFAULT ''`},
 	}
 	for _, c := range columns {
 		ok, err := hasColumn(db, c.table, c.column)
@@ -246,7 +248,7 @@ func NewID() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
 
-const itemCols = `i.id, i.content_hash, i.relative_path, i.kind, i.format, i.file_size,
+const itemCols = `i.id, i.content_hash, i.relative_path, i.origin_path, i.kind, i.format, i.file_size,
 	i.timestamp, i.width, i.height, i.duration, i.favorite, i.rating, i.status, i.state,
 	i.session_id, i.prompt, i.negative_prompt, i.model_name, i.seed, i.steps, i.sampler,
 	i.cfg_scale, i.generated_at, i.thumbnail_path, i.frame_count, i.source_id`
@@ -266,7 +268,7 @@ func scanItem(sc interface{ Scan(dest ...any) error }) (*model.Item, error) {
 		sourceID                 sql.NullString
 	)
 	err := sc.Scan(
-		&it.ID, &it.ContentHash, &it.RelativePath, &kind, &format, &it.FileSize,
+		&it.ID, &it.ContentHash, &it.RelativePath, &it.OriginPath, &kind, &format, &it.FileSize,
 		&it.Timestamp, &it.Width, &it.Height, &duration, &favorite, &it.Rating, &status, &state,
 		&sessionID, &prompt, &negative, &modelN, &seed, &steps, &sampler,
 		&cfg, &generatedAt, &it.ThumbnailPath, &it.FrameCount, &sourceID,

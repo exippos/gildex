@@ -51,7 +51,7 @@ function ThumbStrip({ items, onOpen }: { items: Item[]; onOpen: (item: Item) => 
             ) : (
               <span className="insp-thumb-empty" aria-hidden="true" />
             )}
-            {it.state === 'missing' && <span className="insp-thumb-tick" aria-hidden="true" />}
+            {it.state === 'missing' && <span className="insp-missing-badge">missing</span>}
           </button>
         )
       })}
