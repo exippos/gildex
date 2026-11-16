@@ -23,11 +23,11 @@ export function TagPicker() {
   const showFamilies = groups.some((group) => group.family)
 
   const add = (tagName: string) => {
-    void batchTag([tagName], [])
+    void batchTag([tagName], [], { keep: true })
   }
 
   const remove = (tagName: string) => {
-    void batchTag([], [tagName])
+    void batchTag([], [tagName], { keep: true })
   }
 
   const create = () => {
