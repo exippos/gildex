@@ -1,11 +1,12 @@
 // Popover tag picker for the batch toolbar. Lists the vocabulary with
-// add/remove semantics plus a create-new input.
+// add/remove semantics plus a create-new input. It stays open after each
+// action so several tags can be applied in one pass.
 import { Fragment, useMemo, useState } from 'react'
 import { useStore } from '../../store'
 import { familyLabel, familyStyle, groupTags } from '../tags'
 import './tag-picker.css'
 
-export function TagPicker({ onClose }: { onClose: () => void }) {
+export function TagPicker() {
   const tags = useStore((s) => s.tags)
   const batchTag = useStore((s) => s.batchTag)
   const createTag = useStore((s) => s.createTag)
@@ -22,12 +23,10 @@ export function TagPicker({ onClose }: { onClose: () => void }) {
   const showFamilies = groups.some((group) => group.family)
 
   const add = (tagName: string) => {
-    onClose()
     void batchTag([tagName], [])
   }
 
   const remove = (tagName: string) => {
-    onClose()
     void batchTag([], [tagName])
   }
 

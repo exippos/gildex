@@ -131,7 +131,7 @@ export function BatchToolbar() {
         Clear
       </button>
 
-      {popover === 'tag' && <TagPicker onClose={() => setPopover(null)} />}
+      {popover === 'tag' && <TagPicker />}
 
       {popover === 'rate' && (
         <div className="batch-popover batch-rate" role="menu" aria-label="Set rating">
