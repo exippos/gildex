@@ -3,7 +3,7 @@
 // destructive actions. Mirrors the floating BatchToolbar but stays open.
 import { useMemo } from 'react'
 import { thumbUrl } from '../../api'
-import { useStore } from '../../store'
+import { resolveItems, useStore } from '../../store'
 import type { Status } from '../../types'
 import { STATUSES } from '../grid/statuses'
 import { TagEditor } from './TagEditor'
@@ -14,6 +14,7 @@ const MAX_THUMBS = 12
 export function BatchPreview() {
   const selection = useStore((s) => s.selection)
   const items = useStore((s) => s.items)
+  const collectionItems = useStore((s) => s.collectionItems)
   const tags = useStore((s) => s.tags)
   const batchTag = useStore((s) => s.batchTag)
   const batchSet = useStore((s) => s.batchSet)
@@ -22,10 +23,11 @@ export function BatchPreview() {
   const openCollectionPicker = useStore((s) => s.openCollectionPicker)
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
 
-  const selectedSet = useMemo(() => new Set(selection), [selection])
+  // Expanded collection tiles render from the collection caches, so a
+  // selection may hold ids that are absent from the main `items` page.
   const selectedItems = useMemo(
-    () => items.filter((item) => selectedSet.has(item.id)),
-    [items, selectedSet],
+    () => resolveItems(items, collectionItems, selection),
+    [items, collectionItems, selection],
   )
 
   const count = selection.length

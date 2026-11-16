@@ -1,9 +1,9 @@
 // Right preview (D7): read-only triage. Owner-polymorphic — item, session,
 // collection, or a minimal folder/tag line. Frosted fixed chrome.
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { mediaUrl, thumbUrl } from '../../api'
-import { useStore, tagFilterLabel } from '../../store'
+import { findCachedItem, useStore, tagFilterLabel } from '../../store'
 import type { Collection, Item, Session, Status } from '../../types'
 import {
   formatBytes,
@@ -350,6 +350,7 @@ function CollectionPreview({
 export function RightPreview({ style }: { style?: CSSProperties }) {
   const previewItemId = useStore((s) => s.previewItemId)
   const items = useStore((s) => s.items)
+  const collectionItems = useStore((s) => s.collectionItems)
   const sessions = useStore((s) => s.sessions)
   const collections = useStore((s) => s.collections)
   const surface = useStore((s) => s.surface)
@@ -360,7 +361,13 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
   const itemsTotal = useStore((s) => s.itemsTotal)
   const selection = useStore((s) => s.selection)
 
-  const found = previewItemId ? items.find((item) => item.id === previewItemId) ?? null : null
+  const found = useMemo(() => {
+    if (!previewItemId) return null
+    return (
+      items.find((item) => item.id === previewItemId) ??
+      findCachedItem(collectionItems, previewItemId)
+    )
+  }, [previewItemId, items, collectionItems])
   const lastItemRef = useRef<Item | null>(null)
   if (found) lastItemRef.current = found
   const item =

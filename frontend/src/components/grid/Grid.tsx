@@ -5,7 +5,7 @@
 // the shared grid flow instead of giving them a block of their own.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { collectionItemsKey, useStore } from '../../store'
+import { collectionItemsKey, resolveItems, useStore } from '../../store'
 import { thumbUrl } from '../../api'
 import type { Collection, GroupType, Item, Session } from '../../types'
 import { ContextMenu, type MenuEntry } from '../common/ContextMenu'
@@ -796,7 +796,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
 
     // Batch actions act on the whole selection, as the floating toolbar does.
     const ids = selection.includes(item.id) ? selection : [item.id]
-    const chosen = items.filter((entry) => ids.includes(entry.id))
+    const chosen = resolveItems(items, collectionItems, ids)
     const allFavorite = chosen.length > 0 && chosen.every((entry) => entry.favorite)
     const uniformRating =
       chosen.length > 0 && chosen.every((entry) => entry.rating === chosen[0].rating)

@@ -1,7 +1,7 @@
 // Floating batch toolbar (D24) — appears whenever the selection is non-empty.
 // Opaque chip, flat, no blur (not fixed chrome).
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useStore } from '../../store'
+import { useStore, resolveItems } from '../../store'
 import type { Status } from '../../types'
 import { TagPicker } from './TagPicker'
 import { STATUSES } from './statuses'
@@ -12,6 +12,7 @@ type Popover = 'tag' | 'rate' | 'status' | null
 export function BatchToolbar() {
   const selection = useStore((s) => s.selection)
   const items = useStore((s) => s.items)
+  const collectionItems = useStore((s) => s.collectionItems)
   const batchSet = useStore((s) => s.batchSet)
   const batchRemove = useStore((s) => s.batchRemove)
   const clearSelection = useStore((s) => s.clearSelection)
@@ -40,10 +41,9 @@ export function BatchToolbar() {
 
   const allFavorite = useMemo(() => {
     if (selection.length === 0) return false
-    const selected = new Set(selection)
-    const selItems = items.filter((item) => selected.has(item.id))
+    const selItems = resolveItems(items, collectionItems, selection)
     return selItems.length > 0 && selItems.every((item) => item.favorite)
-  }, [selection, items])
+  }, [selection, items, collectionItems])
 
   if (selection.length === 0) return null
 

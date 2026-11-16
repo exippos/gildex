@@ -69,6 +69,54 @@ export function collectionItemsKey(
   return [id, search, tagFilters.join(','), sort, sortDir].join('|')
 }
 
+/**
+ * Look up an item in the lazily cached collection pages. Expanded collection
+ * groups render from these caches rather than the main `items` page, so the
+ * preview and inspector must search them too (a large catalog exceeds the
+ * 2000-item page, leaving collection members outside `items`).
+ */
+export function findCachedItem(
+  pages: Record<string, Item[]>,
+  id: string,
+): Item | null {
+  for (const page of Object.values(pages)) {
+    const hit = page.find((item) => item.id === id)
+    if (hit) return hit
+  }
+  return null
+}
+
+/** Resolve a selection in order, falling back to the collection caches. */
+export function resolveItems(
+  items: Item[],
+  pages: Record<string, Item[]>,
+  ids: string[],
+): Item[] {
+  const out: Item[] = []
+  for (const id of ids) {
+    const item = items.find((entry) => entry.id === id) ?? findCachedItem(pages, id)
+    if (item) out.push(item)
+  }
+  return out
+}
+
+// Replace one item inside every cached collection page that contains it.
+function replaceCachedItem(
+  pages: Record<string, Item[]>,
+  fresh: Item,
+): Record<string, Item[]> {
+  let next: Record<string, Item[]> | null = null
+  for (const [key, page] of Object.entries(pages)) {
+    const index = page.findIndex((item) => item.id === fresh.id)
+    if (index === -1) continue
+    next ??= { ...pages }
+    const copy = page.slice()
+    copy[index] = fresh
+    next[key] = copy
+  }
+  return next ?? pages
+}
+
 // Drops every cached page for one collection after its membership changed.
 function clearCollectionCache(
   state: Pick<AppState, 'collectionItems' | 'collectionLoading'>,
@@ -252,6 +300,8 @@ interface AppState {
   saveItem: (id: string, patch: Partial<Item>) => Promise<void>
   toggleFavorite: (id: string) => Promise<void>
   tagItem: (id: string, add: string[], remove: string[]) => Promise<void>
+  /** Refetch one item and splice it into `items` and the collection caches. */
+  syncItem: (id: string) => Promise<void>
 
   createTag: (name: string) => Promise<void>
   exportTags: () => Promise<void>
@@ -767,16 +817,27 @@ export const useStore = create<AppState>((set, get) => ({
   saveItem: async (id, patch) => {
     await api.updateItem(id, patch)
     await get().loadItems()
+    await get().syncItem(id)
   },
   toggleFavorite: async (id) => {
-    const item = get().items.find((i) => i.id === id)
+    const item =
+      get().items.find((i) => i.id === id) ?? findCachedItem(get().collectionItems, id)
     if (!item) return
     await api.updateItem(id, { favorite: !item.favorite })
     await get().loadItems()
+    await get().syncItem(id)
   },
   tagItem: async (id, add, remove) => {
     await api.batch({ ids: [id], addTags: add, removeTags: remove })
     await get().refreshCatalog()
+    await get().syncItem(id)
+  },
+  syncItem: async (id) => {
+    const fresh = await api.item(id)
+    set((s) => ({
+      items: s.items.map((item) => (item.id === fresh.id ? fresh : item)),
+      collectionItems: replaceCachedItem(s.collectionItems, fresh),
+    }))
   },
 
   createTag: async (name) => {
