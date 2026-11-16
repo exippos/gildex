@@ -633,6 +633,16 @@ export function Grid({ cellSize }: { cellSize: number }) {
 
   const selectedSet = useMemo(() => new Set(selection), [selection])
 
+  // Visual item order across the whole layout (including every expanded group),
+  // so shift-click ranges follow what the grid shows, not the catalog page.
+  const itemOrder = useMemo(
+    () =>
+      layout.rows.flatMap((row) =>
+        row.slots.flatMap((slot) => (slot.kind === 'cell' ? [slot.item.id] : [])),
+      ),
+    [layout],
+  )
+
   const expandGroup = (key: string, count: number) => {
     setEntering((prev) => {
       const next = new Set(prev)
@@ -1071,6 +1081,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
                     selected={selectedSet.has(slot.item.id)}
                     isCover={group?.coverId === slot.item.id}
                     phase={phase}
+                    order={itemOrder}
                     style={cellStyle}
                     onMenu={(x, y) =>
                       setMenu({ kind: 'cell', x, y, item: slot.item, group })

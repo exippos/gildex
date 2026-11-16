@@ -16,6 +16,8 @@ interface GridCellProps {
   selected: boolean
   isCover?: boolean
   phase?: 'enter' | 'exit'
+  /** Item ids in visual order, so shift-click can span expanded groups. */
+  order?: string[]
   style: CSSProperties
   onMenu?: (x: number, y: number) => void
 }
@@ -144,7 +146,7 @@ function RatingDots({ rating }: { rating: number }) {
   )
 }
 
-export function GridCell({ item, selected, isCover = false, phase, style, onMenu }: GridCellProps) {
+export function GridCell({ item, selected, isCover = false, phase, order, style, onMenu }: GridCellProps) {
   const setSelected = useStore((s) => s.setSelected)
   const selectRange = useStore((s) => s.selectRange)
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
@@ -199,7 +201,7 @@ export function GridCell({ item, selected, isCover = false, phase, style, onMenu
       onClick={(event) => {
         setPreviewItemId(item.id)
         if (event.shiftKey) {
-          selectRange(item.id)
+          selectRange(item.id, order)
         } else {
           setSelected(item.id, event.ctrlKey || event.metaKey || event.altKey)
         }

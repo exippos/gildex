@@ -282,7 +282,8 @@ interface AppState {
 
   toggleSelect: (id: string) => void
   setSelected: (id: string, additive: boolean) => void
-  selectRange: (id: string) => void
+  /** Extend the selection to `id` within the visual order (defaults to `items`). */
+  selectRange: (id: string, order?: string[]) => void
   clearSelection: () => void
   selectAllVisible: () => void
   /** Select every loaded item in a session or collection group. */
@@ -670,13 +671,13 @@ export const useStore = create<AppState>((set, get) => ({
       lastSelectedId: id,
     })
   },
-  selectRange: (id) => {
+  selectRange: (id, order) => {
     const { items, lastSelectedId } = get()
     if (!lastSelectedId) {
       get().toggleSelect(id)
       return
     }
-    const ids = items.map((i) => i.id)
+    const ids = order ?? items.map((i) => i.id)
     const a = ids.indexOf(lastSelectedId)
     const b = ids.indexOf(id)
     if (a === -1 || b === -1) return
@@ -810,6 +811,23 @@ export const useStore = create<AppState>((set, get) => ({
     const ids = get().selection
     if (!ids.length) return
     await api.batch({ ids, addTags: add, removeTags: remove })
+    // Keep expanded collection tiles in step without a refetch. Their items may
+    // sit outside the main `items` page, so the preview reads from these caches.
+    const idSet = new Set(ids)
+    const addSet = new Set(add)
+    const removeSet = new Set(remove)
+    set((s) => {
+      const collectionItems: Record<string, Item[]> = {}
+      for (const [key, page] of Object.entries(s.collectionItems)) {
+        collectionItems[key] = page.map((item) => {
+          if (!idSet.has(item.id)) return item
+          const tags = item.tags.filter((name) => !removeSet.has(name))
+          for (const name of addSet) if (!tags.includes(name)) tags.push(name)
+          return { ...item, tags }
+        })
+      }
+      return { collectionItems }
+    })
     if (!opts?.keep) get().clearSelection()
     await get().refreshCatalog()
   },
@@ -850,11 +868,13 @@ export const useStore = create<AppState>((set, get) => ({
     if (!itemIds.length) return
     await api.addToCollection(collectionId, itemIds)
     get().clearSelection()
-    set({ collectionPicker: null })
+    set((s) => ({ ...clearCollectionCache(s, collectionId), collectionPicker: null }))
     await get().refreshCatalog()
   },
   removeFromCollection: async (collectionId, itemId) => {
     await api.removeFromCollection(collectionId, itemId)
+    // Drop the cached page so an expanded tile refetches without the item.
+    set((s) => clearCollectionCache(s, collectionId))
     await get().refreshCatalog()
   },
 
@@ -912,6 +932,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
   deleteCollection: async (id) => {
     await api.deleteCollection(id)
+    set((s) => clearCollectionCache(s, id))
     await get().refreshCatalog()
   },
 
