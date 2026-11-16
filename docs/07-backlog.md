@@ -14,6 +14,7 @@
 - [X] Drag-n-Drop ingest
 - [X] Ingest | Gallery | Timeline tabs
 - [X] Ingest duplication thumbnails + links to existing files
+    -[ ] In the "Found duplicate" message show both filenames
 - [X] Media sources: add/remove, once vs watch toggle, rescan
 - [X] Background source watcher (polling; fsnotify is v1 hardening)
 
@@ -64,6 +65,7 @@
 - [ ] On tag list (on the side panel), the "clear N active" should not move the tag list.
 - [X] Add "untagged" tag
 - [X] Make tags lines in right side panel smaller vertically, very compact list "> tag 545"
+- [X] Import/Export tag list
 
 ### Settings menu
 - [X] Settings menu
