@@ -27,7 +27,10 @@ library root/
 - **Item identity = content hash (SHA-256) + UUID**, never the path (D1). The
   hash is the stable identity for move detection and dedup; the UUID is the
   stable foreign-key target so the hash can be recomputed without breaking links.
-- **Paths are relative** to the root. Resolution is `root + relative_path`.
+- **Paths are relative** to the source (or library root for inbox items).
+  Resolution is `source.path + relative_path` (or `root + relative_path`).
+  The absolute path is also snapshotted as `origin_path` at import, so a
+  missing item still shows where it came from after its source is removed.
 - **Move detection** (D1): on scan, a file whose hash matches an existing item
   but whose path differs is re-attached to the new path — within the root only.
 - **Missing-file state** (D1): if an item's file disappears, the item is marked
@@ -47,7 +50,8 @@ limitation); integrity is enforced in the application layer (D10).
 |---|---|
 | `id` | UUID |
 | `content_hash` | SHA-256, unique |
-| `relative_path` | within root |
+| `relative_path` | within the source or library root |
+| `origin_path` | absolute path captured at last import; fallback clue when the source is removed |
 | `kind` | `image` \| `video` \| `audio` (D17) |
 | `format` | detected container/codec |
 | `file_size` | bytes |
