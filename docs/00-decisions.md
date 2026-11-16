@@ -479,3 +479,30 @@ broadens from the inbox to per-source).
 
 **Affects.** Architecture §1/§4 (storage layout); Feature list §2.1; a future
 multi-library decision.
+
+## D44 — Tag families are a convention; vocabulary import/export is names-only
+
+**Choice.** A tag family is the text before the first `:` in the tag name
+(`artist:foo` → `artist`). Families are free-form, case-insensitive, derived at
+read time, and exposed as `family` on each API tag object — no stored column,
+no separate entity. Grouped display order is: ungrouped first, then the
+suggested families (`artist`, `character`, `series`, `style`, `meta`, `rating`),
+then other families alphabetically. The full tag name remains the identity and
+filter value; grouping never changes assignment semantics.
+
+The tag **vocabulary** can be exported (`GET /api/tags/export`) as a versioned
+`gildex.tags` JSON envelope — names, derived families, informational item
+counts — and imported (`POST /api/tags/import`) from names. Import also accepts
+a one-per-line text list client-side. Import is **merge-only and
+case-insensitive**: existing tags are kept, new ones created, blanks/invalid
+names ignored. It never deletes, renames, or touches `item_tag`.
+
+**Rationale.** Booru-style vocabularies grow into the hundreds/thousands, so a
+light grouping helps scanning without paying for a family table, colors, or
+per-family validation. The same convention makes vocabulary files portable
+without a second namespace field. Vocabulary-only transfer is safe across
+libraries because assignments are catalog-specific.
+
+**Affects.** Architecture §3.4; Vision §7.2; Feature list §2.2/§2.9; UI layout
+§2 and §6; README API table. Tag aliases/implications, family colors, and
+family-scoped filtering remain deferred.

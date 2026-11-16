@@ -28,7 +28,7 @@ Breadth is secondary.
 - Sessions-first browsing; timeline, folders, tags, collections as alternate
   surfaces (D6).
 - Time-gap sessions, 2 h default, adjustable (D20).
-- Tags (create, apply, batch) (D23, D24).
+- Tags (create, apply, batch); families come from the `family:name` convention.
 - Collections with time-default order + manual drag (D21).
 - Near-duplicate grouping via pHash, threshold slider (D2, D39).
 - Virtualized grid; hover-play for animated/video (D14, D18).
@@ -66,7 +66,7 @@ Breadth is secondary.
 
 ### 2.9 Settings
 - One header entry point (⚙) opening a sectioned settings panel: Appearance,
-  Library, Sources, Behavior, About.
+  Library, Sources, Tags, Behavior, About.
 - **Device preferences** in `localStorage`: theme, effects mode, gallery zoom.
 - **Library preferences** in the catalog DB, portable with the `.gildex`
   bundle: session inactivity gap (D20, default 2 h, adjustable), applied by an
@@ -74,6 +74,9 @@ Breadth is secondary.
 - Library info (name, root, bundle id, schema/app version, counts) plus
   create/open actions. Media-source management is shared with the Ingest
   workspace.
+- **Tag vocabulary import/export** (D44): versioned JSON export plus merge-only
+  import from JSON or a one-per-line text list. Names only; item assignments
+  stay in the library.
 - pHash similarity threshold (D39) is deferred until near-duplicate grouping
   exists; session-gap reclustering warns that manual session assignments may be
   recomputed.
@@ -81,8 +84,8 @@ Breadth is secondary.
 ## 3. Deferred (post-v1) — D28
 
 Lineage (`lineage_edge`), auto-tagging, embeddings/semantic search, multi-library,
-multiple roots, nested collections, tag namespaces/aliases/implications, video
-regions, advanced query syntax, consolidated/archive export, eco mode.
+multiple roots, nested collections, tag aliases/implications, family colors,
+video regions, advanced query syntax, consolidated/archive export, eco mode.
 
 ## 4. Priority summary
 
@@ -92,7 +95,7 @@ regions, advanced query syntax, consolidated/archive export, eco mode.
 | P1 | References → Attachments → Regions | D26 |
 | P1 | Sessions, tags, collections, batch toolbar | D20–D24 |
 | P1 | Search (tags + FTS), favorite/rating/status | D23, D22 |
-| P1 | Settings: appearance, library, sources, session gap | D20, D39 |
+| P1 | Settings: appearance, library, sources, tags, session gap | D20, D39, D44 |
 | P2 | Watcher (inbox), pHash grouping slider | D16, D2/D39 |
 | P2 | Audio/video polish, hover-play | D17, D18 |
 | Later | Everything in §3 | D28 |

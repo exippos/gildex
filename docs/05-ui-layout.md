@@ -44,7 +44,9 @@ Two stacked regions:
 2. **Surface content** — depends on the active surface:
    - *Folders* — a path-tree browse view, **directories only** (no files).
    - *Tags* — a **scrollable vertical list** of tags, with a filter box above
-     for large vocabularies.
+     for large vocabularies. Convention families (`artist:`, `character:`, …)
+     render as small group headings: ungrouped first, then preferred families,
+     then the rest alphabetically.
    - *Sessions / Collections* — their respective lists.
    - *Timeline* — no list; the rail collapses to the nav section.
 
@@ -91,6 +93,7 @@ the Library wizard), with a fixed section nav:
 | **Appearance** | Theme cards, effects mode, default gallery zoom |
 | **Library** | Current name/root/bundle id, schema and app version, counts; create/open actions |
 | **Sources** | Shared media-source manager (add, rescan, watch/once, remove) |
+| **Tags** | Vocabulary export/import (merge-only; names only — D44) |
 | **Behavior** | Session inactivity gap (D20) with **Save** and a separate **Apply & recluster** action |
 | **About** | App/schema version, library id, local-only note |
 

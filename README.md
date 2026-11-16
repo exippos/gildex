@@ -87,6 +87,8 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 | PATCH | `/api/sessions/{id}` | body `{ label }` (rename) |
 | GET | `/api/tags` | → `TagList` (`{ tags: Tag[], untagged }`) |
 | POST | `/api/tags` | body `{ name }` → `Tag` |
+| GET | `/api/tags/export` | → `gildex.tags` JSON attachment (D44) |
+| POST | `/api/tags/import` | body `{ names: string[] }` → `{ created, existing, ignored }` (merge-only) |
 | DELETE | `/api/tags/{id}` | delete tag (unassigns) |
 | GET | `/api/collections` | → `Collection[]` |
 | POST | `/api/collections` | body `{ name, description? }` → `Collection` |

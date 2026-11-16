@@ -81,10 +81,17 @@ limitation); integrity is enforced in the application layer (D10).
 
 ### 3.4 Tags & Collections (D6, D21)
 
-- **`tag`** — `id`, `name` (unique). `item_tag` join table.
+- **`tag`** — `id`, `name` (unique, case-insensitive). `item_tag` join table.
+  Families are **derived, not stored**: the prefix before the first `:` (valid
+  namespace characters only) is exposed as `family` on the API tag object.
 - **`collection`** — `id`, `name`, `description`. `collection_item` join carries
   an explicit `position` so manual drag-order persists (D21); time-order is the
   default and a view option.
+
+Tag vocabulary transfer (D44) lives in `GET /api/tags/export` (versioned JSON
+envelope with names, derived families, informational counts) and
+`POST /api/tags/import` (case-insensitive merge in one transaction; never
+deletes, renames, or touches `item_tag`).
 
 ### 3.5 Context layer (D8, D10)
 
