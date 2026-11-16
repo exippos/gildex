@@ -41,6 +41,15 @@
     - [X] Tags field
 - [X] Batch operations preview side panel
     - [X] Batch tags 
+- [X] Save media path as metadata (and show on missing items)
+- [ ] Missing items
+    - [X] Missing items grayed-out original thumbnail
+    - [ ] Relocate missing items option
+    - [ ] Flag "missing" items after rescan (if not found on disk) 
+
+- [ ] Setting icon -> gear
+- [ ] Remove theme change pick from header
+- [ ] Add "stop" ingest button
 
 ### 2.2 Group items
 - [ ] "Select" all items in group for batch operations
