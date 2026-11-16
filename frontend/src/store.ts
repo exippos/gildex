@@ -156,6 +156,18 @@ document.documentElement.setAttribute('data-effects', initialEffects)
 const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = { sessionGapMinutes: 120 }
 const DEFAULT_CELL_SIZE = 168
 
+// Rail selections are remembered per surface while the app runs. Opening a
+// different library resets them so ids and folder paths from the old catalog
+// never leak into the new one.
+function clearedRailSelection() {
+  return {
+    activeSessionId: null,
+    activeCollectionId: null,
+    activeFolder: null,
+    activeSourceId: null,
+  }
+}
+
 function readCellSize(): number {
   try {
     const raw = Number(localStorage.getItem('gildex-cell-size'))
@@ -405,13 +417,13 @@ export const useStore = create<AppState>((set, get) => ({
 
   createLibrary: async (name, directory) => {
     const library = await api.createLibrary(name, directory)
-    set({ library })
+    set({ library, ...clearedRailSelection() })
     await get().refreshCatalog()
   },
 
   openLibrary: async (path) => {
     const library = await api.openLibrary(path)
-    set({ library })
+    set({ library, ...clearedRailSelection() })
     await get().refreshCatalog()
   },
 
@@ -488,7 +500,7 @@ export const useStore = create<AppState>((set, get) => ({
         api.sources(),
         api.settings(),
       ])
-    set({
+    set((state) => ({
       library,
       sessions,
       tags: tagList.tags,
@@ -497,7 +509,17 @@ export const useStore = create<AppState>((set, get) => ({
       folders,
       sources,
       librarySettings,
-    })
+      // Drop remembered selections whose group no longer exists (recluster or
+      // a deleted collection), so a tab switch cannot restore a ghost row.
+      activeSessionId:
+        state.activeSessionId && sessions.some((s) => s.id === state.activeSessionId)
+          ? state.activeSessionId
+          : null,
+      activeCollectionId:
+        state.activeCollectionId && collections.some((c) => c.id === state.activeCollectionId)
+          ? state.activeCollectionId
+          : null,
+    }))
     await get().loadItems()
   },
 
@@ -567,8 +589,12 @@ export const useStore = create<AppState>((set, get) => ({
     set({ workspace, previewItemId: null })
     if (workspace !== 'ingest') void get().loadItems()
   },
-  setSurface: (surface) =>
-    set({ surface, activeSessionId: null, activeCollectionId: null, activeFolder: null, activeSourceId: null }),
+  setSurface: (surface) => {
+    // Keep each surface's rail selection. `loadItems` already scopes the
+    // session / collection / folder ids to their surface, so switching tabs
+    // and returning restores the last selected row instead of "All".
+    set({ surface })
+  },
   setActiveSessionId: (id) => {
     set({ activeSessionId: id })
     void get().loadItems()

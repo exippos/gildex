@@ -41,10 +41,9 @@ export function EmptyState() {
   const filtered =
     Boolean(search) ||
     activeTagFilters.length > 0 ||
-    activeSourceId !== null ||
+    (surface === 'folders' && (activeSourceId !== null || activeFolder !== null)) ||
     (surface === 'sessions' && activeSessionId !== null) ||
-    (surface === 'collections' && activeCollectionId !== null) ||
-    (surface === 'folders' && activeFolder !== null)
+    (surface === 'collections' && activeCollectionId !== null)
 
   const ornament = (
     <div className="empty-ornament" aria-hidden="true">
