@@ -1,17 +1,32 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"gildex/internal/importpkg"
 	"gildex/internal/model"
 	"gildex/internal/store"
 )
+
+// waitForImportStop cancels a running import and waits for its workers before
+// the old catalog is closed underneath them. Returns false when it is still
+// winding down (the caller should ask the user to retry).
+func waitForImportStop() bool {
+	importpkg.Stop()
+	if !importpkg.Status().Running {
+		return true
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return importpkg.Wait(ctx) == nil
+}
 
 func (a *API) handleCreateLibrary(w http.ResponseWriter, r *http.Request) {
 	var body struct {
@@ -29,6 +44,12 @@ func (a *API) handleCreateLibrary(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "directory is required")
 		return
 	}
+	if !waitForImportStop() {
+		importpkg.Resume()
+		writeError(w, http.StatusConflict, "an import is still stopping; try again")
+		return
+	}
+	defer importpkg.Resume()
 	if err := a.lib.CreateLibrary(body.Name, body.Directory); err != nil {
 		writeStoreError(w, err)
 		return
@@ -47,6 +68,12 @@ func (a *API) handleOpenLibrary(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "path is required")
 		return
 	}
+	if !waitForImportStop() {
+		importpkg.Resume()
+		writeError(w, http.StatusConflict, "an import is still stopping; try again")
+		return
+	}
+	defer importpkg.Resume()
 	if err := a.lib.OpenLibrary(body.Path); err != nil {
 		writeStoreError(w, err)
 		return
@@ -140,7 +167,7 @@ func (a *API) handleScanSource(w http.ResponseWriter, r *http.Request) {
 	}
 	err := importpkg.ScanSource(a.lib, r.PathValue("id"))
 	switch {
-	case errors.Is(err, importpkg.ErrRunning):
+	case errors.Is(err, importpkg.ErrRunning), errors.Is(err, importpkg.ErrSwitching):
 		writeError(w, http.StatusConflict, err.Error())
 		return
 	case errors.Is(err, importpkg.ErrNoRoot):

@@ -72,7 +72,7 @@ func (a *API) handleImportUpload(w http.ResponseWriter, r *http.Request) {
 
 	if err := importpkg.Start(a.lib, written); err != nil {
 		switch {
-		case errors.Is(err, importpkg.ErrRunning):
+		case errors.Is(err, importpkg.ErrRunning), errors.Is(err, importpkg.ErrSwitching):
 			writeError(w, http.StatusConflict, err.Error())
 		case errors.Is(err, importpkg.ErrNoRoot):
 			writeError(w, http.StatusConflict, err.Error())

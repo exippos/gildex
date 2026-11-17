@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"gildex/internal/importpkg"
 	"gildex/internal/server"
 	"gildex/internal/store"
 	"gildex/internal/watch"
@@ -58,6 +59,15 @@ func main() {
 	<-ctx.Done()
 	stop()
 	log.Printf("gildex: shutting down")
+	// The import job owns a reference to the catalog and has no other way to
+	// be interrupted. Stop also blocks the watcher from starting a fresh job
+	// while shutdown drains.
+	importpkg.Stop()
+	waitCtx, cancelWait := context.WithTimeout(context.Background(), 10*time.Second)
+	if err := importpkg.Wait(waitCtx); err != nil {
+		log.Printf("gildex: import still stopping: %v", err)
+	}
+	cancelWait()
 	if err := srv.Shutdown(context.Background()); err != nil {
 		log.Printf("gildex: shutdown: %v", err)
 	}

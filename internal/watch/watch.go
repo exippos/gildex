@@ -61,6 +61,7 @@ func (m *Manager) tick() {
 		// means we skip this tick and let the in-flight scan finish.
 		err := importpkg.ScanSource(m.lib, src.ID)
 		if err != nil && !errors.Is(err, importpkg.ErrRunning) &&
+			!errors.Is(err, importpkg.ErrSwitching) &&
 			!errors.Is(err, importpkg.ErrNoRoot) && !errors.Is(err, store.ErrNoSource) {
 			log.Printf("gildex: watch %s: %v", src.Name, err)
 		}

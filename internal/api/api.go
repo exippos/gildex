@@ -146,7 +146,7 @@ func (a *API) handleImport(w http.ResponseWriter, r *http.Request) {
 	}
 	err := importpkg.Start(a.lib, clean)
 	switch {
-	case errors.Is(err, importpkg.ErrRunning):
+	case errors.Is(err, importpkg.ErrRunning), errors.Is(err, importpkg.ErrSwitching):
 		writeError(w, http.StatusConflict, err.Error())
 		return
 	case errors.Is(err, importpkg.ErrNoRoot):

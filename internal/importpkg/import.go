@@ -2,7 +2,9 @@
 package importpkg
 
 import (
+	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -43,6 +45,10 @@ var ErrRunning = errors.New("import already running")
 // ErrNoRoot is returned when no library root has been configured.
 var ErrNoRoot = errors.New("library root not set")
 
+// ErrSwitching is returned while a library switch is waiting for the running
+// import to stop. Watchers treat it like ErrRunning.
+var ErrSwitching = errors.New("library switch in progress")
+
 // stageStat accumulates wall time spent in one pipeline stage.
 type stageStat struct {
 	count int
@@ -52,8 +58,11 @@ type stageStat struct {
 type jobState struct {
 	mu         sync.Mutex
 	running    bool
+	switching  bool
+	cancel     context.CancelFunc
+	done       chan struct{}
 	total      int
-	done       int
+	doneCount  int
 	stage      string
 	err        string
 	duplicates []model.Duplicate
@@ -84,14 +93,14 @@ func Status() model.ImportStatus {
 	copy(dups, job.duplicates)
 	var rate float64
 	if !job.startedAt.IsZero() {
-		if elapsed := time.Since(job.startedAt).Seconds(); elapsed > 0 && job.done > 0 {
-			rate = float64(job.done) / elapsed
+		if elapsed := time.Since(job.startedAt).Seconds(); elapsed > 0 && job.doneCount > 0 {
+			rate = float64(job.doneCount) / elapsed
 		}
 	}
 	return model.ImportStatus{
 		Running:     job.running,
 		Total:       job.total,
-		Done:        job.done,
+		Done:        job.doneCount,
 		Stage:       job.stage,
 		Error:       job.err,
 		ItemsPerSec: rate,
@@ -131,13 +140,21 @@ func start(lib *store.Library, sourceID *string, base string, paths []string) er
 	thumbDir := lib.ThumbDir()
 
 	job.mu.Lock()
+	if job.switching {
+		job.mu.Unlock()
+		return ErrSwitching
+	}
 	if job.running {
 		job.mu.Unlock()
 		return ErrRunning
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
 	job.running = true
+	job.cancel = cancel
+	job.done = done
 	job.total = 0
-	job.done = 0
+	job.doneCount = 0
 	job.stage = "discover"
 	job.err = ""
 	job.duplicates = nil
@@ -145,18 +162,61 @@ func start(lib *store.Library, sourceID *string, base string, paths []string) er
 	job.stages = map[string]stageStat{}
 	job.mu.Unlock()
 
-	go run(lib.Store(), base, thumbDir, sourceID, paths)
+	go run(ctx, done, lib.Store(), base, thumbDir, sourceID, paths)
 	return nil
 }
 
-func run(st *store.Store, root, thumbDir string, sourceID *string, paths []string) {
+// Stop blocks new import jobs and cancels the running one. Call Resume once
+// the catalog is safe to import into again (e.g. after a library switch).
+func Stop() {
+	job.mu.Lock()
+	job.switching = true
+	cancel := job.cancel
+	job.mu.Unlock()
+	if cancel != nil {
+		cancel()
+	}
+}
+
+// Resume lets new import jobs start again.
+func Resume() {
+	job.mu.Lock()
+	job.switching = false
+	job.mu.Unlock()
+}
+
+// Wait blocks until the running job (if any) finishes or ctx is done.
+func Wait(ctx context.Context) error {
+	job.mu.Lock()
+	done := job.done
+	job.mu.Unlock()
+	if done == nil {
+		return nil
+	}
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func run(ctx context.Context, done chan struct{}, st *store.Store, root, thumbDir string, sourceID *string, paths []string) {
 	start := time.Now()
 	defer func() {
 		job.mu.Lock()
 		job.running = false
+		job.cancel = nil
+		job.done = nil
 		total := job.total
+		finished := job.doneCount
 		job.mu.Unlock()
-		logSummary(total, start)
+		if ctx.Err() != nil {
+			log.Printf("gildex: import cancelled after %d/%d files", finished, total)
+		} else {
+			logSummary(total, start)
+		}
+		close(done)
 	}()
 
 	t0 := time.Now()
@@ -169,14 +229,27 @@ func run(st *store.Store, root, thumbDir string, sourceID *string, paths []strin
 	job.mu.Lock()
 	job.total = len(files)
 	job.mu.Unlock()
+	if ctx.Err() != nil {
+		setCancelled()
+		return
+	}
 
 	setStage("process")
 	if workers := workerCount(); workers <= 1 {
 		for _, f := range files {
-			processOne(st, thumbDir, sourceID, f)
+			if ctx.Err() != nil {
+				setCancelled()
+				return
+			}
+			processOne(ctx, st, thumbDir, sourceID, f)
 		}
-	} else {
-		processParallel(st, thumbDir, sourceID, files, workers)
+	} else if !processParallel(ctx, st, thumbDir, sourceID, files, workers) {
+		setCancelled()
+		return
+	}
+	if ctx.Err() != nil {
+		setCancelled()
+		return
 	}
 
 	setStage("cluster")
@@ -213,35 +286,63 @@ func workerCount() int {
 }
 
 // processOne handles a single file and advances the job counter.
-func processOne(st *store.Store, thumbDir string, sourceID *string, f fileEntry) {
-	if err := processFile(st, thumbDir, sourceID, f); err != nil {
+func processOne(ctx context.Context, st *store.Store, thumbDir string, sourceID *string, f fileEntry) {
+	if ctx.Err() != nil {
+		return
+	}
+	if err := processFile(st, thumbDir, sourceID, f); err != nil && !importStopped(ctx, err) {
 		log.Printf("gildex: import %s: %v", f.rel, err)
 	}
 	job.mu.Lock()
-	job.done++
+	job.doneCount++
 	job.mu.Unlock()
+}
+
+// importStopped reports whether an error is the expected result of cancelling
+// the job (or of shutting the catalog down mid-file), so shutdown does not log
+// one "database is closed" line per remaining file.
+func importStopped(ctx context.Context, err error) bool {
+	if ctx.Err() != nil {
+		return true
+	}
+	return errors.Is(err, sql.ErrConnDone) || strings.Contains(err.Error(), "database is closed")
 }
 
 // processParallel fans files out to a fixed pool of workers. Per-file DB access
 // is serialized by the store's single connection, so this is safe; duplicate
-// content is handled by UpsertImport's upsert semantics.
-func processParallel(st *store.Store, thumbDir string, sourceID *string, files []fileEntry, workers int) {
+// content is handled by UpsertImport's upsert semantics. It reports false when
+// the context was cancelled before every file was handled.
+func processParallel(ctx context.Context, st *store.Store, thumbDir string, sourceID *string, files []fileEntry, workers int) bool {
 	var wg sync.WaitGroup
 	ch := make(chan fileEntry)
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for f := range ch {
-				processOne(st, thumbDir, sourceID, f)
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case f, ok := <-ch:
+					if !ok {
+						return
+					}
+					processOne(ctx, st, thumbDir, sourceID, f)
+				}
 			}
 		}()
 	}
+feed:
 	for _, f := range files {
-		ch <- f
+		select {
+		case <-ctx.Done():
+			break feed
+		case ch <- f:
+		}
 	}
 	close(ch)
 	wg.Wait()
+	return ctx.Err() == nil
 }
 
 // logSummary reports a one-line per-stage breakdown of a finished job.
@@ -284,6 +385,13 @@ func setError(err error) {
 	job.mu.Lock()
 	job.err = err.Error()
 	job.stage = "error"
+	job.mu.Unlock()
+}
+
+func setCancelled() {
+	job.mu.Lock()
+	job.err = "import cancelled"
+	job.stage = "cancelled"
 	job.mu.Unlock()
 }
 
