@@ -50,7 +50,7 @@ Breadth is secondary.
 - Facets: model, rating, status, kind, tags.
 
 ### 2.5 Item fields
-- Favorite, rating (1–5), status (draft / final / WIP) (D22).
+- Favorite, rating (1–5), status (idea / draft / final / WIP) (D22).
 
 ### 2.6 Batch operations
 - Multi-select toolbar: tag, add-to-collection, assign-session,

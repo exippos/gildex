@@ -61,7 +61,7 @@ limitation); integrity is enforced in the application layer (D10).
 | `phash` | perceptual hash (D2) |
 | `favorite` | bool (D22) |
 | `rating` | 1–5 (D22) |
-| `status` | `draft` \| `final` \| `WIP` (D22) |
+| `status` | `idea` \| `draft` \| `final` \| `WIP` (D22) |
 | `state` | `present` \| `missing` (D1) |
 | *canonical gen fields* | `prompt`, `negative_prompt`, `model_name`, `seed`, `steps`, `sampler`, `cfg_scale`, `generated_at`; each carries a `parsed` \| `manual` provenance flag (D9 tier 1, D41) |
 

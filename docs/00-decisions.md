@@ -262,7 +262,7 @@ a view option.
 ## D22 — Item user fields: favorite + rating + status
 
 **Choice.** Items carry three user-layer scalar fields: **favorite** (boolean),
-**rating** (1–5), and **status** (label: draft / final / WIP, extensible). All
+**rating** (1–5), and **status** (label: idea / draft / final / WIP, extensible). All
 are indexed for filtering/faceting.
 
 **Affects.** Architecture (item fields); Feature list; UI.
@@ -511,7 +511,7 @@ name against the theme palette.
 ## D45 — Group tags and triage live on the group
 
 **Choice.** Sessions and collections carry their own `favorite`, `rating`
-(0–5) and `status` (draft/wip/final), plus group tag assignments in a
+(0–5) and `status` (idea/draft/wip/final), plus group tag assignments in a
 `group_tag (owner_type, owner_id, tag_id)` table. Group tags reuse the shared
 tag vocabulary and families but are independent of `item_tag`: tagging a
 session does not tag its items, and group tags never appear in item tag

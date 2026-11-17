@@ -56,12 +56,13 @@ palette; no theme inherits from another.
 | `gilt-bright` | `#E5C58A` | `#D2B187` | `#E6C792` | `#C4623D` |
 | `ocean` (secondary) | `#38BDF8` | `#A8895D` | `#6EE7B7` | `#C4623D` |
 | `status-final` | `#2DD4BF` | `#4ADE80` | `#6EE7B7` | `#2B7A58` |
+| `status-idea` | `#A78BFA` | `#A78BFA` | `#B7A6F5` | `#7C5CBF` |
 | Display face | Cormorant | Inter | Cormorant | Cormorant |
 | `color-scheme` | dark | dark | dark | light |
 
-Status mapping (D22): favorite → `gilt`; final → `status-final`; wip →
-`status-wip`; draft → `status-draft`. The accent and status colors must stay
-separable in every theme.
+Status mapping (D22): favorite → `gilt`; idea → `status-idea`; final →
+`status-final`; wip → `status-wip`; draft → `status-draft`. The accent and
+status colors must stay separable in every theme.
 
 ### 3.2 Type
 
