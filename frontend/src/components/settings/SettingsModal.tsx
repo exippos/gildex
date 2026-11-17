@@ -139,6 +139,8 @@ export function SettingsModal() {
   const setEffects = useStore((s) => s.setEffects)
   const groupClickMode = useStore((s) => s.groupClickMode)
   const setGroupClickMode = useStore((s) => s.setGroupClickMode)
+  const thumbnailFit = useStore((s) => s.thumbnailFit)
+  const setThumbnailFit = useStore((s) => s.setThumbnailFit)
   const cellSize = useStore((s) => s.cellSize)
   const setCellSize = useStore((s) => s.setCellSize)
   const tags = useStore((s) => s.tags)
@@ -416,6 +418,31 @@ export function SettingsModal() {
                   </div>
                   <p className="settings-hint">
                     session and collection tiles. double-click opens or closes the group.
+                  </p>
+                </div>
+
+                <div className="settings-row">
+                  <span className="settings-label">thumbnail fit</span>
+                  <div className="settings-segmented" role="group" aria-label="Thumbnail fit">
+                    <button
+                      type="button"
+                      className="settings-segment"
+                      aria-pressed={thumbnailFit === 'contain'}
+                      onClick={() => setThumbnailFit('contain')}
+                    >
+                      Whole image
+                    </button>
+                    <button
+                      type="button"
+                      className="settings-segment"
+                      aria-pressed={thumbnailFit === 'cover'}
+                      onClick={() => setThumbnailFit('cover')}
+                    >
+                      Fill square
+                    </button>
+                  </div>
+                  <p className="settings-hint">
+                    whole image adds black bars instead of cropping the thumbnail.
                   </p>
                 </div>
 

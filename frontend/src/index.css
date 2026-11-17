@@ -102,3 +102,21 @@ textarea::placeholder {
 .hairline {
   border-color: var(--hairline);
 }
+
+/* Device-local thumbnail fit (Settings → Appearance). `data-thumb-fit` is set
+   on <html>; contain letterboxes square thumbnails on black instead of
+   cropping them. Large media previews already use contain. */
+html[data-thumb-fit='contain'] .cell-thumb,
+html[data-thumb-fit='contain'] .group-tile-deck img,
+html[data-thumb-fit='contain'] .group-tile-poster > img,
+html[data-thumb-fit='contain'] .preview-thumb img,
+html[data-thumb-fit='contain'] .rail-row-thumb img,
+html[data-thumb-fit='contain'] .col-item-thumb img,
+html[data-thumb-fit='contain'] .col-add-item img,
+html[data-thumb-fit='contain'] .ingest-dupe-icon img,
+html[data-thumb-fit='contain'] .insp-thumb img,
+html[data-thumb-fit='contain'] .timeline-stack-img {
+  object-fit: contain;
+  background-color: #000;
+}
+

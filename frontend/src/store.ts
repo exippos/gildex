@@ -150,6 +150,10 @@ export type EffectsMode = 'full' | 'reduced'
 // one-click expand behaviour. Device-local, like theme and zoom.
 export type GroupClickMode = 'preview' | 'expand'
 
+// Square thumbnails can crop to fill their frame or letterbox on black to keep
+// the whole image. Device-local, like theme and zoom.
+export type ThumbnailFit = 'cover' | 'contain'
+
 function readEffects(): EffectsMode {
   try {
     return localStorage.getItem('gildex-effects') === 'reduced' ? 'reduced' : 'full'
@@ -166,8 +170,19 @@ function readGroupClickMode(): GroupClickMode {
   }
 }
 
+function readThumbnailFit(): ThumbnailFit {
+  try {
+    return localStorage.getItem('gildex-thumbnail-fit') === 'cover' ? 'cover' : 'contain'
+  } catch {
+    return 'contain'
+  }
+}
+
 const initialEffects = readEffects()
 document.documentElement.setAttribute('data-effects', initialEffects)
+
+const initialThumbnailFit = readThumbnailFit()
+document.documentElement.setAttribute('data-thumb-fit', initialThumbnailFit)
 
 const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = { sessionGapMinutes: 120 }
 const DEFAULT_CELL_SIZE = 168
@@ -271,6 +286,8 @@ interface AppState {
   setEffects: (mode: EffectsMode) => void
   groupClickMode: GroupClickMode
   setGroupClickMode: (mode: GroupClickMode) => void
+  thumbnailFit: ThumbnailFit
+  setThumbnailFit: (fit: ThumbnailFit) => void
 
   // actions
   init: () => Promise<void>
@@ -443,6 +460,17 @@ export const useStore = create<AppState>((set, get) => ({
       /* ignore */
     }
     set({ groupClickMode: mode })
+  },
+
+  thumbnailFit: initialThumbnailFit,
+  setThumbnailFit: (fit) => {
+    document.documentElement.setAttribute('data-thumb-fit', fit)
+    try {
+      localStorage.setItem('gildex-thumbnail-fit', fit)
+    } catch {
+      /* ignore */
+    }
+    set({ thumbnailFit: fit })
   },
 
   init: async () => {
