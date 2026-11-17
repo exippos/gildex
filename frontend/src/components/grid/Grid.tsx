@@ -23,6 +23,26 @@ const OVERSCAN_ROWS = 2
 const COMPACT_BELOW = 120
 // Item cells sit a touch smaller than the group tiles that anchor them.
 const ITEM_SCALE = 0.86
+// Single-click group preview waits out the double-click window. Opening the
+// preview panel reflows the grid, and doing that between the two clicks of a
+// double-click would move the tile out from under the pointer.
+const TILE_CLICK_DELAY = 200
+let pendingTileClick: number | null = null
+
+function cancelPendingTileClick() {
+  if (pendingTileClick !== null) {
+    window.clearTimeout(pendingTileClick)
+    pendingTileClick = null
+  }
+}
+
+function scheduleTileClick(action: () => void) {
+  cancelPendingTileClick()
+  pendingTileClick = window.setTimeout(() => {
+    pendingTileClick = null
+    action()
+  }, TILE_CLICK_DELAY)
+}
 // Group expand/collapse entrance/exit timing (ms).
 const ENTER_MS = 160
 const EXIT_MS = 120
@@ -376,10 +396,17 @@ function GroupTile({
         // A double-click fires two clicks. The first runs the single-click
         // action; ignore the second so expansion never toggles twice.
         if (event.detail > 1) return
-        if (previews) onPreview?.()
+        if (previews) scheduleTileClick(() => onPreview?.())
         else onToggle()
       }}
-      onDoubleClick={previews ? onToggle : undefined}
+      onDoubleClick={
+        previews
+          ? () => {
+              cancelPendingTileClick()
+              onToggle()
+            }
+          : undefined
+      }
       onContextMenu={
         onMenu
           ? (event) => {
@@ -849,6 +876,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
     setMenu(null)
   }, [queryKey, cellSize])
 
+  // A pending tile preview must not outlive the grid.
+  useEffect(() => () => cancelPendingTileClick(), [])
+
   type CoverTarget = {
     type: GroupType
     id: string
@@ -1103,6 +1133,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
         onScroll={handleScroll}
         onMouseDown={(event) => {
           const target = event.target as HTMLElement
+          // Moving on before the double-click window closes drops the pending
+          // group preview instead of yanking the panel open late.
+          if (!target.closest('.group-tile')) cancelPendingTileClick()
           if (!target.closest('.grid-cell')) clearSelection()
         }}
       >
