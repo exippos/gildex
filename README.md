@@ -84,7 +84,7 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 | PATCH | `/api/items/{id}` | body partial: `favorite`, `rating`, `status`, `prompt`, `negativePrompt`, `modelName`, `seed`, `steps`, `sampler`, `cfgScale`, `generatedAt` |
 | PATCH | `/api/items/batch` | body `{ ids, addTags[], removeTags[], addToCollectionId, removeFromCollectionId, favorite?, rating?, status?, setSessionId?, removeFromCatalog? }` |
 | GET | `/api/sessions` | → `Session[]` |
-| PATCH | `/api/sessions/{id}` | body `{ label }` (rename) |
+| PATCH | `/api/sessions/{id}` | body `{ label?, favorite?, rating?, status?, addTags?, removeTags? }` (group triage/tags, D45) |
 | GET | `/api/tags` | → `TagList` (`{ tags: Tag[], untagged }`) |
 | POST | `/api/tags` | body `{ name }` → `Tag` |
 | GET | `/api/tags/export` | → `gildex.tags` JSON attachment (D44) |
@@ -92,7 +92,7 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 | DELETE | `/api/tags/{id}` | delete tag (unassigns) |
 | GET | `/api/collections` | → `Collection[]` |
 | POST | `/api/collections` | body `{ name, description? }` → `Collection` |
-| PATCH | `/api/collections/{id}` | body `{ name?, description?, order?: string[] }` (order = full ordered itemIds, D21) |
+| PATCH | `/api/collections/{id}` | body `{ name?, description?, order?: string[], favorite?, rating?, status?, addTags?, removeTags? }` (order = full ordered itemIds, D21; triage/tags D45) |
 | DELETE | `/api/collections/{id}` | delete collection (not items) |
 | POST | `/api/collections/{id}/items` | body `{ itemIds }` append |
 | DELETE | `/api/collections/{id}/items/{itemId}` | remove one |

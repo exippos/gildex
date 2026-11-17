@@ -507,3 +507,27 @@ libraries because assignments are catalog-specific.
 §2 and §6; README API table. Tag aliases/implications and user-assigned
 family colours remain deferred; colours are currently derived from the family
 name against the theme palette.
+
+## D45 — Group tags and triage live on the group
+
+**Choice.** Sessions and collections carry their own `favorite`, `rating`
+(0–5) and `status` (draft/wip/final), plus group tag assignments in a
+`group_tag (owner_type, owner_id, tag_id)` table. Group tags reuse the shared
+tag vocabulary and families but are independent of `item_tag`: tagging a
+session does not tag its items, and group tags never appear in item tag
+filters or item counts. The right preview edits them when a group is selected;
+each group tile's context menu has a "Triage session/collection…" shortcut.
+
+**Rationale.** A group-level verdict ("this session is final", "this collection
+is references") is about the body of work, not any one item. Keeping it on the
+group avoids writing the same tag to thousands of rows and keeps reclusters
+cheap. Separate assignments preserve the existing item-level tag counts and
+filters.
+
+**Bounds.** Group triage survives a recluster when the session id is reused
+(the same overlap rule as labels and covers); a brand-new cluster starts clean.
+Deleting a tag removes its group assignments. No propagation to member items
+and no group-tag filtering in v1.
+
+**Affects.** Architecture §3.3/§3.4; Feature list §2.2; UI layout §2 (right
+preview and group tiles); README API table.

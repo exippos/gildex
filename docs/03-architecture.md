@@ -73,25 +73,30 @@ limitation); integrity is enforced in the application layer (D10).
   arbitrary fields (LoRA, VAE, model_hash, …); displayable by known key (D9 tier
   3). `provenance` is `parsed` \| `manual` (D41).
 
-### 3.3 Session (D6, D20)
+### 3.3 Session (D6, D20, D45)
 
-- `id`, `label`, `starts_at`, `ends_at`. Membership is derived by time-gap
-  clustering (default 2 h, D20) and may be manually overridden. Sessions are
-  first-class indexes and context owners.
+- `id`, `label`, `starts_at`, `ends_at`, `favorite`, `rating`, `status`.
+  Membership is derived by time-gap clustering (default 2 h, D20) and may be
+  manually overridden. Sessions are first-class indexes and context owners.
+  Triage and tags belong to the session itself, not its items.
 
-### 3.4 Tags & Collections (D6, D21)
+### 3.4 Tags & Collections (D6, D21, D45)
 
 - **`tag`** — `id`, `name` (unique, case-insensitive). `item_tag` join table.
-  Families are **derived, not stored**: the prefix before the first `:` (valid
-  namespace characters only) is exposed as `family` on the API tag object.
-- **`collection`** — `id`, `name`, `description`. `collection_item` join carries
-  an explicit `position` so manual drag-order persists (D21); time-order is the
+  **`group_tag`** carries group-owned assignments (`owner_type` ∈ session |
+  collection) from the same vocabulary; it never affects item tags, filters, or
+  item counts. Families are **derived, not stored**: the prefix before the
+  first `:` (valid namespace characters only) is exposed as `family` on the API
+  tag object.
+- **`collection`** — `id`, `name`, `description`, plus the same group triage as
+  sessions (`favorite`, `rating`, `status`). `collection_item` join carries an
+  explicit `position` so manual drag-order persists (D21); time-order is the
   default and a view option.
 
 Tag vocabulary transfer (D44) lives in `GET /api/tags/export` (versioned JSON
 envelope with names, derived families, informational counts) and
 `POST /api/tags/import` (case-insensitive merge in one transaction; never
-deletes, renames, or touches `item_tag`).
+deletes, renames, or touches `item_tag`/`group_tag`).
 
 ### 3.5 Context layer (D8, D10)
 
