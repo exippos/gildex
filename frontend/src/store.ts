@@ -56,24 +56,25 @@ function tagFilterParams(filters: string[]): { tags?: string[]; untagged?: boole
 // distinct from `null` ("all items") and a real source id.
 export const INBOX_SOURCE = '__inbox__'
 
-// Collection contents are fetched lazily and cached per query. The key folds in
-// every input that changes the result set, so a stale page never gets reused
-// after a sort or filter change.
-export function collectionItemsKey(
+// Session and collection contents are fetched lazily and cached per query. The
+// key folds in the group and every input that changes the result set, so a
+// stale page never gets reused after a sort or filter change.
+export function groupItemsKey(
+  type: GroupType,
   id: string,
   search: string,
   tagFilters: string[],
   sort: ItemSort,
   sortDir: SortDir,
 ): string {
-  return [id, search, tagFilters.join(','), sort, sortDir].join('|')
+  return [`${type}:${id}`, search, tagFilters.join(','), sort, sortDir].join('|')
 }
 
 /**
- * Look up an item in the lazily cached collection pages. Expanded collection
- * groups render from these caches rather than the main `items` page, so the
- * preview and inspector must search them too (a large catalog exceeds the
- * 2000-item page, leaving collection members outside `items`).
+ * Look up an item in the lazily cached group pages. Expanded session and
+ * collection groups render from these caches rather than the main `items`
+ * page, so the preview and inspector must search them too (a large catalog
+ * exceeds the 2000-item page, leaving group members outside `items`).
  */
 export function findCachedItem(
   pages: Record<string, Item[]>,
@@ -100,7 +101,7 @@ export function resolveItems(
   return out
 }
 
-// Replace one item inside every cached collection page that contains it.
+// Replace one item inside every cached group page that contains it.
 function replaceCachedItem(
   pages: Record<string, Item[]>,
   fresh: Item,
@@ -117,21 +118,22 @@ function replaceCachedItem(
   return next ?? pages
 }
 
-// Drops every cached page for one collection after its membership changed.
-function clearCollectionCache(
-  state: Pick<AppState, 'collectionItems' | 'collectionLoading'>,
+// Drops every cached page for one group after its membership changed.
+function clearGroupCache(
+  state: Pick<AppState, 'groupItems' | 'groupLoading'>,
+  type: GroupType,
   id: string,
-): Pick<AppState, 'collectionItems' | 'collectionLoading'> {
-  const prefix = id + '|'
-  const collectionItems: Record<string, Item[]> = {}
-  for (const [key, value] of Object.entries(state.collectionItems)) {
-    if (!key.startsWith(prefix)) collectionItems[key] = value
+): Pick<AppState, 'groupItems' | 'groupLoading'> {
+  const prefix = `${type}:${id}|`
+  const groupItems: Record<string, Item[]> = {}
+  for (const [key, value] of Object.entries(state.groupItems)) {
+    if (!key.startsWith(prefix)) groupItems[key] = value
   }
-  const collectionLoading: Record<string, boolean> = {}
-  for (const [key, value] of Object.entries(state.collectionLoading)) {
-    if (!key.startsWith(prefix)) collectionLoading[key] = value
+  const groupLoading: Record<string, boolean> = {}
+  for (const [key, value] of Object.entries(state.groupLoading)) {
+    if (!key.startsWith(prefix)) groupLoading[key] = value
   }
-  return { collectionItems, collectionLoading }
+  return { groupItems, groupLoading }
 }
 
 interface InspectorTarget {
@@ -211,9 +213,9 @@ interface AppState {
   collections: Collection[]
   folders: FolderNode[]
   sources: Source[]
-  // collection id + query key -> one page of that collection's items
-  collectionItems: Record<string, Item[]>
-  collectionLoading: Record<string, boolean>
+  // session or collection id + query key -> one page of that group's items
+  groupItems: Record<string, Item[]>
+  groupLoading: Record<string, boolean>
   // library-scoped preferences from the catalog DB
   librarySettings: LibrarySettings
 
@@ -264,7 +266,7 @@ interface AppState {
   importFiles: (files: DroppedFile[]) => Promise<void>
   pollImport: () => Promise<void>
   loadItems: () => Promise<void>
-  loadCollectionItems: (id: string) => Promise<void>
+  loadGroupItems: (type: GroupType, id: string) => Promise<void>
   refreshCatalog: () => Promise<void>
 
   setWorkspace: (w: Workspace) => void
@@ -371,8 +373,8 @@ export const useStore = create<AppState>((set, get) => ({
   collections: [],
   folders: [],
   sources: [],
-  collectionItems: {},
-  collectionLoading: {},
+  groupItems: {},
+  groupLoading: {},
   librarySettings: DEFAULT_LIBRARY_SETTINGS,
 
   selection: [],
@@ -484,7 +486,11 @@ export const useStore = create<AppState>((set, get) => ({
       set({ importProgress: p })
       if (!p.running) {
         set({ importing: false, importError: p.error || null })
-        if (!p.error) await get().refreshCatalog()
+        if (!p.error) {
+          // An import reclusters sessions, so cached group pages are stale.
+          set({ groupItems: {}, groupLoading: {} })
+          await get().refreshCatalog()
+        }
         return
       }
       await new Promise((r) => setTimeout(r, 400))
@@ -564,27 +570,27 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
-  loadCollectionItems: async (id) => {
+  loadGroupItems: async (type, id) => {
     const { search, activeTagFilters, sort, sortDir } = get()
-    const key = collectionItemsKey(id, search, activeTagFilters, sort, sortDir)
-    if (get().collectionItems[key] || get().collectionLoading[key]) return
-    set((s) => ({ collectionLoading: { ...s.collectionLoading, [key]: true } }))
+    const key = groupItemsKey(type, id, search, activeTagFilters, sort, sortDir)
+    if (get().groupItems[key] || get().groupLoading[key]) return
+    set((s) => ({ groupLoading: { ...s.groupLoading, [key]: true } }))
     try {
       const page = await api.items({
-        collectionId: id,
+        ...(type === 'session' ? { sessionId: id } : { collectionId: id }),
         ...tagFilterParams(activeTagFilters),
         q: search || undefined,
         limit: 2000,
         sort: SORT_PARAM[sort],
         dir: sortDir,
       })
-      set((s) => ({ collectionItems: { ...s.collectionItems, [key]: page.items } }))
+      set((s) => ({ groupItems: { ...s.groupItems, [key]: page.items } }))
     } catch {
       // Cache the failure as an empty page so the grid stops retrying; a
       // membership change (which clears this key) will try again.
-      set((s) => ({ collectionItems: { ...s.collectionItems, [key]: [] } }))
+      set((s) => ({ groupItems: { ...s.groupItems, [key]: [] } }))
     } finally {
-      set((s) => ({ collectionLoading: { ...s.collectionLoading, [key]: false } }))
+      set((s) => ({ groupLoading: { ...s.groupLoading, [key]: false } }))
     }
   },
 
@@ -690,17 +696,16 @@ export const useStore = create<AppState>((set, get) => ({
     set({ selection: ids })
   },
   selectGroupItems: async (type, id) => {
-    let ids: string[]
-    if (type === 'session') {
+    const { search, activeTagFilters, sort, sortDir } = get()
+    const key = groupItemsKey(type, id, search, activeTagFilters, sort, sortDir)
+    // A collapsed group tile may not have loaded its page yet.
+    if (!get().groupItems[key]) await get().loadGroupItems(type, id)
+    let ids = (get().groupItems[key] ?? []).map((item) => item.id)
+    if (!ids.length && type === 'session') {
+      // A failed fetch leaves the page empty; fall back to the main items page.
       ids = get()
         .items.filter((item) => item.sessionId === id)
         .map((item) => item.id)
-    } else {
-      // A collapsed collection tile may not have loaded its page yet.
-      const { search, activeTagFilters, sort, sortDir } = get()
-      const key = collectionItemsKey(id, search, activeTagFilters, sort, sortDir)
-      if (!get().collectionItems[key]) await get().loadCollectionItems(id)
-      ids = (get().collectionItems[key] ?? []).map((item) => item.id)
     }
     if (!ids.length) return
     set({ selection: ids, lastSelectedId: ids[0] })
@@ -777,9 +782,10 @@ export const useStore = create<AppState>((set, get) => ({
     if (!itemIds.length) return
     if (type === 'collection') {
       await api.addToCollection(id, itemIds)
-      set((s) => clearCollectionCache(s, id))
+      set((s) => clearGroupCache(s, 'collection', id))
     } else {
       await api.batch({ ids: itemIds, setSessionId: id })
+      set((s) => clearGroupCache(s, 'session', id))
     }
     await get().refreshCatalog()
     await get().loadGroupEditorItems()
@@ -787,9 +793,10 @@ export const useStore = create<AppState>((set, get) => ({
   removeFromGroup: async (type, id, itemId) => {
     if (type === 'collection') {
       await api.removeFromCollection(id, itemId)
-      set((s) => clearCollectionCache(s, id))
+      set((s) => clearGroupCache(s, 'collection', id))
     } else {
       await api.batch({ ids: [itemId], setSessionId: null })
+      set((s) => clearGroupCache(s, 'session', id))
     }
     await get().refreshCatalog()
     await get().loadGroupEditorItems()
@@ -811,22 +818,23 @@ export const useStore = create<AppState>((set, get) => ({
     const ids = get().selection
     if (!ids.length) return
     await api.batch({ ids, addTags: add, removeTags: remove })
-    // Keep expanded collection tiles in step without a refetch. Their items may
-    // sit outside the main `items` page, so the preview reads from these caches.
+    // Keep expanded session and collection tiles in step without a refetch.
+    // Their items may sit outside the main `items` page, so the preview reads
+    // from these caches.
     const idSet = new Set(ids)
     const addSet = new Set(add)
     const removeSet = new Set(remove)
     set((s) => {
-      const collectionItems: Record<string, Item[]> = {}
-      for (const [key, page] of Object.entries(s.collectionItems)) {
-        collectionItems[key] = page.map((item) => {
+      const groupItems: Record<string, Item[]> = {}
+      for (const [key, page] of Object.entries(s.groupItems)) {
+        groupItems[key] = page.map((item) => {
           if (!idSet.has(item.id)) return item
           const tags = item.tags.filter((name) => !removeSet.has(name))
           for (const name of addSet) if (!tags.includes(name)) tags.push(name)
           return { ...item, tags }
         })
       }
-      return { collectionItems }
+      return { groupItems }
     })
     if (!opts?.keep) get().clearSelection()
     await get().refreshCatalog()
@@ -835,16 +843,16 @@ export const useStore = create<AppState>((set, get) => ({
     const ids = get().selection
     if (!ids.length) return
     await api.batch({ ids, ...patch })
-    // Keep expanded collection tiles in step without a refetch.
+    // Keep expanded session and collection tiles in step without a refetch.
     const idSet = new Set(ids)
     set((s) => {
-      const collectionItems: Record<string, Item[]> = {}
-      for (const [key, page] of Object.entries(s.collectionItems)) {
-        collectionItems[key] = page.map((item) =>
+      const groupItems: Record<string, Item[]> = {}
+      for (const [key, page] of Object.entries(s.groupItems)) {
+        groupItems[key] = page.map((item) =>
           idSet.has(item.id) ? { ...item, ...patch } : item,
         )
       }
-      return { collectionItems }
+      return { groupItems }
     })
     if (!opts?.keep) get().clearSelection()
     await get().refreshCatalog()
@@ -855,11 +863,11 @@ export const useStore = create<AppState>((set, get) => ({
     await api.batch({ ids, removeFromCatalog: true })
     const idSet = new Set(ids)
     set((s) => {
-      const collectionItems: Record<string, Item[]> = {}
-      for (const [key, page] of Object.entries(s.collectionItems)) {
-        collectionItems[key] = page.filter((item) => !idSet.has(item.id))
+      const groupItems: Record<string, Item[]> = {}
+      for (const [key, page] of Object.entries(s.groupItems)) {
+        groupItems[key] = page.filter((item) => !idSet.has(item.id))
       }
-      return { collectionItems }
+      return { groupItems }
     })
     get().clearSelection()
     await get().refreshCatalog()
@@ -868,13 +876,13 @@ export const useStore = create<AppState>((set, get) => ({
     if (!itemIds.length) return
     await api.addToCollection(collectionId, itemIds)
     get().clearSelection()
-    set((s) => ({ ...clearCollectionCache(s, collectionId), collectionPicker: null }))
+    set((s) => ({ ...clearGroupCache(s, 'collection', collectionId), collectionPicker: null }))
     await get().refreshCatalog()
   },
   removeFromCollection: async (collectionId, itemId) => {
     await api.removeFromCollection(collectionId, itemId)
     // Drop the cached page so an expanded tile refetches without the item.
-    set((s) => clearCollectionCache(s, collectionId))
+    set((s) => clearGroupCache(s, 'collection', collectionId))
     await get().refreshCatalog()
   },
 
@@ -885,7 +893,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
   toggleFavorite: async (id) => {
     const item =
-      get().items.find((i) => i.id === id) ?? findCachedItem(get().collectionItems, id)
+      get().items.find((i) => i.id === id) ?? findCachedItem(get().groupItems, id)
     if (!item) return
     await api.updateItem(id, { favorite: !item.favorite })
     await get().loadItems()
@@ -900,7 +908,7 @@ export const useStore = create<AppState>((set, get) => ({
     const fresh = await api.item(id)
     set((s) => ({
       items: s.items.map((item) => (item.id === fresh.id ? fresh : item)),
-      collectionItems: replaceCachedItem(s.collectionItems, fresh),
+      groupItems: replaceCachedItem(s.groupItems, fresh),
     }))
   },
 
@@ -932,7 +940,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
   deleteCollection: async (id) => {
     await api.deleteCollection(id)
-    set((s) => clearCollectionCache(s, id))
+    set((s) => clearGroupCache(s, 'collection', id))
     await get().refreshCatalog()
   },
 
@@ -971,6 +979,9 @@ export const useStore = create<AppState>((set, get) => ({
   },
   reclusterSessions: async () => {
     await api.reclusterSessions()
+    // Reclustering moves items between sessions, so cached session pages are
+    // stale; drop the caches so expanded tiles refetch from the new catalog.
+    set({ groupItems: {}, groupLoading: {} })
     await get().refreshCatalog()
   },
 

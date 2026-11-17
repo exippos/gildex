@@ -350,7 +350,7 @@ function CollectionPreview({
 export function RightPreview({ style }: { style?: CSSProperties }) {
   const previewItemId = useStore((s) => s.previewItemId)
   const items = useStore((s) => s.items)
-  const collectionItems = useStore((s) => s.collectionItems)
+  const groupItems = useStore((s) => s.groupItems)
   const sessions = useStore((s) => s.sessions)
   const collections = useStore((s) => s.collections)
   const surface = useStore((s) => s.surface)
@@ -365,9 +365,9 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
     if (!previewItemId) return null
     return (
       items.find((item) => item.id === previewItemId) ??
-      findCachedItem(collectionItems, previewItemId)
+      findCachedItem(groupItems, previewItemId)
     )
-  }, [previewItemId, items, collectionItems])
+  }, [previewItemId, items, groupItems])
   const lastItemRef = useRef<Item | null>(null)
   if (found) lastItemRef.current = found
   const item =

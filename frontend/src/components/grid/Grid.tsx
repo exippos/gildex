@@ -5,7 +5,7 @@
 // the shared grid flow instead of giving them a block of their own.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { collectionItemsKey, resolveItems, useStore } from '../../store'
+import { groupItemsKey, resolveItems, useStore } from '../../store'
 import { thumbUrl } from '../../api'
 import type { Collection, GroupType, Item, Session } from '../../types'
 import { ContextMenu, type MenuEntry } from '../common/ContextMenu'
@@ -116,8 +116,14 @@ function makeGroup(
   }
 }
 
-/** Groups items by session in catalog order, keeping unmatched runs visible. */
-function sessionGroups(items: Item[], sessions: Session[]): Group[] {
+/** Groups items by session in catalog order, keeping unmatched runs visible.
+ *  Used for filtered session views, where only sessions with matching items
+ *  should appear; the unfiltered view uses `catalogSessionGroups` instead. */
+function sessionGroups(
+  items: Item[],
+  sessions: Session[],
+  cachedFor: (id: string) => Item[] | undefined,
+): Group[] {
   const bySession = new Map<string, Item[]>()
   const loose: Item[] = []
   for (const item of items) {
@@ -132,7 +138,7 @@ function sessionGroups(items: Item[], sessions: Session[]): Group[] {
 
   const groups: Group[] = []
   for (const session of sessions) {
-    const groupItems = bySession.get(session.id)
+    const groupItems = cachedFor(session.id) ?? bySession.get(session.id)
     if (!groupItems?.length) continue
     bySession.delete(session.id)
     const group = makeGroup(
@@ -153,6 +159,52 @@ function sessionGroups(items: Item[], sessions: Session[]): Group[] {
   for (const [id, groupItems] of bySession) {
     groups.push(makeGroup('session', id, id, groupItems, ''))
   }
+  if (loose.length) groups.push(makeGroup('session', '', 'Unsorted', loose, ''))
+  return groups
+}
+
+/**
+ * Builds one tile per catalog session. The main `items` page is capped, so
+ * sessions whose items fall outside it would otherwise vanish; their contents
+ * are loaded lazily on expand and the catalog counts keep the tile honest.
+ */
+function catalogSessionGroups(
+  sessions: Session[],
+  pageItems: Item[],
+  cachedFor: (id: string) => Item[] | undefined,
+): Group[] {
+  const pageBySession = new Map<string, Item[]>()
+  for (const item of pageItems) {
+    if (!item.sessionId) continue
+    const bucket = pageBySession.get(item.sessionId)
+    if (bucket) bucket.push(item)
+    else pageBySession.set(item.sessionId, [item])
+  }
+
+  const groups: Group[] = []
+  for (const session of sessions) {
+    const cached = cachedFor(session.id)
+    if (session.itemCount === 0 && !cached?.length) continue
+    // Show whatever the main page already holds until the full page loads.
+    const items = cached ?? pageBySession.get(session.id) ?? []
+    const group = makeGroup(
+      'session',
+      session.id,
+      session.label,
+      items,
+      session.thumbnailPath,
+      session.itemCount,
+      session.coverItemId,
+    )
+    // Catalog values are authoritative before the first fetch.
+    if (!cached) group.count = session.itemCount
+    group.range = formatRange(session.startsAt, session.endsAt)
+    group.videoCount = session.videoCount
+    group.audioCount = session.audioCount
+    groups.push(group)
+  }
+  // Items with no session (e.g. removed from a group by hand) keep their tile.
+  const loose = pageItems.filter((item) => !item.sessionId)
   if (loose.length) groups.push(makeGroup('session', '', 'Unsorted', loose, ''))
   return groups
 }
@@ -406,9 +458,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const activeTagFilters = useStore((s) => s.activeTagFilters)
   const sessions = useStore((s) => s.sessions)
   const collections = useStore((s) => s.collections)
-  const collectionItems = useStore((s) => s.collectionItems)
-  const collectionLoading = useStore((s) => s.collectionLoading)
-  const loadCollectionItems = useStore((s) => s.loadCollectionItems)
+  const groupItems = useStore((s) => s.groupItems)
+  const groupLoading = useStore((s) => s.groupLoading)
+  const loadGroupItems = useStore((s) => s.loadGroupItems)
   const selection = useStore((s) => s.selection)
   const loading = useStore((s) => s.loadingItems)
   const clearSelection = useStore((s) => s.clearSelection)
@@ -497,8 +549,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
     })
   }
 
-  const cacheKey = (id: string) =>
-    collectionItemsKey(id, search, activeTagFilters, sort, sortDir)
+  const cacheKey = (type: GroupSource, id: string) =>
+    groupItemsKey(type, id, search, activeTagFilters, sort, sortDir)
 
   const cols = Math.max(
     1,
@@ -521,56 +573,76 @@ export function Grid({ cellSize }: { cellSize: number }) {
     activeCollectionId === null &&
     !search.trim() &&
     activeTagFilters.length === 0
-  const groupMode: GroupSource | null =
-    surface === 'sessions'
-      ? activeSessionId === null
-        ? 'session'
-        : null
-      : collectionTiles
-        ? 'collection'
-        : null
+  const sessionGrouping = surface === 'sessions' && activeSessionId === null
+  // Unfiltered sessions come from the catalog so older sessions stay visible
+  // even when the main items page is capped; filtered views fall back to the
+  // page-derived groups, where every listed session has a matching item.
+  const catalogSessions =
+    sessionGrouping && !search.trim() && activeTagFilters.length === 0
+  const groupMode: GroupSource | null = sessionGrouping
+    ? 'session'
+    : collectionTiles
+      ? 'collection'
+      : null
 
-  // An edit can drop a collection's cached page (the group editor or a drop
+  // An edit can drop a group's cached page (the group editor or a drop
   // target invalidates it). Refetch any expanded tile that lost its page so
   // the open group keeps showing its items.
   useEffect(() => {
-    if (groupMode !== 'collection') return
+    if (!groupMode) return
     for (const key of expanded) {
-      if (!key.startsWith('collection:')) continue
-      const id = key.slice('collection:'.length)
-      const keyed = collectionItemsKey(id, search, activeTagFilters, sort, sortDir)
-      if (!collectionItems[keyed] && !collectionLoading[keyed]) {
-        void loadCollectionItems(id)
+      const sep = key.indexOf(':')
+      const source = key.slice(0, sep)
+      if (source !== 'session' && source !== 'collection') continue
+      const id = key.slice(sep + 1)
+      const keyed = groupItemsKey(source, id, search, activeTagFilters, sort, sortDir)
+      if (!groupItems[keyed] && !groupLoading[keyed]) {
+        void loadGroupItems(source, id)
       }
     }
   }, [
     groupMode,
     expanded,
-    collectionItems,
-    collectionLoading,
+    groupItems,
+    groupLoading,
     search,
     activeTagFilters,
     sort,
     sortDir,
-    loadCollectionItems,
+    loadGroupItems,
   ])
 
   const itemSize = groupMode ? Math.round(cellW * ITEM_SCALE) : cellW
   const itemInset = (cellW - itemSize) / 2
 
   const groups = useMemo(() => {
-    if (groupMode === 'session') return sessionGroups(items, sessions)
+    if (groupMode === 'session') {
+      return catalogSessions
+        ? catalogSessionGroups(sessions, items, (id) => groupItems[cacheKey('session', id)])
+        : sessionGroups(items, sessions, (id) => groupItems[cacheKey('session', id)])
+    }
     if (groupMode === 'collection') {
       const out: Group[] = []
       for (const collection of collections) {
-        const cached = collectionItems[cacheKey(collection.id)]
+        const cached = groupItems[cacheKey('collection', collection.id)]
         if (collection.itemCount === 0 && !cached?.length) continue
         out.push(collectionGroup(collection, cached))
       }
       return out
     }
     return []
-  }, [groupMode, items, sessions, collections, collectionItems, search, activeTagFilters, sort, sortDir])
+  }, [
+    groupMode,
+    catalogSessions,
+    items,
+    sessions,
+    collections,
+    groupItems,
+    search,
+    activeTagFilters,
+    sort,
+    sortDir,
+  ])
 
   const layout = useMemo(() => {
     const slots: Slot[] = []
@@ -709,8 +781,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
 
   const toggleGroup = (group: Group) => {
     const open = expanded.has(group.key) && !exiting.has(group.key)
-    if (!open && group.source === 'collection' && !collectionItems[cacheKey(group.id)]) {
-      void loadCollectionItems(group.id)
+    if (!open && group.id && !groupItems[cacheKey(group.source, group.id)]) {
+      void loadGroupItems(group.source, group.id)
     }
     if (open) {
       collapseGroup(group.key)
@@ -865,7 +937,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
 
     // Batch actions act on the whole selection, as the floating toolbar does.
     const ids = selection.includes(item.id) ? selection : [item.id]
-    const chosen = resolveItems(items, collectionItems, ids)
+    const chosen = resolveItems(items, groupItems, ids)
     const allFavorite = chosen.length > 0 && chosen.every((entry) => entry.favorite)
     const uniformRating =
       chosen.length > 0 && chosen.every((entry) => entry.rating === chosen[0].rating)
@@ -1032,7 +1104,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
                       }
                 if (slot.kind === 'tile') {
                   const group = slot.group
-                  const cached = collectionItems[cacheKey(group.id)]
+                  const cached = groupItems[cacheKey(group.source, group.id)]
                   return (
                     <GroupTile
                       key={slot.key}
@@ -1040,9 +1112,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
                       open={slot.open}
                       loading={
                         slot.open &&
-                        group.source === 'collection' &&
                         !cached &&
-                        Boolean(collectionLoading[cacheKey(group.id)])
+                        Boolean(groupLoading[cacheKey(group.source, group.id)])
                       }
                       compact={compact}
                       tight={tight}

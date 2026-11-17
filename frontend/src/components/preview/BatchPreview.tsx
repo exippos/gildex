@@ -14,7 +14,7 @@ const MAX_THUMBS = 12
 export function BatchPreview() {
   const selection = useStore((s) => s.selection)
   const items = useStore((s) => s.items)
-  const collectionItems = useStore((s) => s.collectionItems)
+  const groupItems = useStore((s) => s.groupItems)
   const tags = useStore((s) => s.tags)
   const batchTag = useStore((s) => s.batchTag)
   const batchSet = useStore((s) => s.batchSet)
@@ -23,11 +23,11 @@ export function BatchPreview() {
   const openCollectionPicker = useStore((s) => s.openCollectionPicker)
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
 
-  // Expanded collection tiles render from the collection caches, so a
+  // Expanded session/collection tiles render from the group caches, so a
   // selection may hold ids that are absent from the main `items` page.
   const selectedItems = useMemo(
-    () => resolveItems(items, collectionItems, selection),
-    [items, collectionItems, selection],
+    () => resolveItems(items, groupItems, selection),
+    [items, groupItems, selection],
   )
 
   const count = selection.length

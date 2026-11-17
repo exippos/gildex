@@ -156,7 +156,7 @@ function CollectionView({
 export function Inspector() {
   const inspector = useStore((s) => s.inspector)
   const items = useStore((s) => s.items)
-  const collectionItems = useStore((s) => s.collectionItems)
+  const groupItems = useStore((s) => s.groupItems)
   const sessions = useStore((s) => s.sessions)
   const collections = useStore((s) => s.collections)
   const surface = useStore((s) => s.surface)
@@ -177,7 +177,7 @@ export function Inspector() {
   const { ownerType, ownerId, ownerLabel } = inspector
   const item =
     ownerType === 'item'
-      ? items.find((i) => i.id === ownerId) ?? findCachedItem(collectionItems, ownerId) ?? undefined
+      ? items.find((i) => i.id === ownerId) ?? findCachedItem(groupItems, ownerId) ?? undefined
       : undefined
   const session = ownerType === 'session' ? sessions.find((s) => s.id === ownerId) : undefined
   const collection =

@@ -12,7 +12,7 @@ type Popover = 'tag' | 'rate' | 'status' | null
 export function BatchToolbar() {
   const selection = useStore((s) => s.selection)
   const items = useStore((s) => s.items)
-  const collectionItems = useStore((s) => s.collectionItems)
+  const groupItems = useStore((s) => s.groupItems)
   const batchSet = useStore((s) => s.batchSet)
   const batchRemove = useStore((s) => s.batchRemove)
   const clearSelection = useStore((s) => s.clearSelection)
@@ -41,9 +41,9 @@ export function BatchToolbar() {
 
   const allFavorite = useMemo(() => {
     if (selection.length === 0) return false
-    const selItems = resolveItems(items, collectionItems, selection)
+    const selItems = resolveItems(items, groupItems, selection)
     return selItems.length > 0 && selItems.every((item) => item.favorite)
-  }, [selection, items, collectionItems])
+  }, [selection, items, groupItems])
 
   if (selection.length === 0) return null
 
