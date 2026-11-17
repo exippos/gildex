@@ -3,6 +3,7 @@ import type {
   BatchPatch,
   Collection,
   FolderNode,
+  GroupPatch,
   ImportStatus,
   Item,
   ItemPage,
@@ -158,7 +159,7 @@ export const api = {
   batch: (patch: BatchPatch) => request<{ ok: boolean }>('PATCH', '/items/batch', patch),
 
   sessions: () => request<Session[]>('GET', '/sessions'),
-  updateSession: (id: string, body: { label?: string; coverItemId?: string | null }) =>
+  updateSession: (id: string, body: { label?: string; coverItemId?: string | null } & GroupPatch) =>
     request<Session>('PATCH', `/sessions/${id}`, body),
 
   tags: () => request<TagList>('GET', '/tags'),
@@ -171,7 +172,7 @@ export const api = {
   collections: () => request<Collection[]>('GET', '/collections'),
   createCollection: (body: { name: string; description?: string }) =>
     request<Collection>('POST', '/collections', body),
-  updateCollection: (id: string, body: { name?: string; description?: string; order?: string[]; coverItemId?: string | null }) =>
+  updateCollection: (id: string, body: { name?: string; description?: string; order?: string[]; coverItemId?: string | null } & GroupPatch) =>
     request<Collection>('PATCH', `/collections/${id}`, body),
   deleteCollection: (id: string) => request<void>('DELETE', `/collections/${id}`),
   addToCollection: (id: string, itemIds: string[]) =>

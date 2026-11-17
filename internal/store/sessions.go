@@ -13,6 +13,7 @@ import (
 func (s *Store) Sessions() ([]model.Session, error) {
 	rows, err := s.db.Query(`
 		SELECT s.id, s.label, s.starts_at, s.ends_at, s.cover_item_id,
+			s.favorite, s.rating, s.status,
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id),
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id AND i.kind = 'video'),
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id AND i.kind = 'audio'),
@@ -33,26 +34,51 @@ func (s *Store) Sessions() ([]model.Session, error) {
 	out := []model.Session{}
 	for rows.Next() {
 		var (
-			sess  model.Session
-			cover sql.NullString
+			sess     model.Session
+			cover    sql.NullString
+			favorite int
+			status   string
 		)
-		if err := rows.Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover, &sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath); err != nil {
+		if err := rows.Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover,
+			&favorite, &sess.Rating, &status,
+			&sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath); err != nil {
 			return nil, err
 		}
 		sess.CoverItemID = nullString(cover)
+		sess.Favorite = favorite != 0
+		sess.Status = model.Status(status)
+		sess.Tags = []string{}
 		out = append(out, sess)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	// Close before the tag query: the store runs on a single connection.
+	rows.Close()
+
+	tags, err := s.loadGroupTagsByOwner(groupOwnerSession)
+	if err != nil {
+		return nil, err
+	}
+	for i := range out {
+		if names, ok := tags[out[i].ID]; ok {
+			out[i].Tags = names
+		}
+	}
+	return out, nil
 }
 
 // GetSession returns one session.
 func (s *Store) GetSession(id string) (*model.Session, error) {
 	var (
-		sess  model.Session
-		cover sql.NullString
+		sess     model.Session
+		cover    sql.NullString
+		favorite int
+		status   string
 	)
 	err := s.db.QueryRow(`
 		SELECT s.id, s.label, s.starts_at, s.ends_at, s.cover_item_id,
+			s.favorite, s.rating, s.status,
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id),
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id AND i.kind = 'video'),
 			(SELECT COUNT(*) FROM items i WHERE i.session_id = s.id AND i.kind = 'audio'),
@@ -64,7 +90,9 @@ func (s *Store) GetSession(id string) (*model.Session, error) {
 					ORDER BY i.timestamp DESC LIMIT 1),
 				'')
 		FROM sessions s WHERE s.id = ?`, id).
-		Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover, &sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath)
+		Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover,
+			&favorite, &sess.Rating, &status,
+			&sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -72,17 +100,29 @@ func (s *Store) GetSession(id string) (*model.Session, error) {
 		return nil, err
 	}
 	sess.CoverItemID = nullString(cover)
+	sess.Favorite = favorite != 0
+	sess.Status = model.Status(status)
+	tags, err := s.loadGroupTags(groupOwnerSession, id)
+	if err != nil {
+		return nil, err
+	}
+	sess.Tags = tags
 	return &sess, nil
 }
 
 // SessionPatch is a partial session update. CoverItemID.Set with a nil Value
-// clears the user-picked label image.
+// clears the user-picked label image. AddTags/RemoveTags edit group tags.
 type SessionPatch struct {
 	Label       *string
 	CoverItemID NullableString
+	Favorite    *bool
+	Rating      *int
+	Status      *string
+	AddTags     []string
+	RemoveTags  []string
 }
 
-// UpdateSession updates a session label and/or its label image.
+// UpdateSession updates a session's label, label image, triage and group tags.
 func (s *Store) UpdateSession(id string, p SessionPatch) (*model.Session, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -116,6 +156,24 @@ func (s *Store) UpdateSession(id string, p SessionPatch) (*model.Session, error)
 			args = append(args, *p.CoverItemID.Value)
 		}
 	}
+	if p.Favorite != nil {
+		sets = append(sets, "favorite = ?")
+		args = append(args, boolInt(*p.Favorite))
+	}
+	if p.Rating != nil {
+		if *p.Rating < 0 || *p.Rating > 5 {
+			return nil, invalid("rating must be 0..5")
+		}
+		sets = append(sets, "rating = ?")
+		args = append(args, *p.Rating)
+	}
+	if p.Status != nil {
+		if !validGroupStatus(*p.Status) {
+			return nil, invalid("invalid status")
+		}
+		sets = append(sets, "status = ?")
+		args = append(args, *p.Status)
+	}
 
 	if len(sets) == 0 {
 		var one int
@@ -135,6 +193,12 @@ func (s *Store) UpdateSession(id string, p SessionPatch) (*model.Session, error)
 			return nil, ErrNotFound
 		}
 	}
+	if err := addGroupTagsTx(tx, groupOwnerSession, id, p.AddTags); err != nil {
+		return nil, err
+	}
+	if err := removeGroupTagsTx(tx, groupOwnerSession, id, p.RemoveTags); err != nil {
+		return nil, err
+	}
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
@@ -147,6 +211,9 @@ type oldSession struct {
 	startsAt int64
 	endsAt   int64
 	cover    sql.NullString
+	favorite int
+	rating   int
+	status   string
 	used     bool
 }
 
@@ -176,14 +243,14 @@ func (s *Store) ReclusterSessions() error {
 		return err
 	}
 
-	oldRows, err := s.db.Query(`SELECT id, label, starts_at, ends_at, cover_item_id FROM sessions`)
+	oldRows, err := s.db.Query(`SELECT id, label, starts_at, ends_at, cover_item_id, favorite, rating, status FROM sessions`)
 	if err != nil {
 		return err
 	}
 	var olds []oldSession
 	for oldRows.Next() {
 		var o oldSession
-		if err := oldRows.Scan(&o.id, &o.label, &o.startsAt, &o.endsAt, &o.cover); err != nil {
+		if err := oldRows.Scan(&o.id, &o.label, &o.startsAt, &o.endsAt, &o.cover, &o.favorite, &o.rating, &o.status); err != nil {
 			oldRows.Close()
 			return err
 		}
@@ -235,6 +302,9 @@ func (s *Store) ReclusterSessions() error {
 		sessionID := ""
 		label := ""
 		var cover any
+		favorite := 0
+		rating := 0
+		status := string(model.StatusDraft)
 		bestOverlap := int64(0)
 		bestIdx := -1
 		for i := range olds {
@@ -262,14 +332,18 @@ func (s *Store) ReclusterSessions() error {
 			if olds[bestIdx].cover.Valid {
 				cover = olds[bestIdx].cover.String
 			}
+			favorite = olds[bestIdx].favorite
+			rating = olds[bestIdx].rating
+			status = olds[bestIdx].status
 			olds[bestIdx].used = true
 		} else {
 			sessionID = NewID()
 			label = "Session · " + time.UnixMilli(start).Local().Format("2006-01-02")
 		}
 
-		if _, err := tx.Exec(`INSERT INTO sessions (id, label, starts_at, ends_at, cover_item_id) VALUES (?, ?, ?, ?, ?)`,
-			sessionID, label, start, end, cover); err != nil {
+		if _, err := tx.Exec(`INSERT INTO sessions (id, label, starts_at, ends_at, cover_item_id, favorite, rating, status)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			sessionID, label, start, end, cover, favorite, rating, status); err != nil {
 			return err
 		}
 		for _, t := range cluster {
@@ -277,6 +351,14 @@ func (s *Store) ReclusterSessions() error {
 				return err
 			}
 		}
+	}
+
+	// Sessions that vanished in the recluster leave their group tags behind;
+	// reused ids keep theirs.
+	if _, err := tx.Exec(`DELETE FROM group_tag
+		WHERE owner_type = ? AND owner_id NOT IN (SELECT id FROM sessions)`,
+		groupOwnerSession); err != nil {
+		return err
 	}
 
 	return tx.Commit()

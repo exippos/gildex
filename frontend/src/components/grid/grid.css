@@ -585,6 +585,31 @@
   opacity: 0;
 }
 
+/* group-owned triage: gilded favorite diamond + status/rating in the meta row */
+.group-tile-fav {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  background: var(--gilt);
+  box-shadow: 0 0 8px var(--accent-glow);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.group-tile-triage {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.group-tile.is-open .group-tile-fav {
+  background: var(--on-gilt);
+  box-shadow: none;
+}
+
 /* ---- tile placeholders (no thumbnail) ---- */
 
 .tile-glyph {

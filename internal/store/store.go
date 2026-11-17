@@ -79,7 +79,10 @@ CREATE TABLE IF NOT EXISTS sessions (
   label         TEXT NOT NULL,
   starts_at     INTEGER NOT NULL,
   ends_at       INTEGER NOT NULL,
-  cover_item_id TEXT
+  cover_item_id TEXT,
+  favorite      INTEGER NOT NULL DEFAULT 0,
+  rating        INTEGER NOT NULL DEFAULT 0,
+  status        TEXT NOT NULL DEFAULT 'draft'
 );
 
 CREATE TABLE IF NOT EXISTS tags (
@@ -93,11 +96,23 @@ CREATE TABLE IF NOT EXISTS item_tag (
   PRIMARY KEY (item_id, tag_id)
 );
 
+-- Group tags share the item vocabulary but belong to a session or collection
+-- itself, not to its items (D45). owner_type is 'session' or 'collection'.
+CREATE TABLE IF NOT EXISTS group_tag (
+  owner_type TEXT NOT NULL,
+  owner_id   TEXT NOT NULL,
+  tag_id     TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (owner_type, owner_id, tag_id)
+);
+
 CREATE TABLE IF NOT EXISTS collections (
   id            TEXT PRIMARY KEY,
   name          TEXT NOT NULL,
   description   TEXT NOT NULL DEFAULT '',
-  cover_item_id TEXT
+  cover_item_id TEXT,
+  favorite      INTEGER NOT NULL DEFAULT 0,
+  rating        INTEGER NOT NULL DEFAULT 0,
+  status        TEXT NOT NULL DEFAULT 'draft'
 );
 
 CREATE TABLE IF NOT EXISTS collection_item (
@@ -143,6 +158,8 @@ CREATE INDEX IF NOT EXISTS idx_items_timestamp ON items(timestamp);
 CREATE INDEX IF NOT EXISTS idx_items_session ON items(session_id);
 CREATE INDEX IF NOT EXISTS idx_items_path ON items(relative_path);
 CREATE INDEX IF NOT EXISTS idx_item_tag_tag ON item_tag(tag_id);
+CREATE INDEX IF NOT EXISTS idx_group_tag_tag ON group_tag(tag_id);
+CREATE INDEX IF NOT EXISTS idx_group_tag_owner ON group_tag(owner_type, owner_id);
 CREATE INDEX IF NOT EXISTS idx_collection_item_item ON collection_item(item_id);
 CREATE INDEX IF NOT EXISTS idx_notes_owner ON notes(owner_type, owner_id);
 `
@@ -176,7 +193,13 @@ func Open(dbPath, root string) (*Store, error) {
 func migrate(db *sql.DB) error {
 	columns := []struct{ table, column, ddl string }{
 		{"sessions", "cover_item_id", `ALTER TABLE sessions ADD COLUMN cover_item_id TEXT`},
+		{"sessions", "favorite", `ALTER TABLE sessions ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0`},
+		{"sessions", "rating", `ALTER TABLE sessions ADD COLUMN rating INTEGER NOT NULL DEFAULT 0`},
+		{"sessions", "status", `ALTER TABLE sessions ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'`},
 		{"collections", "cover_item_id", `ALTER TABLE collections ADD COLUMN cover_item_id TEXT`},
+		{"collections", "favorite", `ALTER TABLE collections ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0`},
+		{"collections", "rating", `ALTER TABLE collections ADD COLUMN rating INTEGER NOT NULL DEFAULT 0`},
+		{"collections", "status", `ALTER TABLE collections ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'`},
 		{"items", "source_id", `ALTER TABLE items ADD COLUMN source_id TEXT`},
 		{"items", "frame_count", `ALTER TABLE items ADD COLUMN frame_count INTEGER NOT NULL DEFAULT 0`},
 		{"items", "origin_path", `ALTER TABLE items ADD COLUMN origin_path TEXT NOT NULL DEFAULT ''`},

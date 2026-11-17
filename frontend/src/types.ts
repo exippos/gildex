@@ -5,6 +5,16 @@ export type Status = 'draft' | 'final' | 'wip'
 export type State = 'present' | 'missing'
 export type Surface = 'all' | 'sessions' | 'collections' | 'folders' | 'tags'
 export type GroupType = 'session' | 'collection'
+
+// Group-owned triage/tag edits (D45). Tags use the shared vocabulary; they are
+// assigned to the session/collection, not to its items.
+export interface GroupPatch {
+  favorite?: boolean
+  rating?: number
+  status?: Status
+  addTags?: string[]
+  removeTags?: string[]
+}
 export type Workspace = 'ingest' | 'gallery' | 'timeline'
 export type OwnerType = 'item' | 'session' | 'collection'
 export type ItemSort = 'time' | 'filename' | 'size' | 'session'
@@ -74,6 +84,11 @@ export interface Session {
   audioCount: number
   thumbnailPath: string
   coverItemId: string | null
+  // Group-owned triage and tags (D45); independent of the session's items.
+  favorite: boolean
+  rating: number
+  status: Status
+  tags: string[]
 }
 
 export interface Tag {
@@ -105,6 +120,11 @@ export interface Collection {
   audioCount: number
   thumbnailPath: string
   coverItemId: string | null
+  // Group-owned triage and tags (D45); independent of the collection's items.
+  favorite: boolean
+  rating: number
+  status: Status
+  tags: string[]
 }
 
 export interface Note {

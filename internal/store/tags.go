@@ -82,6 +82,9 @@ func (s *Store) DeleteTag(id string) error {
 	if _, err := tx.Exec(`DELETE FROM item_tag WHERE tag_id = ?`, id); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(`DELETE FROM group_tag WHERE tag_id = ?`, id); err != nil {
+		return err
+	}
 	res, err := tx.Exec(`DELETE FROM tags WHERE id = ?`, id)
 	if err != nil {
 		return err

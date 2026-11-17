@@ -49,27 +49,51 @@ func (a *API) handleUpdateCollection(w http.ResponseWriter, r *http.Request) {
 	if st == nil {
 		return
 	}
-	var body struct {
-		Name        *string         `json:"name"`
-		Description *string         `json:"description"`
-		Order       *[]string       `json:"order"`
-		CoverItemID json.RawMessage `json:"coverItemId"`
-	}
-	if !decodeJSON(w, r, &body) {
+	var raw map[string]json.RawMessage
+	if !decodeJSON(w, r, &raw) {
 		return
 	}
 	var patch store.CollectionPatch
-	patch.Name = body.Name
-	patch.Description = body.Description
-	patch.Order = body.Order
-	if body.CoverItemID != nil {
-		cover, err := rawNullableString(map[string]json.RawMessage{"coverItemId": body.CoverItemID}, "coverItemId")
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "invalid coverItemId")
+	if v, ok := raw["name"]; ok {
+		var name string
+		if err := json.Unmarshal(v, &name); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid name")
 			return
 		}
-		patch.CoverItemID = cover
+		patch.Name = &name
 	}
+	if v, ok := raw["description"]; ok {
+		var description string
+		if err := json.Unmarshal(v, &description); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid description")
+			return
+		}
+		patch.Description = &description
+	}
+	if v, ok := raw["order"]; ok {
+		var order []string
+		if err := json.Unmarshal(v, &order); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid order")
+			return
+		}
+		patch.Order = &order
+	}
+	cover, err := rawNullableString(raw, "coverItemId")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid coverItemId")
+		return
+	}
+	patch.CoverItemID = cover
+	triage, err := parseGroupTriage(raw)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	patch.Favorite = triage.Favorite
+	patch.Rating = triage.Rating
+	patch.Status = triage.Status
+	patch.AddTags = triage.AddTags
+	patch.RemoveTags = triage.RemoveTags
 	collection, err := st.UpdateCollection(r.PathValue("id"), patch)
 	if err != nil {
 		writeStoreError(w, err)

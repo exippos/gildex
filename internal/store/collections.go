@@ -27,7 +27,7 @@ func (s *Store) Collections() ([]model.Collection, error) {
 					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
 					ORDER BY ci.position ASC LIMIT 1),
 				''),
-			c.cover_item_id
+			c.cover_item_id, c.favorite, c.rating, c.status
 		FROM collections c
 		ORDER BY c.name COLLATE NOCASE ASC`)
 	if err != nil {
@@ -38,23 +38,46 @@ func (s *Store) Collections() ([]model.Collection, error) {
 	out := []model.Collection{}
 	for rows.Next() {
 		var (
-			c     model.Collection
-			cover sql.NullString
+			c        model.Collection
+			cover    sql.NullString
+			favorite int
+			status   string
 		)
-		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount, &c.ThumbnailPath, &cover); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount,
+			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status); err != nil {
 			return nil, err
 		}
 		c.CoverItemID = nullString(cover)
+		c.Favorite = favorite != 0
+		c.Status = model.Status(status)
+		c.Tags = []string{}
 		out = append(out, c)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	// Close before the tag query: the store runs on a single connection.
+	rows.Close()
+
+	tags, err := s.loadGroupTagsByOwner(groupOwnerCollection)
+	if err != nil {
+		return nil, err
+	}
+	for i := range out {
+		if names, ok := tags[out[i].ID]; ok {
+			out[i].Tags = names
+		}
+	}
+	return out, nil
 }
 
 // GetCollection returns one collection.
 func (s *Store) GetCollection(id string) (*model.Collection, error) {
 	var (
-		c     model.Collection
-		cover sql.NullString
+		c        model.Collection
+		cover    sql.NullString
+		favorite int
+		status   string
 	)
 	err := s.db.QueryRow(`
 		SELECT c.id, c.name, c.description,
@@ -73,9 +96,10 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
 					ORDER BY ci.position ASC LIMIT 1),
 				''),
-			c.cover_item_id
+			c.cover_item_id, c.favorite, c.rating, c.status
 		FROM collections c WHERE c.id = ?`, id).
-		Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount, &c.ThumbnailPath, &cover)
+		Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount,
+			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -83,6 +107,13 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 		return nil, err
 	}
 	c.CoverItemID = nullString(cover)
+	c.Favorite = favorite != 0
+	c.Status = model.Status(status)
+	tags, err := s.loadGroupTags(groupOwnerCollection, id)
+	if err != nil {
+		return nil, err
+	}
+	c.Tags = tags
 	return &c, nil
 }
 
@@ -102,15 +133,20 @@ func (s *Store) CreateCollection(name, description string) (*model.Collection, e
 
 // CollectionPatch is a partial collection update. Order, when non-nil,
 // rewrites the full ordered membership (D21). CoverItemID.Set with a nil Value
-// clears the user-picked label image.
+// clears the user-picked label image. AddTags/RemoveTags edit group tags.
 type CollectionPatch struct {
 	Name        *string
 	Description *string
 	Order       *[]string
 	CoverItemID NullableString
+	Favorite    *bool
+	Rating      *int
+	Status      *string
+	AddTags     []string
+	RemoveTags  []string
 }
 
-// UpdateCollection updates name/description and/or the full item order.
+// UpdateCollection updates name/description, membership and/or group triage.
 func (s *Store) UpdateCollection(id string, p CollectionPatch) (*model.Collection, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -131,6 +167,24 @@ func (s *Store) UpdateCollection(id string, p CollectionPatch) (*model.Collectio
 	if p.Description != nil {
 		sets = append(sets, "description = ?")
 		args = append(args, strings.TrimSpace(*p.Description))
+	}
+	if p.Favorite != nil {
+		sets = append(sets, "favorite = ?")
+		args = append(args, boolInt(*p.Favorite))
+	}
+	if p.Rating != nil {
+		if *p.Rating < 0 || *p.Rating > 5 {
+			return nil, invalid("rating must be 0..5")
+		}
+		sets = append(sets, "rating = ?")
+		args = append(args, *p.Rating)
+	}
+	if p.Status != nil {
+		if !validGroupStatus(*p.Status) {
+			return nil, invalid("invalid status")
+		}
+		sets = append(sets, "status = ?")
+		args = append(args, *p.Status)
 	}
 	if p.CoverItemID.Set {
 		if p.CoverItemID.Value == nil {
@@ -200,6 +254,13 @@ func (s *Store) UpdateCollection(id string, p CollectionPatch) (*model.Collectio
 		}
 	}
 
+	if err := addGroupTagsTx(tx, groupOwnerCollection, id, p.AddTags); err != nil {
+		return nil, err
+	}
+	if err := removeGroupTagsTx(tx, groupOwnerCollection, id, p.RemoveTags); err != nil {
+		return nil, err
+	}
+
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
@@ -214,6 +275,10 @@ func (s *Store) DeleteCollection(id string) error {
 	}
 	defer tx.Rollback()
 	if _, err := tx.Exec(`DELETE FROM collection_item WHERE collection_id = ?`, id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM group_tag WHERE owner_type = ? AND owner_id = ?`,
+		groupOwnerCollection, id); err != nil {
 		return err
 	}
 	res, err := tx.Exec(`DELETE FROM collections WHERE id = ?`, id)

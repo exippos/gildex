@@ -47,12 +47,73 @@ func (a *API) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	patch.CoverItemID = cover
+	triage, err := parseGroupTriage(raw)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	patch.Favorite = triage.Favorite
+	patch.Rating = triage.Rating
+	patch.Status = triage.Status
+	patch.AddTags = triage.AddTags
+	patch.RemoveTags = triage.RemoveTags
 	session, err := st.UpdateSession(r.PathValue("id"), patch)
 	if err != nil {
 		writeStoreError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, session)
+}
+
+// groupTriagePatch mirrors the group-owned metadata fields shared by sessions
+// and collections (D45).
+type groupTriagePatch struct {
+	Favorite   *bool
+	Rating     *int
+	Status     *string
+	AddTags    []string
+	RemoveTags []string
+}
+
+// parseGroupTriage reads the optional triage/tag fields from a PATCH body.
+func parseGroupTriage(raw map[string]json.RawMessage) (groupTriagePatch, error) {
+	var p groupTriagePatch
+	if v, ok := raw["favorite"]; ok {
+		var favorite bool
+		if err := json.Unmarshal(v, &favorite); err != nil {
+			return p, errInvalid("invalid favorite")
+		}
+		p.Favorite = &favorite
+	}
+	if v, ok := raw["rating"]; ok {
+		var rating int
+		if err := json.Unmarshal(v, &rating); err != nil || rating < 0 || rating > 5 {
+			return p, errInvalid("invalid rating")
+		}
+		p.Rating = &rating
+	}
+	if v, ok := raw["status"]; ok {
+		var status string
+		if err := json.Unmarshal(v, &status); err != nil || !validStatus(status) {
+			return p, errInvalid("invalid status")
+		}
+		p.Status = &status
+	}
+	if v, ok := raw["addTags"]; ok {
+		var names []string
+		if err := json.Unmarshal(v, &names); err != nil {
+			return p, errInvalid("invalid addTags")
+		}
+		p.AddTags = names
+	}
+	if v, ok := raw["removeTags"]; ok {
+		var names []string
+		if err := json.Unmarshal(v, &names); err != nil {
+			return p, errInvalid("invalid removeTags")
+		}
+		p.RemoveTags = names
+	}
+	return p, nil
 }
 
 func (a *API) handleTags(w http.ResponseWriter, r *http.Request) {

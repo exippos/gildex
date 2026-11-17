@@ -7,6 +7,7 @@ import { applyTheme, initialTheme, persistTheme, syncThemeUrl, type Theme } from
 import type {
   Collection,
   FolderNode,
+  GroupPatch,
   GroupType,
   ImportStatus,
   Item,
@@ -225,6 +226,8 @@ interface AppState {
 
   // quick preview (right panel)
   previewItemId: string | null
+  // group focused in the preview from a tile menu, independent of the rail
+  previewGroup: { type: GroupType; id: string } | null
 
   // inspector (deep surface)
   inspector: InspectorTarget | null
@@ -292,6 +295,7 @@ interface AppState {
   selectGroupItems: (type: GroupType, id: string) => Promise<void>
 
   setPreviewItemId: (id: string | null) => void
+  setPreviewGroup: (group: { type: GroupType; id: string } | null) => void
   openInspector: (ownerType: OwnerType, ownerId: string, ownerLabel?: string) => Promise<void>
   closeInspector: () => void
 
@@ -324,8 +328,9 @@ interface AppState {
   exportTags: () => Promise<void>
   importTags: (names: string[]) => Promise<TagImportSummary>
   createCollection: (name: string, description: string, itemIds?: string[]) => Promise<string | null>
-  updateCollection: (id: string, patch: { name?: string; description?: string }) => Promise<void>
-  updateSession: (id: string, patch: { label?: string }) => Promise<void>
+  updateCollection: (id: string, patch: { name?: string; description?: string } & GroupPatch) => Promise<void>
+  updateSession: (id: string, patch: { label?: string } & GroupPatch) => Promise<void>
+  saveGroup: (type: GroupType, id: string, patch: GroupPatch) => Promise<void>
   deleteCollection: (id: string) => Promise<void>
 
   loadNotes: (ownerType: OwnerType, ownerId: string) => Promise<void>
@@ -381,6 +386,7 @@ export const useStore = create<AppState>((set, get) => ({
   lastSelectedId: null,
 
   previewItemId: null,
+  previewGroup: null,
   inspector: null,
 
   groupEditor: null,
@@ -509,26 +515,36 @@ export const useStore = create<AppState>((set, get) => ({
         api.sources(),
         api.settings(),
       ])
-    set((state) => ({
-      library,
-      sessions,
-      tags: tagList.tags,
-      untaggedCount: tagList.untagged,
-      collections,
-      folders,
-      sources,
-      librarySettings,
+    set((state) => {
       // Drop remembered selections whose group no longer exists (recluster or
       // a deleted collection), so a tab switch cannot restore a ghost row.
-      activeSessionId:
-        state.activeSessionId && sessions.some((s) => s.id === state.activeSessionId)
-          ? state.activeSessionId
-          : null,
-      activeCollectionId:
-        state.activeCollectionId && collections.some((c) => c.id === state.activeCollectionId)
-          ? state.activeCollectionId
-          : null,
-    }))
+      const previewGroup =
+        state.previewGroup &&
+        (state.previewGroup.type === 'session'
+          ? sessions.some((entry) => entry.id === state.previewGroup?.id)
+          : collections.some((entry) => entry.id === state.previewGroup?.id))
+          ? state.previewGroup
+          : null
+      return {
+        library,
+        sessions,
+        tags: tagList.tags,
+        untaggedCount: tagList.untagged,
+        collections,
+        folders,
+        sources,
+        librarySettings,
+        activeSessionId:
+          state.activeSessionId && sessions.some((s) => s.id === state.activeSessionId)
+            ? state.activeSessionId
+            : null,
+        activeCollectionId:
+          state.activeCollectionId && collections.some((c) => c.id === state.activeCollectionId)
+            ? state.activeCollectionId
+            : null,
+        previewGroup,
+      }
+    })
     await get().loadItems()
   },
 
@@ -595,21 +611,21 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   setWorkspace: (workspace) => {
-    set({ workspace, previewItemId: null })
+    set({ workspace, previewItemId: null, previewGroup: null })
     if (workspace !== 'ingest') void get().loadItems()
   },
   setSurface: (surface) => {
     // Keep each surface's rail selection. `loadItems` already scopes the
     // session / collection / folder ids to their surface, so switching tabs
     // and returning restores the last selected row instead of "All".
-    set({ surface })
+    set({ surface, previewGroup: null })
   },
   setActiveSessionId: (id) => {
-    set({ activeSessionId: id })
+    set({ activeSessionId: id, previewGroup: null })
     void get().loadItems()
   },
   setActiveCollectionId: (id) => {
-    set({ activeCollectionId: id })
+    set({ activeCollectionId: id, previewGroup: null })
     void get().loadItems()
   },
   setActiveFolder: (path) => {
@@ -712,6 +728,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   setPreviewItemId: (id) => set({ previewItemId: id }),
+  setPreviewGroup: (group) => set({ previewGroup: group, previewItemId: null }),
 
   openInspector: async (ownerType, ownerId, ownerLabel) => {
     set({ inspector: { ownerType, ownerId, ownerLabel } })
@@ -937,6 +954,10 @@ export const useStore = create<AppState>((set, get) => ({
   updateSession: async (id, patch) => {
     await api.updateSession(id, patch)
     await get().refreshCatalog()
+  },
+  saveGroup: async (type, id, patch) => {
+    if (type === 'session') await get().updateSession(id, patch)
+    else await get().updateCollection(id, patch)
   },
   deleteCollection: async (id) => {
     await api.deleteCollection(id)

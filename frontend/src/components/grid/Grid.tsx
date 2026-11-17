@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { groupItemsKey, resolveItems, useStore } from '../../store'
 import { thumbUrl } from '../../api'
-import type { Collection, GroupType, Item, Session } from '../../types'
+import type { Collection, GroupType, Item, Session, Status } from '../../types'
 import { ContextMenu, type MenuEntry } from '../common/ContextMenu'
 import { GridCell } from './GridCell'
 import { formatRange } from '../format'
@@ -52,6 +52,10 @@ interface Group {
   items: Item[]
   videoCount: number
   audioCount: number
+  /** Group-owned triage (D45), shown on the tile and edited in the preview. */
+  favorite: boolean
+  rating: number
+  status: Status
 }
 
 type Slot =
@@ -113,6 +117,9 @@ function makeGroup(
     items,
     videoCount,
     audioCount,
+    favorite: false,
+    rating: 0,
+    status: 'draft',
   }
 }
 
@@ -153,6 +160,9 @@ function sessionGroups(
     // Catalog counts are authoritative over the (possibly truncated) page.
     group.videoCount = session.videoCount
     group.audioCount = session.audioCount
+    group.favorite = session.favorite
+    group.rating = session.rating
+    group.status = session.status
     groups.push(group)
   }
   // Items whose session is missing from the catalog list still get a tile.
@@ -201,6 +211,9 @@ function catalogSessionGroups(
     group.range = formatRange(session.startsAt, session.endsAt)
     group.videoCount = session.videoCount
     group.audioCount = session.audioCount
+    group.favorite = session.favorite
+    group.rating = session.rating
+    group.status = session.status
     groups.push(group)
   }
   // Items with no session (e.g. removed from a group by hand) keep their tile.
@@ -220,6 +233,9 @@ function collectionGroup(collection: Collection, cached: Item[] | undefined): Gr
     collection.itemCount,
     collection.coverItemId,
   )
+  group.favorite = collection.favorite
+  group.rating = collection.rating
+  group.status = collection.status
   // Before the first fetch there are no items to count, so trust the catalog.
   if (!cached) {
     group.count = collection.itemCount
@@ -396,6 +412,8 @@ function GroupTile({
         </span>
       )}
 
+      {group.favorite && <span className="group-tile-fav" aria-hidden="true" />}
+
       <span className="group-tile-poster" style={posterStyle}>
         {poster ? (
           <>
@@ -433,6 +451,16 @@ function GroupTile({
           <span className="group-tile-meta">
             <span>{countLabel}</span>
             {group.range && <span className="group-tile-range">{group.range}</span>}
+            <span className="group-tile-triage" aria-hidden="true">
+              <span className={`cell-status status-${group.status}`} />
+              {group.rating > 0 && (
+                <span className="cell-rating">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <span key={n} className={`rating-dot${n <= group.rating ? ' is-on' : ''}`} />
+                  ))}
+                </span>
+              )}
+            </span>
           </span>
         </span>
         {loading ? (
@@ -472,6 +500,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const openInspector = useStore((s) => s.openInspector)
   const openGroupEditor = useStore((s) => s.openGroupEditor)
   const setGroupCover = useStore((s) => s.setGroupCover)
+  const setPreviewGroup = useStore((s) => s.setPreviewGroup)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
@@ -1018,6 +1047,14 @@ export function Grid({ cellSize }: { cellSize: number }) {
           count: group.count,
         }),
       )
+      entries.push({
+        kind: 'item',
+        label: group.source === 'session' ? 'Triage session…' : 'Triage collection…',
+        onSelect: () => {
+          clearSelection()
+          setPreviewGroup({ type: group.source, id: group.id })
+        },
+      })
       entries.push({
         kind: 'item',
         label: group.source === 'session' ? 'Edit session…' : 'Edit collection…',

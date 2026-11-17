@@ -1,9 +1,9 @@
 // Right preview (D7): read-only triage. Owner-polymorphic — item, session,
 // collection, or a minimal folder/tag line. Frosted fixed chrome.
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { mediaUrl, thumbUrl } from '../../api'
-import { findCachedItem, useStore, tagFilterLabel } from '../../store'
+import { findCachedItem, groupItemsKey, useStore, tagFilterLabel } from '../../store'
 import type { Collection, Item, Session, Status } from '../../types'
 import {
   formatBytes,
@@ -13,6 +13,7 @@ import {
 } from '../format'
 import { resolveMediaPath } from '../paths'
 import { BatchPreview } from './BatchPreview'
+import { GroupMeta } from './GroupMeta'
 import { TagEditor } from './TagEditor'
 import './right-preview.css'
 
@@ -276,6 +277,8 @@ function SessionPreview({ session, items }: { session: Session; items: Item[] })
         </div>
       </div>
 
+      <GroupMeta type="session" group={session} />
+
       <div className="preview-section preview-actions">
         <button
           type="button"
@@ -334,6 +337,8 @@ function CollectionPreview({
         </div>
       </div>
 
+      <GroupMeta type="collection" group={collection} />
+
       <div className="preview-section preview-actions">
         <button
           type="button"
@@ -360,6 +365,11 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
   const activeTagFilters = useStore((s) => s.activeTagFilters)
   const itemsTotal = useStore((s) => s.itemsTotal)
   const selection = useStore((s) => s.selection)
+  const previewGroup = useStore((s) => s.previewGroup)
+  const search = useStore((s) => s.search)
+  const sort = useStore((s) => s.sort)
+  const sortDir = useStore((s) => s.sortDir)
+  const loadGroupItems = useStore((s) => s.loadGroupItems)
 
   const found = useMemo(() => {
     if (!previewItemId) return null
@@ -375,14 +385,61 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
 
   const isBatch = selection.length >= 2
 
+  // A tile shortcut focuses a specific group; otherwise the rail's active row
+  // supplies the preview owner.
+  const focusedSession =
+    previewGroup?.type === 'session'
+      ? sessions.find((entry) => entry.id === previewGroup.id) ?? null
+      : null
+  const focusedCollection =
+    previewGroup?.type === 'collection'
+      ? collections.find((entry) => entry.id === previewGroup.id) ?? null
+      : null
   const session =
-    !item && surface === 'sessions' && activeSessionId
-      ? sessions.find((entry) => entry.id === activeSessionId) ?? null
+    !item
+      ? focusedSession ??
+        (surface === 'sessions' && activeSessionId
+          ? sessions.find((entry) => entry.id === activeSessionId) ?? null
+          : null)
       : null
   const collection =
-    !item && surface === 'collections' && activeCollectionId
-      ? collections.find((entry) => entry.id === activeCollectionId) ?? null
+    !item
+      ? focusedCollection ??
+        (surface === 'collections' && activeCollectionId
+          ? collections.find((entry) => entry.id === activeCollectionId) ?? null
+          : null)
       : null
+
+  // Explicit tile focus has no rail-scoped page behind it; fetch the group's
+  // page so the strip shows its contents instead of the current surface page.
+  useEffect(() => {
+    if (!previewGroup) return
+    void loadGroupItems(previewGroup.type, previewGroup.id)
+  }, [previewGroup, loadGroupItems])
+
+  const groupPreviewItems = useMemo(() => {
+    if (session) {
+      const key = groupItemsKey('session', session.id, search, activeTagFilters, sort, sortDir)
+      return groupItems[key] ?? items.filter((entry) => entry.sessionId === session.id)
+    }
+    if (collection) {
+      const key = groupItemsKey('collection', collection.id, search, activeTagFilters, sort, sortDir)
+      if (groupItems[key]) return groupItems[key]
+      return surface === 'collections' && activeCollectionId === collection.id ? items : []
+    }
+    return []
+  }, [
+    session,
+    collection,
+    groupItems,
+    items,
+    search,
+    activeTagFilters,
+    sort,
+    sortDir,
+    surface,
+    activeCollectionId,
+  ])
 
   let kicker = 'preview'
   if (isBatch) kicker = 'batch'
@@ -401,10 +458,10 @@ export function RightPreview({ style }: { style?: CSSProperties }) {
 
         {!isBatch && item && <ItemPreview item={item} />}
 
-        {!isBatch && !item && session && <SessionPreview session={session} items={items} />}
+        {!isBatch && !item && session && <SessionPreview session={session} items={groupPreviewItems} />}
 
         {!isBatch && !item && !session && collection && (
-          <CollectionPreview collection={collection} items={items} />
+          <CollectionPreview collection={collection} items={groupPreviewItems} />
         )}
 
         {!isBatch && !item && !session && !collection && (

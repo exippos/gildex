@@ -91,17 +91,23 @@ type Item struct {
 	Extra          map[string]string `json:"extra"`         // tier-3 metadata_kv, never null
 }
 
-// Session is a first-class time-gap cluster (D6, D20).
+// Session is a first-class time-gap cluster (D6, D20). Favorite, Rating and
+// Status are group-owned triage; Tags are group tags from the shared
+// vocabulary (D45).
 type Session struct {
-	ID            string  `json:"id"`
-	Label         string  `json:"label"`
-	StartsAt      int64   `json:"startsAt"`
-	EndsAt        int64   `json:"endsAt"`
-	ItemCount     int     `json:"itemCount"`
-	VideoCount    int     `json:"videoCount"` // items of kind video in this session
-	AudioCount    int     `json:"audioCount"` // items of kind audio in this session
-	ThumbnailPath string  `json:"thumbnailPath"`
-	CoverItemID   *string `json:"coverItemId"` // user-picked label image, nil = derived
+	ID            string   `json:"id"`
+	Label         string   `json:"label"`
+	StartsAt      int64    `json:"startsAt"`
+	EndsAt        int64    `json:"endsAt"`
+	ItemCount     int      `json:"itemCount"`
+	VideoCount    int      `json:"videoCount"` // items of kind video in this session
+	AudioCount    int      `json:"audioCount"` // items of kind audio in this session
+	ThumbnailPath string   `json:"thumbnailPath"`
+	CoverItemID   *string  `json:"coverItemId"` // user-picked label image, nil = derived
+	Favorite      bool     `json:"favorite"`
+	Rating        int      `json:"rating"` // 0 = unrated, else 1..5
+	Status        Status   `json:"status"`
+	Tags          []string `json:"tags"` // assigned group tag names, never null
 }
 
 // Tag is a flat user-owned vocabulary term (D6, D23). Family is derived from
@@ -145,14 +151,18 @@ type TagExportEntry struct {
 
 // Collection is a user-authored, ordered index (D21).
 type Collection struct {
-	ID            string  `json:"id"`
-	Name          string  `json:"name"`
-	Description   string  `json:"description"`
-	ItemCount     int     `json:"itemCount"`
-	VideoCount    int     `json:"videoCount"` // items of kind video in this collection
-	AudioCount    int     `json:"audioCount"` // items of kind audio in this collection
-	ThumbnailPath string  `json:"thumbnailPath"`
-	CoverItemID   *string `json:"coverItemId"` // user-picked label image, nil = derived
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	Description   string   `json:"description"`
+	ItemCount     int      `json:"itemCount"`
+	VideoCount    int      `json:"videoCount"` // items of kind video in this collection
+	AudioCount    int      `json:"audioCount"` // items of kind audio in this collection
+	ThumbnailPath string   `json:"thumbnailPath"`
+	CoverItemID   *string  `json:"coverItemId"` // user-picked label image, nil = derived
+	Favorite      bool     `json:"favorite"`
+	Rating        int      `json:"rating"` // 0 = unrated, else 1..5
+	Status        Status   `json:"status"`
+	Tags          []string `json:"tags"` // assigned group tag names, never null
 }
 
 // Note is a markdown context record (D8, D10).
