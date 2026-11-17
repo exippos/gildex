@@ -120,3 +120,10 @@ html[data-thumb-fit='contain'] .timeline-stack-img {
   background-color: #000;
 }
 
+/* The open-root etching is a background layer, so it needs its own fit rule to
+   line up with the letterboxed poster image. */
+html[data-thumb-fit='contain'] .group-tile-relief {
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
