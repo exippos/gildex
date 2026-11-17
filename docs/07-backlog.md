@@ -79,6 +79,7 @@
     - [X] Sources: shared manager with Ingest
     - [X] Behavior: session gap (library-local) + apply & recluster
     - [X] About
+    - [X] Group tiles: single click previews, double-click expands (Settings → Appearance)
     - [ ] pHash similarity threshold (with near-duplicate grouping)
     - [ ] Protect manual session assignments across recluster
 

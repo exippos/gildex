@@ -63,6 +63,10 @@ current surface + active filters; it is never a thumbnail strip or a summary.
 
 - **Search** — a borderless input spanning the top of the grid column, above
   the items. `/` focuses it. Drives full-text search plus tag filters (D23).
+- **Group tiles** — sessions and collections render as stacked tiles. A single
+  click previews the group in the right panel and a double-click expands or
+  collapses it; Settings → Appearance → *group tiles* switches the single
+  click back to expansion.
 
 ## 4. Right preview
 
