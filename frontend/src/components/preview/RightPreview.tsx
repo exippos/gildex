@@ -4,7 +4,8 @@ import { useMemo, useRef, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { mediaUrl, thumbUrl } from '../../api'
 import { findCachedItem, groupItemsKey, useStore, tagFilterLabel } from '../../store'
-import type { Collection, Item, Session, Status } from '../../types'
+import type { Collection, Item, Session } from '../../types'
+import { STATUSES } from '../grid/statuses'
 import {
   formatBytes,
   formatDateTime,
@@ -16,12 +17,6 @@ import { BatchPreview } from './BatchPreview'
 import { GroupMeta } from './GroupMeta'
 import { TagEditor } from './TagEditor'
 import './right-preview.css'
-
-const STATUSES: ReadonlyArray<{ id: Status; label: string }> = [
-  { id: 'draft', label: 'draft' },
-  { id: 'wip', label: 'wip' },
-  { id: 'final', label: 'final' },
-]
 
 function MetaRow({ label, value, title }: { label: string; value: string; title?: string }) {
   if (!value) return null

@@ -1,7 +1,7 @@
 // Shared types — MUST match internal/model/model.go (camelCase JSON) exactly.
 
 export type Kind = 'image' | 'video' | 'audio'
-export type Status = 'draft' | 'final' | 'wip'
+export type Status = 'idea' | 'draft' | 'final' | 'wip'
 export type State = 'present' | 'missing'
 export type Surface = 'all' | 'sessions' | 'collections' | 'folders' | 'tags'
 export type GroupType = 'session' | 'collection'

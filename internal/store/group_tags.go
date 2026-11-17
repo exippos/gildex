@@ -102,7 +102,7 @@ func removeGroupTagsTx(tx *sql.Tx, ownerType, ownerID string, names []string) er
 // validGroupStatus mirrors the item status vocabulary for group triage.
 func validGroupStatus(status string) bool {
 	switch model.Status(status) {
-	case model.StatusDraft, model.StatusWIP, model.StatusFinal:
+	case model.StatusIdea, model.StatusDraft, model.StatusWIP, model.StatusFinal:
 		return true
 	}
 	return false

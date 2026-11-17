@@ -219,6 +219,9 @@
   border-radius: 0;
 }
 
+.cell-status.status-idea {
+  background: var(--status-idea);
+}
 .cell-status.status-final {
   background: var(--status-final);
 }

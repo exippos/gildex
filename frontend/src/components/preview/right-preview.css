@@ -376,6 +376,10 @@
   border-color: var(--gilt-border);
 }
 
+.preview-status-button.is-active[data-status='idea'] {
+  color: var(--status-idea);
+}
+
 .preview-status-button.is-active[data-status='draft'] {
   color: var(--status-draft);
 }

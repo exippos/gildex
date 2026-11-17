@@ -267,7 +267,7 @@ func (a *API) handleBatch(w http.ResponseWriter, r *http.Request) {
 
 func validStatus(s string) bool {
 	switch model.Status(s) {
-	case model.StatusDraft, model.StatusFinal, model.StatusWIP:
+	case model.StatusIdea, model.StatusDraft, model.StatusFinal, model.StatusWIP:
 		return true
 	default:
 		return false

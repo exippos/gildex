@@ -73,6 +73,7 @@
   --status-final: #2dd4bf;
   --status-wip: #c99a6a;
   --status-draft: #8fa3be;
+  --status-idea: #a78bfa;
   --danger: #e06a6a;
   --focus: #e5c58a;
 
@@ -133,6 +134,7 @@ html[data-theme='dark-bento'] {
   --status-final: #4ade80;
   --status-wip: #d08c57;
   --status-draft: #9ca3af;
+  --status-idea: #a78bfa;
   --danger: #e0655b;
   --focus: #c5a073;
 
@@ -190,6 +192,7 @@ html[data-theme='sage'] {
   --status-final: #6ee7b7;
   --status-wip: #c99a6a;
   --status-draft: #9bb0a5;
+  --status-idea: #b7a6f5;
   --danger: #e06a6a;
   --focus: #e6c792;
 
@@ -256,6 +259,7 @@ html[data-theme='copper'] {
   --status-final: #2b7a58;
   --status-wip: #a97648;
   --status-draft: #685d55;
+  --status-idea: #7c5cbf;
   --danger: #a4574e;
   --focus: #a84a28;
 

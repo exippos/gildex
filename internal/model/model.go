@@ -16,6 +16,7 @@ const (
 type Status string
 
 const (
+	StatusIdea  Status = "idea"
 	StatusDraft Status = "draft"
 	StatusFinal Status = "final"
 	StatusWIP   Status = "wip"

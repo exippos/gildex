@@ -33,7 +33,7 @@ function humanKey(key: string): string {
   return key.replace(/[_-]+/g, ' ')
 }
 
-const STATUSES: Status[] = ['draft', 'wip', 'final']
+const STATUSES: Status[] = ['idea', 'draft', 'wip', 'final']
 
 export function StoryView({ item }: { item: Item }) {
   const saveItem = useStore((s) => s.saveItem)

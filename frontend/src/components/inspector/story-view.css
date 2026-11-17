@@ -380,6 +380,9 @@
   height: 12px;
   background: var(--status-draft);
 }
+.story-status--idea .story-status-tick {
+  background: var(--status-idea);
+}
 .story-status--final .story-status-tick {
   background: var(--status-final);
 }
