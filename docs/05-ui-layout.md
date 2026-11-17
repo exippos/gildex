@@ -67,6 +67,9 @@ current surface + active filters; it is never a thumbnail strip or a summary.
   click previews the group in the right panel and a double-click expands or
   collapses it; Settings → Appearance → *group tiles* switches the single
   click back to expansion.
+- **Thumbnail fit** — square thumbnails either fill the frame (crop) or show
+  the whole image letterboxed on black, toggled in Settings → Appearance →
+  *thumbnail fit*.
 
 ## 4. Right preview
 
