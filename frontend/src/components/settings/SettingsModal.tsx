@@ -137,6 +137,8 @@ export function SettingsModal() {
   const setTheme = useStore((s) => s.setTheme)
   const effects = useStore((s) => s.effects)
   const setEffects = useStore((s) => s.setEffects)
+  const groupClickMode = useStore((s) => s.groupClickMode)
+  const setGroupClickMode = useStore((s) => s.setGroupClickMode)
   const cellSize = useStore((s) => s.cellSize)
   const setCellSize = useStore((s) => s.setCellSize)
   const tags = useStore((s) => s.tags)
@@ -390,6 +392,31 @@ export function SettingsModal() {
                       Reduced effects
                     </button>
                   </div>
+                </div>
+
+                <div className="settings-row">
+                  <span className="settings-label">group tiles</span>
+                  <div className="settings-segmented" role="group" aria-label="Group tile click action">
+                    <button
+                      type="button"
+                      className="settings-segment"
+                      aria-pressed={groupClickMode === 'preview'}
+                      onClick={() => setGroupClickMode('preview')}
+                    >
+                      Click previews
+                    </button>
+                    <button
+                      type="button"
+                      className="settings-segment"
+                      aria-pressed={groupClickMode === 'expand'}
+                      onClick={() => setGroupClickMode('expand')}
+                    >
+                      Click expands
+                    </button>
+                  </div>
+                  <p className="settings-hint">
+                    session and collection tiles. double-click opens or closes the group.
+                  </p>
                 </div>
 
                 <div className="settings-row">

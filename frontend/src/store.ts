@@ -145,11 +145,24 @@ interface InspectorTarget {
 
 export type EffectsMode = 'full' | 'reduced'
 
+// Session/collection tile interaction: the default quick-preview flow opens a
+// group on one click and expands it on double-click; `expand` keeps the older
+// one-click expand behaviour. Device-local, like theme and zoom.
+export type GroupClickMode = 'preview' | 'expand'
+
 function readEffects(): EffectsMode {
   try {
     return localStorage.getItem('gildex-effects') === 'reduced' ? 'reduced' : 'full'
   } catch {
     return 'full'
+  }
+}
+
+function readGroupClickMode(): GroupClickMode {
+  try {
+    return localStorage.getItem('gildex-group-click-mode') === 'expand' ? 'expand' : 'preview'
+  } catch {
+    return 'preview'
   }
 }
 
@@ -256,6 +269,8 @@ interface AppState {
   setTheme: (theme: Theme) => void
   effects: EffectsMode
   setEffects: (mode: EffectsMode) => void
+  groupClickMode: GroupClickMode
+  setGroupClickMode: (mode: GroupClickMode) => void
 
   // actions
   init: () => Promise<void>
@@ -418,6 +433,16 @@ export const useStore = create<AppState>((set, get) => ({
       /* ignore */
     }
     set({ effects: mode })
+  },
+
+  groupClickMode: readGroupClickMode(),
+  setGroupClickMode: (mode) => {
+    try {
+      localStorage.setItem('gildex-group-click-mode', mode)
+    } catch {
+      /* ignore */
+    }
+    set({ groupClickMode: mode })
   },
 
   init: async () => {
@@ -727,7 +752,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({ selection: ids, lastSelectedId: ids[0] })
   },
 
-  setPreviewItemId: (id) => set({ previewItemId: id }),
+  setPreviewItemId: (id) => set({ previewItemId: id, previewGroup: null }),
   setPreviewGroup: (group) => set({ previewGroup: group, previewItemId: null }),
 
   openInspector: async (ownerType, ownerId, ownerLabel) => {

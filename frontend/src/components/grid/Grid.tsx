@@ -5,7 +5,7 @@
 // the shared grid flow instead of giving them a block of their own.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { groupItemsKey, resolveItems, useStore } from '../../store'
+import { groupItemsKey, resolveItems, useStore, type GroupClickMode } from '../../store'
 import { thumbUrl } from '../../api'
 import type { Collection, GroupType, Item, Session, Status } from '../../types'
 import { ContextMenu, type MenuEntry } from '../common/ContextMenu'
@@ -321,7 +321,9 @@ function GroupTile({
   compact,
   tight,
   style,
+  clickMode,
   onToggle,
+  onPreview,
   onDropItems,
   onMenu,
 }: {
@@ -331,12 +333,19 @@ function GroupTile({
   compact: boolean
   tight: boolean
   style: CSSProperties
+  clickMode: GroupClickMode
   onToggle: () => void
+  /** Single-click group preview; omitted for pseudo groups (Unsorted). */
+  onPreview?: () => void
   onDropItems?: (itemIds: string[]) => void
   onMenu?: (x: number, y: number) => void
 }) {
   const [dropActive, setDropActive] = useState(false)
   const canDrop = Boolean(onDropItems) && Boolean(group.id)
+  // In preview mode a single click opens the right-panel preview and a
+  // double-click toggles expansion. Groups without an id have nothing to
+  // preview, so they keep the one-click expand behaviour.
+  const previews = clickMode === 'preview' && Boolean(onPreview)
   const poster = group.thumb ? thumbUrl(group.thumb) : null
   const posterStyle = poster
     ? ({ '--tile-art': `url("${poster}")` } as CSSProperties)
@@ -362,7 +371,15 @@ function GroupTile({
       aria-busy={loading || undefined}
       aria-label={`${group.label}, ${group.count} ${group.count === 1 ? 'item' : 'items'}`}
       aria-haspopup="menu"
-      onClick={onToggle}
+      title={previews ? 'Click to preview · double-click to expand' : 'Click to expand'}
+      onClick={(event) => {
+        // A double-click fires two clicks. The first runs the single-click
+        // action; ignore the second so expansion never toggles twice.
+        if (event.detail > 1) return
+        if (previews) onPreview?.()
+        else onToggle()
+      }}
+      onDoubleClick={previews ? onToggle : undefined}
       onContextMenu={
         onMenu
           ? (event) => {
@@ -501,6 +518,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const openGroupEditor = useStore((s) => s.openGroupEditor)
   const setGroupCover = useStore((s) => s.setGroupCover)
   const setPreviewGroup = useStore((s) => s.setPreviewGroup)
+  const groupClickMode = useStore((s) => s.groupClickMode)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
@@ -1155,7 +1173,16 @@ export function Grid({ cellSize }: { cellSize: number }) {
                       compact={compact}
                       tight={tight}
                       style={style}
+                      clickMode={groupClickMode}
                       onToggle={() => toggleGroup(group)}
+                      onPreview={
+                        group.id
+                          ? () => {
+                              clearSelection()
+                              setPreviewGroup({ type: group.source, id: group.id })
+                            }
+                          : undefined
+                      }
                       onDropItems={(ids) => {
                         void addToGroup(group.source, group.id, ids).catch(() => {
                           /* the rail reports drop errors; keep the tile quiet */

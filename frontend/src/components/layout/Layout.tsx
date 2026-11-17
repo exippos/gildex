@@ -121,6 +121,7 @@ export function Layout() {
   const [previewOpen, setPreviewOpen] = useState(true)
 
   const previewItemId = useStore((s) => s.previewItemId)
+  const previewGroup = useStore((s) => s.previewGroup)
   const selection = useStore((s) => s.selection)
   const cellSize = useStore((s) => s.cellSize)
   const workspace = useStore((s) => s.workspace)
@@ -128,8 +129,8 @@ export function Layout() {
 
   // Selecting anything should reveal the quick preview even if it was closed.
   useEffect(() => {
-    if (previewItemId || selection.length > 0) setPreviewOpen(true)
-  }, [previewItemId, selection])
+    if (previewItemId || previewGroup || selection.length > 0) setPreviewOpen(true)
+  }, [previewItemId, previewGroup, selection])
 
   // Panel toggles: p = preview, [ = rail. Ignored while typing.
   useEffect(() => {
