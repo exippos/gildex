@@ -7,12 +7,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { groupItemsKey, resolveItems, useStore, type GroupClickMode } from '../../store'
 import { thumbUrl } from '../../api'
-import type { Collection, GroupType, Item, Session, Status } from '../../types'
+import type { Collection, GroupType, Item, ItemSort, Session, SortDir, Status } from '../../types'
 import { ContextMenu, type MenuEntry } from '../common/ContextMenu'
 import { GridCell } from './GridCell'
 import { formatRange } from '../format'
 import { readDraggedItemIds } from '../groups/drag'
-import { STATUSES } from './statuses'
+import { STATUSES, STATUS_ORDER } from './statuses'
 import './grid.css'
 
 const PAD_X = 16
@@ -106,6 +106,19 @@ function itemRange(items: Item[]): string {
     if (item.timestamp > hi) hi = item.timestamp
   }
   return formatRange(lo, hi)
+}
+
+/** Orders group tiles by their own triage for the triage sort keys. Other
+ *  sorts keep the catalog order the groups were built in. */
+function sortGroups(groups: Group[], sort: ItemSort, sortDir: SortDir): Group[] {
+  if (sort !== 'rating' && sort !== 'status' && sort !== 'favorite') return groups
+  const sign = sortDir === 'asc' ? 1 : -1
+  const rank = (group: Group) => {
+    if (sort === 'rating') return group.rating
+    if (sort === 'status') return STATUS_ORDER[group.status]
+    return group.favorite ? 1 : 0
+  }
+  return [...groups].sort((a, b) => (rank(a) - rank(b)) * sign)
 }
 
 function makeGroup(
@@ -690,21 +703,22 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const itemInset = (cellW - itemSize) / 2
 
   const groups = useMemo(() => {
+    let out: Group[]
     if (groupMode === 'session') {
-      return catalogSessions
+      out = catalogSessions
         ? catalogSessionGroups(sessions, items, (id) => groupItems[cacheKey('session', id)])
         : sessionGroups(items, sessions, (id) => groupItems[cacheKey('session', id)])
-    }
-    if (groupMode === 'collection') {
-      const out: Group[] = []
+    } else if (groupMode === 'collection') {
+      out = []
       for (const collection of collections) {
         const cached = groupItems[cacheKey('collection', collection.id)]
         if (collection.itemCount === 0 && !cached?.length) continue
         out.push(collectionGroup(collection, cached))
       }
-      return out
+    } else {
+      return []
     }
-    return []
+    return sortGroups(out, sort, sortDir)
   }, [
     groupMode,
     catalogSessions,
