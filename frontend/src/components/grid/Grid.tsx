@@ -637,6 +637,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const [menu, setMenu] = useState<MenuTarget | null>(null)
   const [focusedKey, setFocusedKey] = useState<string | null>(null)
   const slotRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
+  // Flat index of the focused slot, kept so a deletion can restore focus to the
+  // nearest surviving slot instead of resetting it.
+  const focusIndexRef = useRef(0)
 
   const registerSlot = (key: string, el: HTMLButtonElement | null) => {
     if (el) slotRefs.current.set(key, el)
@@ -1028,6 +1031,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
 
   const focusSlot = (entry: { slot: Slot; row: number }) => {
     setFocusedKey(entry.slot.key)
+    focusIndexRef.current = flatSlots.findIndex((e) => e.slot.key === entry.slot.key)
     // Preview follows the keyboard cursor (mirrors a single click).
     if (entry.slot.kind === 'cell') {
       setPreviewItemId(entry.slot.item.id)
@@ -1093,6 +1097,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
     )
     if (!ok) return
     if (!selection.length && focusedId) setSelected(focusedId, false)
+    // Remember the cursor so the repair effect restores focus to the nearest
+    // surviving slot instead of resetting it.
+    if (focused) setFocusedKey(focused.slot.key)
     void batchRemove()
   }
 
@@ -1148,6 +1155,19 @@ export function Grid({ cellSize }: { cellSize: number }) {
         return
     }
   }
+
+  // When the focused slot disappears (its item was removed from the catalog),
+  // move focus to the nearest surviving slot so the cursor does not reset.
+  useEffect(() => {
+    if (!focusedKey) return
+    if (flatSlots.some((entry) => entry.slot.key === focusedKey)) return
+    if (!flatSlots.length) {
+      setFocusedKey(null)
+      return
+    }
+    const idx = Math.min(focusIndexRef.current, flatSlots.length - 1)
+    focusSlot(flatSlots[idx])
+  }, [flatSlots, focusedKey])
 
   // A cancelable view change leaves no stale menu floating over new content.
   useEffect(() => {
