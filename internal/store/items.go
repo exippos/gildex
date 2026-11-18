@@ -158,6 +158,13 @@ func (s *Store) QueryItems(q ItemQuery) (model.ItemPage, error) {
 		field = "i.file_size"
 	case "session":
 		field = "(SELECT s.starts_at FROM sessions s WHERE s.id = i.session_id)"
+	case "rating":
+		field = "i.rating"
+	case "status":
+		// Workflow order, not alphabetical: idea → draft → wip → final.
+		field = "CASE i.status WHEN 'idea' THEN 0 WHEN 'draft' THEN 1 WHEN 'wip' THEN 2 WHEN 'final' THEN 3 ELSE 4 END"
+	case "favorite":
+		field = "i.favorite"
 	}
 	order := " ORDER BY " + field + " " + dir + ", i.id " + dir
 	query := `SELECT ` + itemCols + ` FROM items i` + clause + order + ` LIMIT ? OFFSET ?`

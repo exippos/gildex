@@ -34,6 +34,9 @@ const SORT_PARAM: Record<ItemSort, string> = {
   filename: 'name',
   size: 'size',
   session: 'session',
+  rating: 'rating',
+  status: 'status',
+  favorite: 'favorite',
 }
 
 // Tag filters are a multi-select AND chain. "Untagged" is a UI-side pseudo

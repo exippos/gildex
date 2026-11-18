@@ -10,6 +10,9 @@ const SORTS: ReadonlyArray<{ id: ItemSort; label: string }> = [
   { id: 'filename', label: 'Filename' },
   { id: 'size', label: 'Size' },
   { id: 'session', label: 'Session' },
+  { id: 'rating', label: 'Rating' },
+  { id: 'status', label: 'Status' },
+  { id: 'favorite', label: 'Favorite' },
 ]
 
 export function GalleryViewControls() {

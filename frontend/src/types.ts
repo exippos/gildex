@@ -17,7 +17,7 @@ export interface GroupPatch {
 }
 export type Workspace = 'ingest' | 'gallery' | 'timeline'
 export type OwnerType = 'item' | 'session' | 'collection'
-export type ItemSort = 'time' | 'filename' | 'size' | 'session'
+export type ItemSort = 'time' | 'filename' | 'size' | 'session' | 'rating' | 'status' | 'favorite'
 export type SortDir = 'asc' | 'desc'
 export type SourceMode = 'once' | 'watch'
 export type SettingsSection =
