@@ -1,12 +1,13 @@
 # TODO
 - [X] Keyboard navigation
-- [ ] Nester grouping (very similar images or manual order) -- episodes
+- [ ] Nested grouping (very similar images or manual order) -- episodes
 - [ ] Local reorder in collection
 - [ ] Hide drafts toggle
 - [ ] Add "sorted" flag for collections
 - [ ] Drag-n-Drop reorder inside collections 
 - [ ] Mested sub-collections (sub-groups for very similar images)
 - [ ] Remove/Edit tag
+- [ ] Undo feature
 
 # Features
 - [ ] Timeline propper management
