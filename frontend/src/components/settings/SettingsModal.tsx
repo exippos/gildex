@@ -153,6 +153,7 @@ export function SettingsModal() {
 
   const [active, setActive] = useState<SettingsSection>(section ?? 'appearance')
   const [gap, setGap] = useState(String(librarySettings.sessionGapMinutes))
+  const [threshold, setThreshold] = useState(String(librarySettings.phashThreshold))
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -199,11 +200,16 @@ export function SettingsModal() {
   }, [section])
 
   const savedGap = librarySettings.sessionGapMinutes
+  const savedThreshold = librarySettings.phashThreshold
 
   // Keep the editor in step when the catalog value changes (load or save).
   useEffect(() => {
     setGap(String(savedGap))
   }, [savedGap])
+
+  useEffect(() => {
+    setThreshold(String(savedThreshold))
+  }, [savedThreshold])
 
   if (!section) return null
 
@@ -215,6 +221,11 @@ export function SettingsModal() {
   const value = Number(gap)
   const valid = Number.isInteger(value) && value >= 15 && value <= 1440
   const dirty = valid && value !== savedGap
+
+  const thresholdValue = Number(threshold)
+  const thresholdValid =
+    Number.isInteger(thresholdValue) && thresholdValue >= 0 && thresholdValue <= 64
+  const thresholdDirty = thresholdValid && thresholdValue !== savedThreshold
 
   const saveGap = async () => {
     if (!valid || !dirty || busy) return
@@ -243,6 +254,36 @@ export function SettingsModal() {
     try {
       await reclusterSessions()
       setStatus('sessions reclustered')
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const saveThreshold = async () => {
+    if (!thresholdValid || !thresholdDirty || busy) return
+    setBusy(true)
+    setError(null)
+    setStatus(null)
+    try {
+      await updateSettings({ phashThreshold: thresholdValue })
+      setStatus('episode threshold saved')
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const setAutoCluster = async (enabled: boolean) => {
+    if (busy || librarySettings.autoClusterEpisodes === enabled) return
+    setBusy(true)
+    setError(null)
+    setStatus(null)
+    try {
+      await updateSettings({ autoClusterEpisodes: enabled })
+      setStatus(enabled ? 'automatic episodes on' : 'automatic episodes off')
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -805,9 +846,80 @@ export function SettingsModal() {
                     <p className="settings-note">
                       Reclustering applies the saved gap to the whole catalog.
                     </p>
-                    <p className="settings-note">
-                      Similarity threshold will appear with near-duplicate grouping.
-                    </p>
+
+                    <div className="settings-section-head">
+                      <span className="settings-eyebrow">episodes</span>
+                      <h3>near-duplicate grouping</h3>
+                      <p className="settings-hint">
+                        episodes are nested groups of very similar images inside a session or
+                        collection.
+                      </p>
+                    </div>
+
+                    <div className="settings-row">
+                      <label className="settings-label" htmlFor="settings-phash">
+                        similarity threshold
+                      </label>
+                      <div className="settings-inline">
+                        <input
+                          id="settings-phash"
+                          className="settings-gap-input"
+                          type="number"
+                          min={0}
+                          max={64}
+                          step={1}
+                          value={threshold}
+                          onChange={(event) => setThreshold(event.target.value)}
+                          disabled={busy}
+                        />
+                        <span className="settings-unit">bits</span>
+                      </div>
+                      <p className="settings-hint">
+                        saved: {savedThreshold} · range 0–64 · lower is stricter
+                      </p>
+                    </div>
+
+                    <div className="settings-actions">
+                      <button
+                        type="button"
+                        className="settings-btn settings-primary"
+                        onClick={() => void saveThreshold()}
+                        disabled={!thresholdValid || !thresholdDirty || busy}
+                      >
+                        Save
+                      </button>
+                    </div>
+
+                    <div className="settings-row">
+                      <span className="settings-label">automatic episodes</span>
+                      <div
+                        className="settings-segmented"
+                        role="group"
+                        aria-label="Automatic episodes"
+                      >
+                        <button
+                          type="button"
+                          className="settings-segment"
+                          aria-pressed={librarySettings.autoClusterEpisodes}
+                          onClick={() => void setAutoCluster(true)}
+                        >
+                          On
+                        </button>
+                        <button
+                          type="button"
+                          className="settings-segment"
+                          aria-pressed={!librarySettings.autoClusterEpisodes}
+                          onClick={() => void setAutoCluster(false)}
+                        >
+                          Off
+                        </button>
+                      </div>
+                      <p className="settings-hint">
+                        {librarySettings.autoClusterEpisodes
+                          ? 'episodes are rebuilt after every import; manual edits are kept.'
+                          : 'off — group episodes from a group menu or the item Episode menu.'}
+                      </p>
+                    </div>
                   </>
                 ) : (
                   <NoLibrary

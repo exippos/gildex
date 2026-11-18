@@ -34,6 +34,8 @@ export interface LibrarySettings {
   sessionGapMinutes: number
   blurNsfw: boolean // blur items tagged `nsfwTag` in the UI
   nsfwTag: string // tag name marking an item NSFW, "" = none
+  phashThreshold: number // near-duplicate Hamming distance for episodes (0–64)
+  autoClusterEpisodes: boolean // rebuild auto episodes after import
 }
 
 export interface Source {
@@ -130,6 +132,20 @@ export interface Collection {
   status: Status
   tags: string[]
   nsfw: boolean // cover thumbnail item carries the NSFW tag
+}
+
+// A nested sub-group of items inside one session or collection. Episodes are
+// either user-authored (auto=false) or clustered from near-duplicate pHashes
+// (auto=true); any manual edit flips auto to false so clustering leaves it be.
+export interface Episode {
+  id: string
+  ownerType: GroupType
+  ownerId: string
+  label: string
+  itemCount: number
+  thumbnailPath: string
+  auto: boolean
+  itemIds: string[]
 }
 
 export interface Note {

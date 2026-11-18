@@ -1,0 +1,221 @@
+/* Episode editor — layered on the collection modal chrome. Flat rows with
+   hairline rules; gilt only on focus and the automatic marker. */
+
+.episode-panel {
+  width: min(680px, 100%);
+}
+
+.episode-block {
+  border-top: 1px solid var(--hairline);
+  padding: 10px 0;
+}
+
+.episode-block:first-of-type {
+  border-top: 0;
+}
+
+.episode-block.is-focus {
+  box-shadow: inset 2px 0 0 var(--gilt);
+  padding-left: 10px;
+}
+
+.episode-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.episode-cover {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+}
+
+.episode-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.episode-cover-empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 6px,
+    var(--hairline) 6px 7px
+  );
+}
+
+.episode-head-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.episode-name {
+  font-size: 14px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.episode-meta {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.episode-btn {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  cursor: pointer;
+}
+
+.episode-btn:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--gilt);
+}
+
+.episode-btn.is-danger:hover:not(:disabled) {
+  color: var(--danger, #d98b8b);
+  border-color: var(--danger, #d98b8b);
+}
+
+.episode-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.episode-rename {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0 48px;
+}
+
+.episode-rename input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--text);
+  font: inherit;
+}
+
+.episode-rename button {
+  padding: 6px 10px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.episode-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 2px 48px;
+}
+
+.episode-member {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-inset);
+  cursor: pointer;
+}
+
+.episode-member img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.episode-member-empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 6px,
+    var(--hairline) 6px 7px
+  );
+}
+
+.episode-member-x {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1;
+  text-shadow: 1px 1px 2px #000;
+  opacity: 0;
+  transition: opacity 100ms linear;
+}
+
+.episode-member:hover .episode-member-x,
+.episode-member:focus-visible .episode-member-x {
+  opacity: 1;
+}
+
+.episode-member:hover:not(:disabled) {
+  border-color: var(--gilt);
+}
+
+.episode-member:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.episode-new {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+}
+
+.episode-new-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.episode-new-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--gilt-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--text);
+  font: inherit;
+}
+
+.episode-new-row input:focus-visible {
+  outline: 1px solid var(--gilt);
+  outline-offset: 1px;
+}

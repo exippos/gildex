@@ -6,6 +6,7 @@ import type { DroppedFile } from './api'
 import { applyTheme, initialTheme, persistTheme, syncThemeUrl, type Theme } from './theme'
 import type {
   Collection,
+  Episode,
   FolderNode,
   GroupPatch,
   GroupType,
@@ -85,6 +86,12 @@ export function groupItemsKey(
   return [`${type}:${id}`, search, tagFilters.join(','), sort, sortDir].join('|')
 }
 
+// Episodes are owned by a group and cached one owner at a time; unlike group
+// item pages their key does not depend on the current search/sort.
+export function episodeKey(type: GroupType, id: string): string {
+  return `${type}:${id}`
+}
+
 /**
  * Look up an item in the lazily cached group pages. Expanded session and
  * collection groups render from these caches rather than the main `items`
@@ -157,6 +164,15 @@ interface InspectorTarget {
   ownerLabel?: string
 }
 
+export interface EpisodeEditorTarget {
+  ownerType: GroupType
+  ownerId: string
+  /** Episode to focus when the editor opens, or null for "manage all". */
+  episodeId: string | null
+  /** Items to assign when the editor creates a new episode. */
+  itemIds: string[]
+}
+
 export type EffectsMode = 'full' | 'reduced'
 
 // Session/collection tile interaction: the default quick-preview flow opens a
@@ -202,6 +218,8 @@ const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = {
   sessionGapMinutes: 120,
   blurNsfw: false,
   nsfwTag: '',
+  phashThreshold: 10,
+  autoClusterEpisodes: false,
 }
 const DEFAULT_CELL_SIZE = 168
 
@@ -263,6 +281,9 @@ interface AppState {
   // session or collection id + query key -> one page of that group's items
   groupItems: Record<string, Item[]>
   groupLoading: Record<string, boolean>
+  // nested episodes per owner ("session:<id>" / "collection:<id>")
+  episodes: Record<string, Episode[]>
+  episodeLoading: Record<string, boolean>
   // library-scoped preferences from the catalog DB
   librarySettings: LibrarySettings
 
@@ -287,6 +308,10 @@ interface AppState {
   groupPickerResults: Item[]
   groupPickerQuery: string
   collectionPicker: { itemIds: string[] } | null
+  // nested-episode editor (rename/delete/assign) and its owner's items
+  episodeEditor: EpisodeEditorTarget | null
+  episodeEditorItems: Item[]
+  episodeEditorLoading: boolean
 
   // notes cache for the open inspector
   notes: Note[]
@@ -321,6 +346,42 @@ interface AppState {
   loadItems: () => Promise<void>
   loadGroupItems: (type: GroupType, id: string) => Promise<void>
   refreshCatalog: () => Promise<void>
+
+  loadEpisodes: (type: GroupType, id: string) => Promise<void>
+  createEpisode: (
+    type: GroupType,
+    id: string,
+    label: string,
+    itemIds: string[],
+  ) => Promise<Episode>
+  renameEpisode: (
+    type: GroupType,
+    id: string,
+    episodeId: string,
+    label: string,
+  ) => Promise<void>
+  deleteEpisode: (type: GroupType, id: string, episodeId: string) => Promise<void>
+  assignEpisodeItems: (
+    type: GroupType,
+    id: string,
+    episodeId: string,
+    itemIds: string[],
+  ) => Promise<void>
+  removeEpisodeItem: (
+    type: GroupType,
+    id: string,
+    episodeId: string,
+    itemId: string,
+  ) => Promise<void>
+  clusterEpisodes: (type: GroupType, id: string) => Promise<number>
+  openEpisodeEditor: (
+    type: GroupType,
+    id: string,
+    episodeId?: string | null,
+    itemIds?: string[],
+  ) => void
+  closeEpisodeEditor: () => void
+  loadEpisodeEditorItems: () => Promise<void>
 
   setWorkspace: (w: Workspace) => void
   setSurface: (s: Surface) => void
@@ -394,7 +455,13 @@ interface AppState {
   openSettings: (section?: SettingsSection) => void
   closeSettings: () => void
   loadSettings: () => Promise<void>
-  updateSettings: (patch: { sessionGapMinutes?: number; blurNsfw?: boolean; nsfwTag?: string }) => Promise<LibrarySettings>
+  updateSettings: (patch: {
+    sessionGapMinutes?: number
+    blurNsfw?: boolean
+    nsfwTag?: string
+    phashThreshold?: number
+    autoClusterEpisodes?: boolean
+  }) => Promise<LibrarySettings>
   reclusterSessions: () => Promise<void>
 }
 
@@ -430,6 +497,8 @@ export const useStore = create<AppState>((set, get) => ({
   sources: [],
   groupItems: {},
   groupLoading: {},
+  episodes: {},
+  episodeLoading: {},
   librarySettings: DEFAULT_LIBRARY_SETTINGS,
 
   selection: [],
@@ -445,6 +514,9 @@ export const useStore = create<AppState>((set, get) => ({
   groupPickerResults: [],
   groupPickerQuery: '',
   collectionPicker: null,
+  episodeEditor: null,
+  episodeEditorItems: [],
+  episodeEditorLoading: false,
 
   notes: [],
 
@@ -499,13 +571,27 @@ export const useStore = create<AppState>((set, get) => ({
 
   createLibrary: async (name, directory) => {
     const library = await api.createLibrary(name, directory)
-    set({ library, ...clearedRailSelection() })
+    set({
+      library,
+      ...clearedRailSelection(),
+      episodes: {},
+      episodeLoading: {},
+      episodeEditor: null,
+      episodeEditorItems: [],
+    })
     await get().refreshCatalog()
   },
 
   openLibrary: async (path) => {
     const library = await api.openLibrary(path)
-    set({ library, ...clearedRailSelection() })
+    set({
+      library,
+      ...clearedRailSelection(),
+      episodes: {},
+      episodeLoading: {},
+      episodeEditor: null,
+      episodeEditorItems: [],
+    })
     await get().refreshCatalog()
   },
 
@@ -605,6 +691,9 @@ export const useStore = create<AppState>((set, get) => ({
         folders,
         sources,
         librarySettings,
+        // Import/recluster may have rebuilt or pruned episodes; refetch lazily.
+        episodes: {},
+        episodeLoading: {},
         activeSessionId:
           state.activeSessionId && sessions.some((s) => s.id === state.activeSessionId)
             ? state.activeSessionId
@@ -678,6 +767,96 @@ export const useStore = create<AppState>((set, get) => ({
       set((s) => ({ groupItems: { ...s.groupItems, [key]: [] } }))
     } finally {
       set((s) => ({ groupLoading: { ...s.groupLoading, [key]: false } }))
+    }
+  },
+
+  loadEpisodes: async (type, id) => {
+    if (!id) return
+    const key = episodeKey(type, id)
+    set((s) => ({ episodeLoading: { ...s.episodeLoading, [key]: true } }))
+    try {
+      const episodes = await api.episodes(type, id)
+      set((s) => ({ episodes: { ...s.episodes, [key]: episodes } }))
+    } catch {
+      // Cache the failure as empty so the grid stops retrying; a catalog
+      // refresh clears every episode cache and allows a fresh attempt.
+      set((s) => ({ episodes: { ...s.episodes, [key]: [] } }))
+    } finally {
+      set((s) => ({ episodeLoading: { ...s.episodeLoading, [key]: false } }))
+    }
+  },
+
+  createEpisode: async (type, id, label, itemIds) => {
+    const episode = await api.createEpisode({
+      ownerType: type,
+      ownerId: id,
+      label,
+      itemIds,
+    })
+    await get().loadEpisodes(type, id)
+    return episode
+  },
+
+  renameEpisode: async (type, id, episodeId, label) => {
+    await api.updateEpisode(episodeId, label)
+    await get().loadEpisodes(type, id)
+  },
+
+  deleteEpisode: async (type, id, episodeId) => {
+    await api.deleteEpisode(episodeId)
+    await get().loadEpisodes(type, id)
+  },
+
+  assignEpisodeItems: async (type, id, episodeId, itemIds) => {
+    if (!itemIds.length) return
+    await api.assignEpisodeItems(episodeId, itemIds)
+    await get().loadEpisodes(type, id)
+  },
+
+  removeEpisodeItem: async (type, id, episodeId, itemId) => {
+    await api.removeEpisodeItem(episodeId, itemId)
+    await get().loadEpisodes(type, id)
+  },
+
+  clusterEpisodes: async (type, id) => {
+    const { created } = await api.clusterEpisodes(type, id)
+    await get().loadEpisodes(type, id)
+    return created
+  },
+
+  openEpisodeEditor: (ownerType, ownerId, episodeId = null, itemIds = []) => {
+    set({
+      episodeEditor: { ownerType, ownerId, episodeId, itemIds },
+      episodeEditorItems: [],
+      episodeEditorLoading: false,
+    })
+    void get().loadEpisodes(ownerType, ownerId)
+    void get().loadEpisodeEditorItems()
+  },
+
+  closeEpisodeEditor: () =>
+    set({ episodeEditor: null, episodeEditorItems: [], episodeEditorLoading: false }),
+
+  loadEpisodeEditorItems: async () => {
+    const editor = get().episodeEditor
+    if (!editor) {
+      set({ episodeEditorItems: [], episodeEditorLoading: false })
+      return
+    }
+    const { ownerType, ownerId } = editor
+    set({ episodeEditorLoading: true })
+    try {
+      const page = await api.items(
+        ownerType === 'session'
+          ? { sessionId: ownerId, limit: 2000, sort: 'time', dir: 'desc' }
+          : { collectionId: ownerId, limit: 2000, sort: 'time', dir: 'desc' },
+      )
+      const current = get().episodeEditor
+      if (current?.ownerType === ownerType && current.ownerId === ownerId) {
+        set({ episodeEditorItems: page.items })
+      }
+    } finally {
+      set({ episodeEditorLoading: false })
     }
   },
 

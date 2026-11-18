@@ -2,8 +2,10 @@
 import type {
   BatchPatch,
   Collection,
+  Episode,
   FolderNode,
   GroupPatch,
+  GroupType,
   ImportStatus,
   Item,
   ItemPage,
@@ -106,8 +108,13 @@ export const api = {
   openLibrary: (path: string) => request<LibraryStatus>('POST', '/library/open', { path }),
 
   settings: () => request<LibrarySettings>('GET', '/settings'),
-  updateSettings: (patch: { sessionGapMinutes?: number; blurNsfw?: boolean; nsfwTag?: string }) =>
-    request<LibrarySettings>('PATCH', '/settings', patch),
+  updateSettings: (patch: {
+    sessionGapMinutes?: number
+    blurNsfw?: boolean
+    nsfwTag?: string
+    phashThreshold?: number
+    autoClusterEpisodes?: boolean
+  }) => request<LibrarySettings>('PATCH', '/settings', patch),
   reclusterSessions: () => request<void>('POST', '/sessions/recluster'),
 
   sources: () => request<Source[]>('GET', '/sources'),
@@ -181,6 +188,28 @@ export const api = {
     request<void>('DELETE', `/collections/${id}/items/${itemId}`),
 
   folders: () => request<FolderNode[]>('GET', '/folders'),
+
+  episodes: (ownerType: GroupType, ownerId: string) =>
+    request<Episode[]>('GET', `/episodes${qs({ ownerType, ownerId })}`),
+  createEpisode: (body: {
+    ownerType: GroupType
+    ownerId: string
+    label: string
+    itemIds?: string[]
+  }) => request<Episode>('POST', '/episodes', body),
+  updateEpisode: (id: string, label: string) =>
+    request<Episode>('PATCH', `/episodes/${id}`, { label }),
+  deleteEpisode: (id: string) => request<{ ok: boolean }>('DELETE', `/episodes/${id}`),
+  assignEpisodeItems: (id: string, itemIds: string[]) =>
+    request<Episode>('POST', `/episodes/${id}/items`, { itemIds }),
+  removeEpisodeItem: (id: string, itemId: string) =>
+    request<Episode>('DELETE', `/episodes/${id}/items/${itemId}`),
+  clusterEpisodes: (ownerType?: GroupType, ownerId?: string) =>
+    request<{ created: number }>(
+      'POST',
+      '/episodes/cluster',
+      ownerType ? { ownerType, ownerId } : {},
+    ),
 
   notes: (ownerType: OwnerType, ownerId: string) =>
     request<Note[]>('GET', `/notes${qs({ ownerType, ownerId })}`),

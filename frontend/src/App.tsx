@@ -5,6 +5,7 @@ import { useStore } from './store'
 import { Layout } from './components/layout/Layout'
 import { Inspector } from './components/inspector/Inspector'
 import { GroupEditor } from './components/groups/GroupEditor'
+import { EpisodeEditor } from './components/episodes/EpisodeEditor'
 import { CollectionPicker } from './components/collections/CollectionPicker'
 import { LibraryWizard } from './components/library/LibraryWizard'
 import { SettingsModal } from './components/settings/SettingsModal'
@@ -13,6 +14,7 @@ export default function App() {
   const init = useStore((s) => s.init)
   const inspector = useStore((s) => s.inspector)
   const groupEditor = useStore((s) => s.groupEditor)
+  const episodeEditor = useStore((s) => s.episodeEditor)
   const collectionPicker = useStore((s) => s.collectionPicker)
   const settingsModal = useStore((s) => s.settingsModal)
 
@@ -25,6 +27,7 @@ export default function App() {
       <Layout />
       {inspector && <Inspector />}
       {groupEditor && <GroupEditor />}
+      {episodeEditor && <EpisodeEditor />}
       {collectionPicker && <CollectionPicker />}
       {settingsModal && <SettingsModal />}
       <LibraryWizard />
