@@ -26,6 +26,7 @@ export function EpisodeEditor() {
   const renameEpisode = useStore((s) => s.renameEpisode)
   const deleteEpisode = useStore((s) => s.deleteEpisode)
   const removeEpisodeItem = useStore((s) => s.removeEpisodeItem)
+  const clusterEpisodes = useStore((s) => s.clusterEpisodes)
 
   const [label, setLabel] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
@@ -33,6 +34,7 @@ export function EpisodeEditor() {
   const [editLabel, setEditLabel] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [status, setStatus] = useState<string | null>(null)
 
   const ownerType = editor?.ownerType ?? 'session'
   const ownerId = editor?.ownerId ?? ''
@@ -57,6 +59,7 @@ export function EpisodeEditor() {
     setEditingId(null)
     setEditLabel('')
     setError(null)
+    setStatus(null)
   }, [editor?.ownerType, editor?.ownerId, editor?.episodeId])
 
   useEffect(() => {
@@ -140,6 +143,30 @@ export function EpisodeEditor() {
     setError(null)
     try {
       await removeEpisodeItem(ownerType, ownerId, episodeId, itemId)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const regenerate = async () => {
+    if (busy) return
+    const ok = window.confirm(
+      'Rebuild automatic episodes from similar images?\n\nEpisodes you created, renamed, or edited by hand are left alone.',
+    )
+    if (!ok) return
+    setBusy(true)
+    setError(null)
+    setStatus(null)
+    try {
+      const created = await clusterEpisodes(ownerType, ownerId)
+      setOpenId(null)
+      setStatus(
+        created === 0
+          ? 'no automatic episodes found — manual episodes untouched'
+          : `${created} automatic ${created === 1 ? 'episode' : 'episodes'} rebuilt · manual episodes untouched`,
+      )
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -329,9 +356,17 @@ export function EpisodeEditor() {
             </form>
 
             {error && <p className="col-error">{error}</p>}
+            {status && (
+              <p className="col-hint" role="status" aria-live="polite">
+                {status}
+              </p>
+            )}
           </div>
 
           <footer className="col-foot">
+            <button type="button" onClick={() => void regenerate()} disabled={busy}>
+              regenerate automatic
+            </button>
             <span className="col-foot-spacer" />
             <button type="button" onClick={close} disabled={busy}>
               close

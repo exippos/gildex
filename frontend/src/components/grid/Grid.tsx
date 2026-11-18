@@ -101,6 +101,7 @@ type Slot =
       ownerId: string
       episode: Episode
       count: number
+      open: boolean
     }
   | {
       kind: 'section'
@@ -115,6 +116,14 @@ type Slot =
 type MenuTarget =
   | { kind: 'cell'; x: number; y: number; item: Item; group: Group | null }
   | { kind: 'tile'; x: number; y: number; group: Group; open: boolean }
+  | {
+      kind: 'episode'
+      x: number
+      y: number
+      ownerType: GroupType
+      ownerId: string
+      episodeId: string
+    }
 
 interface GridRow {
   key: string
@@ -289,9 +298,10 @@ function catalogSessionGroups(
   return groups
 }
 
-/** Appends one expanded group's slots, split into episode sections. Episodes
- *  keep their member order; everything else follows in catalog order under an
- *  "Unassigned" header (only when the group actually has episodes). */
+/** Appends one expanded group's slots, split into episode sections. Episode
+ *  cards expand and collapse in place like group tiles; everything else
+ *  follows in catalog order under an "Unassigned" header (only when the group
+ *  actually has episodes). */
 function pushSectionedSlots(
   slots: Slot[],
   group: Group | null,
@@ -299,6 +309,7 @@ function pushSectionedSlots(
   ownerType: GroupType,
   ownerId: string,
   eps: Episode[],
+  expandedEpisodes: Set<string>,
   orderStart = 0,
 ): number {
   const byId = new Map(items.map((item) => [item.id, item]))
@@ -311,16 +322,20 @@ function pushSectionedSlots(
       .filter((item): item is Item => Boolean(item))
     if (!members.length) continue
     shown++
+    const key = `episode:${ownerType}:${ownerId}:${ep.id}`
+    const open = expandedEpisodes.has(key)
     slots.push({
       kind: 'episode',
-      key: `episode:${ownerType}:${ownerId}:${ep.id}`,
+      key,
       ownerType,
       ownerId,
       episode: ep,
       count: members.length,
+      open,
     })
     for (const item of members) {
       assigned.add(item.id)
+      if (!open) continue
       slots.push({
         kind: 'cell',
         key: group ? `cell:${group.key}:${item.id}` : `cell:${item.id}`,
@@ -453,22 +468,26 @@ function EpisodeCard({
   meta,
   thumb,
   unassigned = false,
+  open = true,
   style,
   tabIndex,
   slotRef,
-  onOpen,
+  onToggle,
+  onMenu,
 }: {
   label: string
   meta: string
   thumb?: string | null
   unassigned?: boolean
+  open?: boolean
   style: CSSProperties
   tabIndex?: number
   slotRef?: (el: HTMLButtonElement | null) => void
-  onOpen: () => void
+  onToggle: () => void
+  onMenu?: (x: number, y: number) => void
 }) {
   const src = thumb ? thumbUrl(thumb) : null
-  const className = unassigned ? 'episode-card is-unassigned' : 'episode-card'
+  const className = `episode-card${unassigned ? ' is-unassigned' : open ? ' is-open' : ''}`
   return (
     <button
       type="button"
@@ -476,8 +495,36 @@ function EpisodeCard({
       style={style}
       tabIndex={tabIndex}
       ref={slotRef}
-      onClick={onOpen}
-      title={label}
+      aria-expanded={unassigned ? undefined : open}
+      aria-haspopup={onMenu ? 'menu' : undefined}
+      onClick={onToggle}
+      onContextMenu={
+        onMenu
+          ? (event) => {
+              event.preventDefault()
+              onMenu(event.clientX, event.clientY)
+            }
+          : undefined
+      }
+      onKeyDown={
+        onMenu
+          ? (event) => {
+              if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) {
+                return
+              }
+              event.preventDefault()
+              const rect = event.currentTarget.getBoundingClientRect()
+              onMenu(rect.left + Math.min(rect.width / 2, 120), rect.top + 18)
+            }
+          : undefined
+      }
+      title={
+        unassigned
+          ? 'Manage episodes'
+          : open
+            ? `${label} · click to collapse`
+            : `${label} · click to expand`
+      }
     >
       <span className="episode-card-inner">
         {!unassigned && (
@@ -495,6 +542,7 @@ function EpisodeCard({
           <span className="episode-card-label">{label}</span>
           <span className="episode-card-meta">{meta}</span>
         </span>
+        {!unassigned && <span className="episode-card-chevron" aria-hidden="true" />}
       </span>
     </button>
   )
@@ -773,6 +821,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const [viewportH, setViewportH] = useState(0)
   const [scrollTop, setScrollTop] = useState(0)
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
+  // Episode cards expand in place, independently of group expansion.
+  const [expandedEpisodes, setExpandedEpisodes] = useState<Set<string>>(() => new Set())
   const [entering, setEntering] = useState<Set<string>>(() => new Set())
   const [exiting, setExiting] = useState<Set<string>>(() => new Set())
   const [menu, setMenu] = useState<MenuTarget | null>(null)
@@ -1042,7 +1092,15 @@ export function Grid({ cellSize }: { cellSize: number }) {
         })
         if (open) {
           const eps = episodes[episodeKey(group.source, group.id)] ?? []
-          pushSectionedSlots(slots, group, group.items, group.source, group.id, eps)
+          pushSectionedSlots(
+            slots,
+            group,
+            group.items,
+            group.source,
+            group.id,
+            eps,
+            expandedEpisodes,
+          )
           outlines.push(
             groupOutline(group.key, start, slots.length - 1, cols, cellW, rowStep),
           )
@@ -1053,7 +1111,15 @@ export function Grid({ cellSize }: { cellSize: number }) {
         ? episodes[episodeKey(scopedOwner.type, scopedOwner.id)] ?? []
         : []
       if (scopedOwner) {
-        pushSectionedSlots(slots, null, items, scopedOwner.type, scopedOwner.id, eps)
+        pushSectionedSlots(
+          slots,
+          null,
+          items,
+          scopedOwner.type,
+          scopedOwner.id,
+          eps,
+          expandedEpisodes,
+        )
       } else {
         for (const item of items) {
           slots.push({ kind: 'cell', key: `cell:${item.id}`, group: null, item, order: 0 })
@@ -1087,6 +1153,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
     viewportH,
     episodes,
     scopedOwner,
+    expandedEpisodes,
   ])
 
   const visible = useMemo(() => {
@@ -1210,6 +1277,15 @@ export function Grid({ cellSize }: { cellSize: number }) {
     }
   }
 
+  const toggleEpisode = (key: string) => {
+    setExpandedEpisodes((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
   const focusSlot = (entry: { slot: Slot; row: number }) => {
     setFocusedKey(entry.slot.key)
     focusIndexRef.current = flatSlots.findIndex((e) => e.slot.key === entry.slot.key)
@@ -1255,6 +1331,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
       flatSlots[0]
     if (!cur) return
     if (cur.slot.kind === 'cell') toggleSelect(cur.slot.item.id)
+    else if (cur.slot.kind === 'episode') toggleEpisode(cur.slot.key)
     else if (cur.slot.kind === 'tile' && cur.slot.group.id)
       void selectGroupItems(cur.slot.group.source, cur.slot.group.id)
   }
@@ -1265,8 +1342,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
       flatSlots[0]
     if (!cur) return
     if (cur.slot.kind === 'cell') void openInspector('item', cur.slot.item.id)
-    else if (cur.slot.kind === 'episode')
-      openEpisodeEditor(cur.slot.ownerType, cur.slot.ownerId, cur.slot.episode.id)
+    else if (cur.slot.kind === 'episode') toggleEpisode(cur.slot.key)
     else if (cur.slot.kind === 'section')
       openEpisodeEditor(cur.slot.ownerType, cur.slot.ownerId)
     else toggleGroup(cur.slot.group)
@@ -1593,7 +1669,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
       })
       episodeItems.push({
         kind: 'item',
-        label: 'Group into episodes…',
+        label: eps.length ? 'Regenerate episodes…' : 'Group into episodes…',
         onSelect: () => {
           const ok = window.confirm(
             'Group this group’s similar images into episodes?\n\nAutomatic episodes are rebuilt. Episodes you renamed or edited by hand are left alone.',
@@ -1659,7 +1735,10 @@ export function Grid({ cellSize }: { cellSize: number }) {
       })
       entries.push({
         kind: 'item',
-        label: 'Group into episodes…',
+        label:
+          (episodes[episodeKey(group.source, group.id)] ?? []).length
+            ? 'Regenerate episodes…'
+            : 'Group into episodes…',
         onSelect: () => {
           const ok = window.confirm(
             `Group “${group.label}” by image similarity?\n\nAutomatic episodes are rebuilt. Episodes you renamed or edited by hand are left alone.`,
@@ -1676,6 +1755,28 @@ export function Grid({ cellSize }: { cellSize: number }) {
     })
     return entries
   }
+
+  const buildEpisodeMenu = (
+    ownerType: GroupType,
+    ownerId: string,
+    episodeId: string,
+  ): MenuEntry[] => [
+    {
+      kind: 'item',
+      label: 'Manage episode…',
+      onSelect: () => openEpisodeEditor(ownerType, ownerId, episodeId),
+    },
+    {
+      kind: 'item',
+      label: 'Regenerate automatic episodes…',
+      onSelect: () => {
+        const ok = window.confirm(
+          'Rebuild automatic episodes for this group from similar images?\n\nEpisodes you created, renamed, or edited by hand are left alone.',
+        )
+        if (ok) void clusterEpisodes(ownerType, ownerId)
+      },
+    },
+  ]
 
   return (
     <div className="grid-root">
@@ -1799,15 +1900,20 @@ export function Grid({ cellSize }: { cellSize: number }) {
                         slot.count === 1 ? 'item' : 'items'
                       }`}
                       thumb={slot.episode.thumbnailPath}
+                      open={slot.open}
                       style={style}
                       tabIndex={slot.key === (focusedKey ?? firstSlotKey) ? 0 : -1}
                       slotRef={(el) => registerSlot(slot.key, el)}
-                      onOpen={() =>
-                        openEpisodeEditor(
-                          slot.ownerType,
-                          slot.ownerId,
-                          slot.episode.id,
-                        )
+                      onToggle={() => toggleEpisode(slot.key)}
+                      onMenu={(x, y) =>
+                        setMenu({
+                          kind: 'episode',
+                          x,
+                          y,
+                          ownerType: slot.ownerType,
+                          ownerId: slot.ownerId,
+                          episodeId: slot.episode.id,
+                        })
                       }
                     />
                   )
@@ -1822,7 +1928,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
                       style={style}
                       tabIndex={slot.key === (focusedKey ?? firstSlotKey) ? 0 : -1}
                       slotRef={(el) => registerSlot(slot.key, el)}
-                      onOpen={() => openEpisodeEditor(slot.ownerType, slot.ownerId)}
+                      onToggle={() => openEpisodeEditor(slot.ownerType, slot.ownerId)}
                     />
                   )
                 }
@@ -1875,7 +1981,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
           items={
             menu.kind === 'cell'
               ? buildCellMenu(menu.item, menu.group)
-              : buildTileMenu(menu.group, menu.open)
+              : menu.kind === 'tile'
+                ? buildTileMenu(menu.group, menu.open)
+                : buildEpisodeMenu(menu.ownerType, menu.ownerId, menu.episodeId)
           }
           onClose={() => setMenu(null)}
         />

@@ -761,6 +761,7 @@
 }
 
 .episode-card-text {
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -782,6 +783,35 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
+}
+
+/* Chevron points right when collapsed, down when expanded — the same
+   expand-in-place affordance as a group tile. */
+.episode-card-chevron {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 7px;
+  height: 7px;
+  margin-right: 2px;
+  border-right: 1px solid var(--text-muted);
+  border-bottom: 1px solid var(--text-muted);
+  transform: rotate(-45deg);
+  transition: transform 120ms ease;
+}
+
+.episode-card.is-open .episode-card-chevron {
+  transform: rotate(45deg);
+}
+
+.episode-card.is-open .episode-card-inner {
+  border-color: var(--gilt-border);
+  background: var(--surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .episode-card-chevron {
+    transition: none;
+  }
 }
 
 .episode-card.is-unassigned .episode-card-inner {
