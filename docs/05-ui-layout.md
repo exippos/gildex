@@ -70,6 +70,9 @@ current surface + active filters; it is never a thumbnail strip or a summary.
 - **Thumbnail fit** — square thumbnails either fill the frame (crop) or show
   the whole image letterboxed on black, toggled in Settings → Appearance →
   *thumbnail fit*.
+- **Sorting** — Time, Filename, Size, Session, Rating, Status, or Favorite.
+  In group views the triage keys order session/collection tiles by their own
+  group-owned triage; expanded items sort by their item triage.
 
 ## 4. Right preview
 
