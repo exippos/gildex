@@ -75,13 +75,18 @@ func (s *Store) Sessions() ([]model.Session, error) {
 	if err != nil {
 		return nil, err
 	}
+	nsfwTag := s.groupNsfwTag()
 	for i := range out {
 		if names, ok := tags[out[i].ID]; ok {
 			out[i].Tags = names
 		}
+		// The session's own tags mark it NSFW, as does its cover item.
+		if hasTagFold(out[i].Tags, nsfwTag) {
+			out[i].Nsfw = true
+		}
 	}
 
-	nsfwSet, err := s.nsfwThumbSet(thumbIDs, s.groupNsfwTag())
+	nsfwSet, err := s.nsfwThumbSet(thumbIDs, nsfwTag)
 	if err != nil {
 		return nil, err
 	}
@@ -145,11 +150,13 @@ func (s *Store) GetSession(id string) (*model.Session, error) {
 	if thumbID.Valid {
 		thumbIDStr = thumbID.String
 	}
-	nsfwSet, err := s.nsfwThumbSet([]string{thumbIDStr}, s.groupNsfwTag())
+	nsfwTag := s.groupNsfwTag()
+	nsfwSet, err := s.nsfwThumbSet([]string{thumbIDStr}, nsfwTag)
 	if err != nil {
 		return nil, err
 	}
-	sess.Nsfw = nsfwSet[thumbIDStr]
+	// The session's own tags mark it NSFW, as does its cover item.
+	sess.Nsfw = hasTagFold(sess.Tags, nsfwTag) || nsfwSet[thumbIDStr]
 	return &sess, nil
 }
 
