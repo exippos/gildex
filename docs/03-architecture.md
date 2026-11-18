@@ -83,10 +83,17 @@ limitation); integrity is enforced in the application layer (D10).
 ### 3.4 Episodes (nested grouping, D46)
 
 - **`episode`** — `id`, `owner_type` ∈ session | collection, `owner_id`, `label`,
-  `position`, `auto`, `created_at`. Episodes are a second level of grouping
-  *inside* a group: a session or collection may contain episodes, and items with
-  no near-duplicates stay unassigned. `episode_item` carries `(episode_id,
-  item_id, position)`; an item belongs to at most one episode of a given owner.
+  `cover_item_id`, `position`, `auto`, `created_at`. Episodes are a second level
+  of grouping *inside* a group: a session or collection may contain episodes,
+  and items with no near-duplicates stay unassigned. `episode_item` carries
+  `(episode_id, item_id, position)`; an item belongs to at most one episode of a
+  given owner.
+- The cover is the first member with a thumbnail unless the user picks one: an
+  item's context menu offers "Use as episode cover" (and "Clear episode cover")
+  for the episode that holds it. Picking or clearing a cover is a manual edit and
+  flips the episode to `auto=0`. A cover is cleared automatically when its item
+  leaves the episode, the item is removed from the catalog, or the item is moved
+  to another episode of the same owner.
 - Manual is the source of truth: create/rename/delete/assign are user actions.
   `auto=1` marks an episode produced by pHash clustering. Any manual edit —
   rename, assignment, or removal — flips it to `auto=0`, and clustering never

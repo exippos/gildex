@@ -98,7 +98,7 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 | DELETE | `/api/collections/{id}/items/{itemId}` | remove one |
 | GET | `/api/episodes?ownerType=&ownerId=` | → `Episode[]` nested in one session/collection (D46) |
 | POST | `/api/episodes` | body `{ ownerType, ownerId, label, itemIds? }` → `Episode` (manual; moves items out of other episodes of the owner) |
-| PATCH | `/api/episodes/{id}` | body `{ label }` rename → `Episode`; flips the episode to manual |
+| PATCH | `/api/episodes/{id}` | body `{ label?, coverItemId? }` rename and/or set (`null` clears) the cover → `Episode`; flips the episode to manual |
 | DELETE | `/api/episodes/{id}` | delete episode, keep items |
 | DELETE | `/api/episodes/auto` | remove every automatic episode; manual episodes and items stay |
 | POST | `/api/episodes/{id}/items` | body `{ itemIds }` assign → `Episode`; flips to manual |
