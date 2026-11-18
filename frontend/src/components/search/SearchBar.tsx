@@ -3,17 +3,8 @@
 import { useEffect, useRef } from 'react'
 import { useStore, tagFilterLabel } from '../../store'
 import { familyFromName, familyStyle } from '../tags'
+import { isTypingTarget } from '../keys'
 import './search-bar.css'
-
-function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false
-  return (
-    target.tagName === 'INPUT' ||
-    target.tagName === 'TEXTAREA' ||
-    target.tagName === 'SELECT' ||
-    target.isContentEditable
-  )
-}
 
 export function SearchBar() {
   const search = useStore((s) => s.search)

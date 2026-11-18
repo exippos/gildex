@@ -19,6 +19,8 @@ interface GridCellProps {
   /** Item ids in visual order, so shift-click can span expanded groups. */
   order?: string[]
   style: CSSProperties
+  tabIndex?: number
+  slotRef?: (el: HTMLButtonElement | null) => void
   onMenu?: (x: number, y: number) => void
 }
 
@@ -146,7 +148,17 @@ function RatingDots({ rating }: { rating: number }) {
   )
 }
 
-export function GridCell({ item, selected, isCover = false, phase, order, style, onMenu }: GridCellProps) {
+export function GridCell({
+  item,
+  selected,
+  isCover = false,
+  phase,
+  order,
+  style,
+  tabIndex,
+  slotRef,
+  onMenu,
+}: GridCellProps) {
   const setSelected = useStore((s) => s.setSelected)
   const selectRange = useStore((s) => s.selectRange)
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
@@ -172,8 +184,10 @@ export function GridCell({ item, selected, isCover = false, phase, order, style,
   return (
     <button
       type="button"
+      ref={slotRef}
       className={`grid-cell${selected ? ' is-selected' : ''}${missing ? ' is-missing' : ''}${nsfw ? ' is-nsfw' : ''}${phase ? ` is-${phase === 'enter' ? 'entering' : 'exiting'}` : ''}`}
       style={style}
+      tabIndex={tabIndex}
       aria-pressed={selected}
       aria-label={`${item.kind} ${missing ? 'missing ' : ''}${mediaPath}`}
       aria-haspopup="menu"

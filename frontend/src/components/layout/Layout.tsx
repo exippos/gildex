@@ -2,6 +2,7 @@
 // preview. Owns only local frame state (panel widths, visibility).
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../store'
+import { isTypingTarget } from '../keys'
 import { Header } from './Header'
 import { LeftRail } from './LeftRail'
 import { Grid } from '../grid/Grid'
@@ -126,37 +127,32 @@ export function Layout() {
   const cellSize = useStore((s) => s.cellSize)
   const workspace = useStore((s) => s.workspace)
   const effects = useStore((s) => s.effects)
+  const openSettings = useStore((s) => s.openSettings)
 
   // Selecting anything should reveal the quick preview even if it was closed.
   useEffect(() => {
     if (previewItemId || previewGroup || selection.length > 0) setPreviewOpen(true)
   }, [previewItemId, previewGroup, selection])
 
-  // Panel toggles: p = preview, [ = rail. Ignored while typing.
+  // Panel toggles: p = preview, [ = rail, ? = shortcut help. Ignored while typing.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
-      const target = event.target as HTMLElement | null
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
-        return
-      }
+      if (isTypingTarget(event.target)) return
       if (event.key === 'p') {
         event.preventDefault()
         setPreviewOpen((open) => !open)
       } else if (event.key === '[') {
         event.preventDefault()
         setRailOpen((open) => !open)
+      } else if (event.key === '?') {
+        event.preventDefault()
+        openSettings('shortcuts')
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [openSettings])
 
   const showRail = workspace === 'gallery'
   const showPreview = workspace !== 'ingest'

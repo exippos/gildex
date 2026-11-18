@@ -5,12 +5,23 @@
 // the shared grid flow instead of giving them a block of their own.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { groupItemsKey, resolveItems, useStore, isNsfwBlurred, type GroupClickMode } from '../../store'
 import { thumbUrl } from '../../api'
-import type { Collection, GroupType, Item, ItemSort, Session, SortDir, Status } from '../../types'
+import type {
+  Collection,
+  GroupType,
+  Item,
+  ItemSort,
+  Session,
+  SortDir,
+  Status,
+  Surface,
+} from '../../types'
 import { ContextMenu, type MenuEntry } from '../common/ContextMenu'
 import { GridCell } from './GridCell'
 import { formatRange } from '../format'
+import { isTypingTarget } from '../keys'
 import { readDraggedItemIds } from '../groups/drag'
 import { STATUSES, STATUS_ORDER } from './statuses'
 import './grid.css'
@@ -362,6 +373,8 @@ function GroupTile({
   tight,
   style,
   clickMode,
+  tabIndex,
+  slotRef,
   onToggle,
   onPreview,
   onDropItems,
@@ -374,6 +387,8 @@ function GroupTile({
   tight: boolean
   style: CSSProperties
   clickMode: GroupClickMode
+  tabIndex?: number
+  slotRef?: (el: HTMLButtonElement | null) => void
   onToggle: () => void
   /** Single-click group preview; omitted for pseudo groups (Unsorted). */
   onPreview?: () => void
@@ -425,8 +440,10 @@ function GroupTile({
   return (
     <button
       type="button"
+      ref={slotRef}
       className={`group-tile${open ? ' is-open' : ''}${compact ? ' is-compact' : ''}${tight ? ' is-tight' : ''}${dropActive ? ' is-drop-target' : ''}`}
       style={style}
+      tabIndex={tabIndex}
       aria-expanded={open}
       aria-busy={loading || undefined}
       aria-label={`${group.label}, ${group.count} ${group.count === 1 ? 'item' : 'items'}`}
@@ -600,6 +617,12 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const setGroupCover = useStore((s) => s.setGroupCover)
   const setPreviewGroup = useStore((s) => s.setPreviewGroup)
   const groupClickMode = useStore((s) => s.groupClickMode)
+  const setSurface = useStore((s) => s.setSurface)
+  const setPreviewItemId = useStore((s) => s.setPreviewItemId)
+  const toggleSelect = useStore((s) => s.toggleSelect)
+  const selectRange = useStore((s) => s.selectRange)
+  const selectAllVisible = useStore((s) => s.selectAllVisible)
+  const loadItems = useStore((s) => s.loadItems)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
@@ -611,6 +634,14 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const [entering, setEntering] = useState<Set<string>>(() => new Set())
   const [exiting, setExiting] = useState<Set<string>>(() => new Set())
   const [menu, setMenu] = useState<MenuTarget | null>(null)
+  const [focusedKey, setFocusedKey] = useState<string | null>(null)
+  const slotRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
+
+  const registerSlot = (key: string, el: HTMLButtonElement | null) => {
+    if (el) slotRefs.current.set(key, el)
+    else slotRefs.current.delete(key)
+  }
+
   const enterTimers = useRef<Map<string, number>>(new Map())
   const exitTimers = useRef<Map<string, number>>(new Map())
 
@@ -640,6 +671,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
     setExpanded(new Set())
     setEntering(new Set())
     setExiting(new Set())
+    setFocusedKey(null)
     enterTimers.current.forEach((timer) => window.clearTimeout(timer))
     enterTimers.current.clear()
     exitTimers.current.forEach((timer) => window.clearTimeout(timer))
@@ -659,6 +691,54 @@ export function Grid({ cellSize }: { cellSize: number }) {
       window.removeEventListener('blur', onBlur)
     }
   }, [clearSelection, menu])
+
+  // Keys 1–5 switch surfaces, as long as no typing field or modal owns the key.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+      if (isTypingTarget(event.target)) return
+      const state = useStore.getState()
+      if (
+        state.settingsModal ||
+        state.inspector ||
+        state.groupEditor ||
+        state.collectionPicker ||
+        state.libraryModal
+      ) {
+        return
+      }
+      if (menu) return
+      let next: Surface | null = null
+      switch (event.key) {
+        case '1':
+          next = 'all'
+          break
+        case '2':
+          next = 'sessions'
+          break
+        case '3':
+          next = 'collections'
+          break
+        case '4':
+          next = 'folders'
+          break
+        case '5':
+          next = 'tags'
+          break
+        default:
+          return
+      }
+      event.preventDefault()
+      setSurface(next)
+      setPreviewItemId(null)
+      clearSelection()
+      void loadItems()
+      // Keep keyboard focus in the grid so arrows keep working after the switch.
+      scrollRef.current?.focus()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menu, setSurface, setPreviewItemId, clearSelection, loadItems])
 
   useEffect(() => {
     return () => {
@@ -844,6 +924,25 @@ export function Grid({ cellSize }: { cellSize: number }) {
     [layout],
   )
 
+  // Flat visual order of every slot, so the keyboard cursor can step through
+  // tiles and cells alike and map back to a row for scroll-into-view.
+  const flatSlots = useMemo(() => {
+    const out: { slot: Slot; row: number }[] = []
+    layout.rows.forEach((row, r) => {
+      row.slots.forEach((slot) => out.push({ slot, row: r }))
+    })
+    return out
+  }, [layout])
+  const firstSlotKey = flatSlots[0]?.slot.key ?? null
+
+  // Focus the cursor's element once it is actually rendered (virtualized rows
+  // only exist while they are near the viewport).
+  useEffect(() => {
+    if (!focusedKey) return
+    const el = slotRefs.current.get(focusedKey)
+    if (el && el.isConnected) el.focus({ preventScroll: true })
+  }, [focusedKey, visible, scrollTop])
+
   const expandGroup = (key: string, count: number) => {
     setEntering((prev) => {
       const next = new Set(prev)
@@ -923,6 +1022,110 @@ export function Grid({ cellSize }: { cellSize: number }) {
         exitTimers.current.delete(group.key)
       }
       expandGroup(group.key, group.items.length)
+    }
+  }
+
+  const focusSlot = (entry: { slot: Slot; row: number }) => {
+    setFocusedKey(entry.slot.key)
+    // Preview follows the keyboard cursor (mirrors a single click).
+    if (entry.slot.kind === 'cell') {
+      setPreviewItemId(entry.slot.item.id)
+    } else if (entry.slot.group.id) {
+      setPreviewGroup({ type: entry.slot.group.source, id: entry.slot.group.id })
+    }
+    // Reveal the row before focusing — virtualized slots may be off-screen.
+    const el = scrollRef.current
+    if (el) {
+      const top = layout.rows[entry.row].y
+      const bottom = top + cellW
+      if (top < el.scrollTop + PAD_Y) {
+        el.scrollTop = top - PAD_Y
+      } else if (bottom > el.scrollTop + el.clientHeight) {
+        el.scrollTop = bottom - el.clientHeight + PAD_Y
+      }
+    }
+  }
+
+  const moveFocus = (delta: number, shift: boolean) => {
+    if (!flatSlots.length) return
+    const idx = flatSlots.findIndex((entry) => entry.slot.key === (focusedKey ?? firstSlotKey))
+    const from = idx === -1 ? 0 : idx
+    const next = Math.max(0, Math.min(flatSlots.length - 1, from + delta))
+    const target = flatSlots[next]
+    if (shift && target.slot.kind === 'cell') {
+      selectRange(target.slot.item.id, itemOrder)
+    }
+    focusSlot(target)
+  }
+
+  const focusIndex = (index: number) => {
+    if (!flatSlots.length) return
+    focusSlot(flatSlots[Math.max(0, Math.min(flatSlots.length - 1, index))])
+  }
+
+  const activateSpace = () => {
+    const cur =
+      flatSlots.find((entry) => entry.slot.key === (focusedKey ?? firstSlotKey)) ??
+      flatSlots[0]
+    if (!cur) return
+    if (cur.slot.kind === 'cell') toggleSelect(cur.slot.item.id)
+    else if (cur.slot.group.id) void selectGroupItems(cur.slot.group.source, cur.slot.group.id)
+  }
+
+  const openFocused = () => {
+    const cur =
+      flatSlots.find((entry) => entry.slot.key === (focusedKey ?? firstSlotKey)) ??
+      flatSlots[0]
+    if (!cur) return
+    if (cur.slot.kind === 'cell') void openInspector('item', cur.slot.item.id)
+    else toggleGroup(cur.slot.group)
+  }
+
+  const handleGridKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.altKey) return
+    switch (event.key) {
+      case 'ArrowLeft':
+        event.preventDefault()
+        moveFocus(-1, event.shiftKey)
+        break
+      case 'ArrowRight':
+        event.preventDefault()
+        moveFocus(1, event.shiftKey)
+        break
+      case 'ArrowUp':
+        event.preventDefault()
+        moveFocus(-cols, event.shiftKey)
+        break
+      case 'ArrowDown':
+        event.preventDefault()
+        moveFocus(cols, event.shiftKey)
+        break
+      case 'Home':
+        event.preventDefault()
+        focusIndex(0)
+        break
+      case 'End':
+        event.preventDefault()
+        focusIndex(flatSlots.length - 1)
+        break
+      case ' ':
+        event.preventDefault()
+        activateSpace()
+        break
+      case 'Enter':
+        event.preventDefault()
+        openFocused()
+        break
+      case 'a':
+      case 'A':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault()
+          selectAllVisible()
+          break
+        }
+        return
+      default:
+        return
     }
   }
 
@@ -1186,6 +1389,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
         className="grid-scroll"
         ref={scrollRef}
         onScroll={handleScroll}
+        tabIndex={-1}
+        onKeyDown={handleGridKeyDown}
         onMouseDown={(event) => {
           const target = event.target as HTMLElement
           // Moving on before the double-click window closes drops the pending
@@ -1262,6 +1467,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
                       tight={tight}
                       style={style}
                       clickMode={groupClickMode}
+                      tabIndex={slot.key === (focusedKey ?? firstSlotKey) ? 0 : -1}
+                      slotRef={(el) => registerSlot(slot.key, el)}
                       onToggle={() => toggleGroup(group)}
                       onPreview={
                         group.id
@@ -1306,6 +1513,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
                     phase={phase}
                     order={itemOrder}
                     style={cellStyle}
+                    tabIndex={slot.key === (focusedKey ?? firstSlotKey) ? 0 : -1}
+                    slotRef={(el) => registerSlot(slot.key, el)}
                     onMenu={(x, y) =>
                       setMenu({ kind: 'cell', x, y, item: slot.item, group })
                     }
