@@ -47,7 +47,7 @@
     - [X] Missing items grayed-out original thumbnail
     - [ ] Relocate missing items option
     - [ ] Flag "missing" items after rescan (if not found on disk) 
-- [ ] Sort by rating, status, favorite
+- [X] Sort by rating, status, favorite
 - [X] Remember last selected session/collection/folder on tab change
 - [X] Do not cut thumbnails to fit a square -- black bars (Settings → Appearance)
 
