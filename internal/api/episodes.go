@@ -1,7 +1,10 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"gildex/internal/store"
 )
 
 // handleEpisodes lists the episodes of one session or collection.
@@ -41,19 +44,36 @@ func (a *API) handleCreateEpisode(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, episode)
 }
 
-// handleUpdateEpisode renames an episode.
+// handleUpdateEpisode renames an episode and/or sets its cover image.
 func (a *API) handleUpdateEpisode(w http.ResponseWriter, r *http.Request) {
 	st := a.requireStore(w)
 	if st == nil {
 		return
 	}
-	var body struct {
-		Label string `json:"label"`
-	}
-	if !decodeJSON(w, r, &body) {
+	var raw map[string]json.RawMessage
+	if !decodeJSON(w, r, &raw) {
 		return
 	}
-	episode, err := st.UpdateEpisode(r.PathValue("id"), body.Label)
+	var patch store.EpisodePatch
+	if v, ok := raw["label"]; ok {
+		var label string
+		if err := json.Unmarshal(v, &label); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid label")
+			return
+		}
+		patch.Label = &label
+	}
+	cover, err := rawNullableString(raw, "coverItemId")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid coverItemId")
+		return
+	}
+	patch.CoverItemID = cover
+	if patch.Label == nil && !patch.CoverItemID.Set {
+		writeError(w, http.StatusBadRequest, "nothing to update")
+		return
+	}
+	episode, err := st.UpdateEpisode(r.PathValue("id"), patch)
 	if err != nil {
 		writeStoreError(w, err)
 		return

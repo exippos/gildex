@@ -178,6 +178,7 @@ type Episode struct {
 	Label         string    `json:"label"`
 	ItemCount     int       `json:"itemCount"`
 	ThumbnailPath string    `json:"thumbnailPath"`
+	CoverItemID   *string   `json:"coverItemId"` // user-picked cover, nil = derived
 	Auto          bool      `json:"auto"`
 	ItemIDs       []string  `json:"itemIds"` // ordered members, never null
 }

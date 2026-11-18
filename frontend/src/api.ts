@@ -197,8 +197,8 @@ export const api = {
     label: string
     itemIds?: string[]
   }) => request<Episode>('POST', '/episodes', body),
-  updateEpisode: (id: string, label: string) =>
-    request<Episode>('PATCH', `/episodes/${id}`, { label }),
+  updateEpisode: (id: string, patch: { label?: string; coverItemId?: string | null }) =>
+    request<Episode>('PATCH', `/episodes/${id}`, patch),
   deleteEpisode: (id: string) => request<{ ok: boolean }>('DELETE', `/episodes/${id}`),
   clearAutoEpisodes: () => request<{ removed: number }>('DELETE', '/episodes/auto'),
   assignEpisodeItems: (id: string, itemIds: string[]) =>

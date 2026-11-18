@@ -144,6 +144,7 @@ export interface Episode {
   label: string
   itemCount: number
   thumbnailPath: string
+  coverItemId: string | null
   auto: boolean
   itemIds: string[]
 }

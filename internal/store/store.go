@@ -126,13 +126,14 @@ CREATE TABLE IF NOT EXISTS collection_item (
 -- auto = 1 marks an auto-clustered episode that a later clustering pass may
 -- rebuild; any manual edit flips it to 0 so user work is never destroyed.
 CREATE TABLE IF NOT EXISTS episodes (
-  id         TEXT PRIMARY KEY,
-  owner_type TEXT NOT NULL,
-  owner_id   TEXT NOT NULL,
-  label      TEXT NOT NULL DEFAULT '',
-  position   INTEGER NOT NULL DEFAULT 0,
-  auto       INTEGER NOT NULL DEFAULT 0,
-  created_at INTEGER NOT NULL
+  id            TEXT PRIMARY KEY,
+  owner_type    TEXT NOT NULL,
+  owner_id      TEXT NOT NULL,
+  label         TEXT NOT NULL DEFAULT '',
+  cover_item_id TEXT,
+  position      INTEGER NOT NULL DEFAULT 0,
+  auto          INTEGER NOT NULL DEFAULT 0,
+  created_at    INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS episode_item (
@@ -222,6 +223,7 @@ func migrate(db *sql.DB) error {
 		{"collections", "favorite", `ALTER TABLE collections ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0`},
 		{"collections", "rating", `ALTER TABLE collections ADD COLUMN rating INTEGER NOT NULL DEFAULT 0`},
 		{"collections", "status", `ALTER TABLE collections ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'`},
+		{"episodes", "cover_item_id", `ALTER TABLE episodes ADD COLUMN cover_item_id TEXT`},
 		{"items", "source_id", `ALTER TABLE items ADD COLUMN source_id TEXT`},
 		{"items", "frame_count", `ALTER TABLE items ADD COLUMN frame_count INTEGER NOT NULL DEFAULT 0`},
 		{"items", "origin_path", `ALTER TABLE items ADD COLUMN origin_path TEXT NOT NULL DEFAULT ''`},

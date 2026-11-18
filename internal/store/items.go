@@ -476,8 +476,12 @@ func (s *Store) removeFromCatalogTx(tx *sql.Tx, ids []string) error {
 	if _, err := tx.Exec(`DELETE FROM notes WHERE owner_type = 'item' AND owner_id IN (`+placeholders+`)`, idArgs...); err != nil {
 		return err
 	}
-	_, err = tx.Exec(`DELETE FROM items WHERE id IN (`+placeholders+`)`, idArgs...)
-	return err
+	if _, err := tx.Exec(`DELETE FROM items WHERE id IN (`+placeholders+`)`, idArgs...); err != nil {
+		return err
+	}
+	// episode_item rows cascade with the items; covers must not point at a
+	// former member.
+	return pruneEpisodeCoversTx(tx, "")
 }
 
 func boolInt(b bool) int {

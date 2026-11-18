@@ -13,10 +13,14 @@ import (
 )
 
 // episodeCols selects one episode row plus its member count and a cover
-// thumbnail (the first member that has one).
-const episodeCols = `e.id, e.owner_type, e.owner_id, e.label, e.auto,
+// thumbnail. A user-picked cover wins; otherwise the first member with a
+// thumbnail is used.
+const episodeCols = `e.id, e.owner_type, e.owner_id, e.label, e.auto, e.cover_item_id,
 	(SELECT COUNT(*) FROM episode_item ei WHERE ei.episode_id = e.id),
 	COALESCE(
+		(SELECT i.thumbnail_path
+			FROM episode_item ei JOIN items i ON i.id = ei.item_id
+			WHERE ei.episode_id = e.id AND i.id = e.cover_item_id AND i.thumbnail_path <> ''),
 		(SELECT i.thumbnail_path
 			FROM episode_item ei JOIN items i ON i.id = ei.item_id
 			WHERE ei.episode_id = e.id AND i.thumbnail_path <> ''
@@ -43,16 +47,18 @@ func (s *Store) Episodes(ownerType, ownerID string) ([]model.Episode, error) {
 	out := []model.Episode{}
 	for rows.Next() {
 		var (
-			e    model.Episode
-			ot   string
-			auto int
+			e     model.Episode
+			ot    string
+			auto  int
+			cover sql.NullString
 		)
-		if err := rows.Scan(&e.ID, &ot, &e.OwnerID, &e.Label, &auto, &e.ItemCount, &e.ThumbnailPath); err != nil {
+		if err := rows.Scan(&e.ID, &ot, &e.OwnerID, &e.Label, &auto, &cover, &e.ItemCount, &e.ThumbnailPath); err != nil {
 			rows.Close()
 			return nil, err
 		}
 		e.OwnerType = model.OwnerType(ot)
 		e.Auto = auto != 0
+		e.CoverItemID = nullString(cover)
 		e.ItemIDs = []string{}
 		out = append(out, e)
 	}
@@ -98,12 +104,13 @@ func (s *Store) Episodes(ownerType, ownerID string) ([]model.Episode, error) {
 // GetEpisode returns one episode with its ordered member ids.
 func (s *Store) GetEpisode(id string) (*model.Episode, error) {
 	var (
-		e    model.Episode
-		ot   string
-		auto int
+		e     model.Episode
+		ot    string
+		auto  int
+		cover sql.NullString
 	)
 	err := s.db.QueryRow(`SELECT `+episodeCols+` FROM episodes e WHERE e.id = ?`, id).
-		Scan(&e.ID, &ot, &e.OwnerID, &e.Label, &auto, &e.ItemCount, &e.ThumbnailPath)
+		Scan(&e.ID, &ot, &e.OwnerID, &e.Label, &auto, &cover, &e.ItemCount, &e.ThumbnailPath)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -112,6 +119,7 @@ func (s *Store) GetEpisode(id string) (*model.Episode, error) {
 	}
 	e.OwnerType = model.OwnerType(ot)
 	e.Auto = auto != 0
+	e.CoverItemID = nullString(cover)
 	e.ItemIDs = []string{}
 
 	rows, err := s.db.Query(`SELECT item_id FROM episode_item WHERE episode_id = ? ORDER BY position ASC`, id)
@@ -177,14 +185,48 @@ func (s *Store) CreateEpisode(ownerType, ownerID, label string, itemIDs []string
 	return s.GetEpisode(id)
 }
 
-// UpdateEpisode renames an episode. A rename is a manual touch, so the episode
-// stops being auto-managed.
-func (s *Store) UpdateEpisode(id, label string) (*model.Episode, error) {
-	label = strings.TrimSpace(label)
-	if label == "" {
-		return nil, invalid("label is required")
+// EpisodePatch is a partial episode update. CoverItemID.Set with a nil Value
+// clears the user-picked cover and returns to the derived one.
+type EpisodePatch struct {
+	Label       *string
+	CoverItemID NullableString
+}
+
+// UpdateEpisode renames an episode and/or sets its cover. Any change is a
+// manual touch, so the episode stops being auto-managed.
+func (s *Store) UpdateEpisode(id string, p EpisodePatch) (*model.Episode, error) {
+	var sets []string
+	var args []any
+	if p.Label != nil {
+		label := strings.TrimSpace(*p.Label)
+		if label == "" {
+			return nil, invalid("label is required")
+		}
+		sets = append(sets, "label = ?")
+		args = append(args, label)
 	}
-	res, err := s.db.Exec(`UPDATE episodes SET label = ?, auto = 0 WHERE id = ?`, label, id)
+	if p.CoverItemID.Set {
+		if p.CoverItemID.Value == nil {
+			sets = append(sets, "cover_item_id = NULL")
+		} else {
+			var member int
+			if err := s.db.QueryRow(`SELECT COUNT(*) FROM episode_item WHERE episode_id = ? AND item_id = ?`,
+				id, *p.CoverItemID.Value).Scan(&member); err != nil {
+				return nil, err
+			}
+			if member == 0 {
+				return nil, invalid("cover item is not in this episode")
+			}
+			sets = append(sets, "cover_item_id = ?")
+			args = append(args, *p.CoverItemID.Value)
+		}
+	}
+	if len(sets) == 0 {
+		return s.GetEpisode(id)
+	}
+	sets = append(sets, "auto = 0")
+	args = append(args, id)
+	res, err := s.db.Exec(`UPDATE episodes SET `+strings.Join(sets, ", ")+` WHERE id = ?`, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +301,18 @@ func (s *Store) RemoveEpisodeItem(episodeID, itemID string) (*model.Episode, err
 	if n, _ := res.RowsAffected(); n == 0 {
 		return nil, ErrNotFound
 	}
-	if _, err := s.db.Exec(`UPDATE episodes SET auto = 0 WHERE id = ?`, episodeID); err != nil {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(`UPDATE episodes SET auto = 0 WHERE id = ?`, episodeID); err != nil {
+		return nil, err
+	}
+	if err := pruneEpisodeCoversTx(tx, episodeID); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 	return s.GetEpisode(episodeID)
@@ -521,7 +574,24 @@ func assignEpisodeItemsTx(tx *sql.Tx, episodeID, ownerType, ownerID string, item
 			maxPos++
 		}
 	}
-	return nil
+	// Moving items between episodes can strand a cover on a former member.
+	return pruneEpisodeCoversTx(tx, "")
+}
+
+// pruneEpisodeCoversTx clears covers that are no longer members of their
+// episode. An empty episodeID sweeps every episode.
+func pruneEpisodeCoversTx(tx *sql.Tx, episodeID string) error {
+	q := `UPDATE episodes SET cover_item_id = NULL
+		WHERE cover_item_id IS NOT NULL
+			AND cover_item_id NOT IN (
+				SELECT item_id FROM episode_item WHERE episode_id = episodes.id)`
+	var args []any
+	if episodeID != "" {
+		q += ` AND id = ?`
+		args = append(args, episodeID)
+	}
+	_, err := tx.Exec(q, args...)
+	return err
 }
 
 // ensureItemsInOwner rejects item ids that are not part of the owner. Sessions

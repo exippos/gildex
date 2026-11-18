@@ -812,6 +812,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const openGroupEditor = useStore((s) => s.openGroupEditor)
   const openEpisodeEditor = useStore((s) => s.openEpisodeEditor)
   const assignEpisodeItems = useStore((s) => s.assignEpisodeItems)
+  const setEpisodeCover = useStore((s) => s.setEpisodeCover)
   const clusterEpisodes = useStore((s) => s.clusterEpisodes)
   const setGroupCover = useStore((s) => s.setGroupCover)
   const setPreviewGroup = useStore((s) => s.setPreviewGroup)
@@ -1685,6 +1686,24 @@ export function Grid({ cellSize }: { cellSize: number }) {
         },
       }))
       if (episodeItems.length) episodeItems.push({ kind: 'separator' })
+      // An item belongs to at most one episode of this owner, so the cover
+      // action is a single toggle for the episode that holds it.
+      const holder = eps.find((ep) => ep.itemIds.includes(item.id))
+      if (holder) {
+        const isCover = holder.coverItemId === item.id
+        episodeItems.push({
+          kind: 'item',
+          label: isCover
+            ? `Clear episode cover — ${holder.label}`
+            : `Use as episode cover — ${holder.label}`,
+          hint: isCover ? 'current' : undefined,
+          checked: isCover,
+          onSelect: () => {
+            void setEpisodeCover(epOwner.type, epOwner.id, holder.id, isCover ? null : item.id)
+          },
+        })
+        episodeItems.push({ kind: 'separator' })
+      }
       episodeItems.push({
         kind: 'item',
         label: 'New episode…',

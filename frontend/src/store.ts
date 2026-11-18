@@ -360,6 +360,12 @@ interface AppState {
     episodeId: string,
     label: string,
   ) => Promise<void>
+  setEpisodeCover: (
+    type: GroupType,
+    id: string,
+    episodeId: string,
+    itemId: string | null,
+  ) => Promise<void>
   deleteEpisode: (type: GroupType, id: string, episodeId: string) => Promise<void>
   assignEpisodeItems: (
     type: GroupType,
@@ -800,7 +806,12 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   renameEpisode: async (type, id, episodeId, label) => {
-    await api.updateEpisode(episodeId, label)
+    await api.updateEpisode(episodeId, { label })
+    await get().loadEpisodes(type, id)
+  },
+
+  setEpisodeCover: async (type, id, episodeId, itemId) => {
+    await api.updateEpisode(episodeId, { coverItemId: itemId })
     await get().loadEpisodes(type, id)
   },
 
