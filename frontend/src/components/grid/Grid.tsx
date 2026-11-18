@@ -526,17 +526,22 @@ function EpisodeCard({
             : `${label} · click to expand`
       }
     >
+      <span className="episode-card-deck" aria-hidden="true" />
       <span className="episode-card-inner">
         {!unassigned && (
-          <span className="episode-card-art">
-            {src ? (
-              <img src={src} alt="" loading="lazy" />
-            ) : (
-              <span className="episode-card-glyph" aria-hidden="true">
-                ▤
-              </span>
-            )}
-          </span>
+          <>
+            <span className="episode-card-art">
+              {src ? (
+                <img src={src} alt="" loading="lazy" />
+              ) : (
+                <span className="episode-card-glyph" aria-hidden="true">
+                  ▤
+                </span>
+              )}
+            </span>
+            <span className="episode-card-scrim" aria-hidden="true" />
+            <span className="episode-card-stack" aria-hidden="true" />
+          </>
         )}
         <span className="episode-card-text">
           <span className="episode-card-label">{label}</span>

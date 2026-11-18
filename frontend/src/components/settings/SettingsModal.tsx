@@ -135,6 +135,7 @@ export function SettingsModal() {
   const librarySettings = useStore((s) => s.librarySettings)
   const updateSettings = useStore((s) => s.updateSettings)
   const reclusterSessions = useStore((s) => s.reclusterSessions)
+  const regenerateAllEpisodes = useStore((s) => s.regenerateAllEpisodes)
   const refreshCatalog = useStore((s) => s.refreshCatalog)
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
@@ -284,6 +285,29 @@ export function SettingsModal() {
     try {
       await updateSettings({ autoClusterEpisodes: enabled })
       setStatus(enabled ? 'automatic episodes on' : 'automatic episodes off')
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const regenerateAll = async () => {
+    if (busy) return
+    const ok = window.confirm(
+      'Regenerate automatic episodes for every session?\n\nEpisodes you created, renamed, or edited by hand are left alone.',
+    )
+    if (!ok) return
+    setBusy(true)
+    setError(null)
+    setStatus(null)
+    try {
+      const created = await regenerateAllEpisodes()
+      setStatus(
+        created === 0
+          ? 'no automatic episodes found'
+          : `${created} automatic ${created === 1 ? 'episode' : 'episodes'} rebuilt`,
+      )
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -919,6 +943,24 @@ export function SettingsModal() {
                           ? 'episodes are rebuilt after every import; manual edits are kept.'
                           : 'off — group episodes from a group menu or the item Episode menu.'}
                       </p>
+                    </div>
+
+                    <div className="settings-row">
+                      <span className="settings-label">regenerate episodes</span>
+                      <p className="settings-hint">
+                        rebuild automatic episodes for every session using the saved
+                        threshold. episodes you created or edited by hand are kept.
+                      </p>
+                      <div className="settings-actions">
+                        <button
+                          type="button"
+                          className="settings-btn"
+                          onClick={() => void regenerateAll()}
+                          disabled={busy}
+                        >
+                          Regenerate all
+                        </button>
+                      </div>
                     </div>
                   </>
                 ) : (

@@ -374,6 +374,7 @@ interface AppState {
     itemId: string,
   ) => Promise<void>
   clusterEpisodes: (type: GroupType, id: string) => Promise<number>
+  regenerateAllEpisodes: () => Promise<number>
   openEpisodeEditor: (
     type: GroupType,
     id: string,
@@ -821,6 +822,13 @@ export const useStore = create<AppState>((set, get) => ({
   clusterEpisodes: async (type, id) => {
     const { created } = await api.clusterEpisodes(type, id)
     await get().loadEpisodes(type, id)
+    return created
+  },
+
+  regenerateAllEpisodes: async () => {
+    const { created } = await api.clusterEpisodes()
+    // Every session's auto episodes may have changed; let owners refetch.
+    set({ episodes: {}, episodeLoading: {} })
     return created
   },
 
