@@ -111,6 +111,7 @@ type Slot =
       label: string
       count: number
     }
+  | { kind: 'spacer'; key: string }
   | { kind: 'cell'; key: string; group: Group | null; item: Item; order: number }
 
 type MenuTarget =
@@ -1085,6 +1086,16 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const layout = useMemo(() => {
     const slots: Slot[] = []
     const outlines: GroupOutline[] = []
+    // After an expanded group, pad to the end of its row so the next group
+    // tile starts a fresh row instead of butting against the spilled items.
+    const breakRow = () => {
+      if (cols <= 0) return
+      const remainder = slots.length % cols
+      if (remainder === 0) return
+      for (let i = remainder; i < cols; i++) {
+        slots.push({ kind: 'spacer', key: `spacer:${slots.length}` })
+      }
+    }
     if (groupMode) {
       for (const group of groups) {
         const open = expanded.has(group.key)
@@ -1109,6 +1120,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
           outlines.push(
             groupOutline(group.key, start, slots.length - 1, cols, cellW, rowStep),
           )
+          breakRow()
         }
       }
     } else {
@@ -1186,7 +1198,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const flatSlots = useMemo(() => {
     const out: { slot: Slot; row: number }[] = []
     layout.rows.forEach((row, r) => {
-      row.slots.forEach((slot) => out.push({ slot, row: r }))
+      row.slots.forEach((slot) => {
+        if (slot.kind !== 'spacer') out.push({ slot, row: r })
+      })
     })
     return out
   }, [layout])
@@ -1350,7 +1364,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
     else if (cur.slot.kind === 'episode') toggleEpisode(cur.slot.key)
     else if (cur.slot.kind === 'section')
       openEpisodeEditor(cur.slot.ownerType, cur.slot.ownerId)
-    else toggleGroup(cur.slot.group)
+    else if (cur.slot.kind === 'tile') toggleGroup(cur.slot.group)
   }
 
   const deleteFromCatalog = () => {
@@ -1843,6 +1857,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
           {width > 0 &&
             visible.map((row) =>
               row.slots.map((slot, index) => {
+                if (slot.kind === 'spacer') return null
                 const style: CSSProperties =
                   slot.kind === 'cell'
                     ? {
