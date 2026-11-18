@@ -26,6 +26,7 @@ export type SettingsSection =
   | 'sources'
   | 'tags'
   | 'behavior'
+  | 'shortcuts'
   | 'about'
 
 // Library-scoped preferences stored in the .gildex catalog DB.

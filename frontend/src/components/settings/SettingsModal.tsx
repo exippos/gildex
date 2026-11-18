@@ -7,6 +7,7 @@ import type { CSSProperties } from 'react'
 import { useStore } from '../../store'
 import { THEMES, THEME_LABELS, type Theme } from '../../theme'
 import type { SettingsSection } from '../../types'
+import { SHORTCUTS } from '../shortcuts'
 import { SourceManager } from '../sources/SourceManager'
 import './settings.css'
 
@@ -42,6 +43,7 @@ const SECTIONS: ReadonlyArray<{ id: SettingsSection; label: string }> = [
   { id: 'sources', label: 'Sources' },
   { id: 'tags', label: 'Tags' },
   { id: 'behavior', label: 'Behavior' },
+  { id: 'shortcuts', label: 'Shortcuts' },
   { id: 'about', label: 'About' },
 ]
 
@@ -813,6 +815,27 @@ export function SettingsModal() {
                     onOpen={() => openLibrary('open')}
                   />
                 )}
+              </div>
+            )}
+
+            {active === 'shortcuts' && (
+              <div className="settings-section">
+                <div className="settings-section-head">
+                  <span className="settings-eyebrow">shortcuts</span>
+                  <h3>keyboard</h3>
+                  <p className="settings-hint">
+                    grid navigation and workspace controls. arrow keys move focus through the grid.
+                  </p>
+                </div>
+                <dl className="settings-shortcuts">
+                  {SHORTCUTS.map((shortcut) => (
+                    <div className="settings-shortcut" key={shortcut.keys}>
+                      <dt className="settings-shortcut-keys">{shortcut.keys}</dt>
+                      <dd className="settings-shortcut-action">{shortcut.action}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="settings-note">press ? anywhere to jump back here.</p>
               </div>
             )}
 
