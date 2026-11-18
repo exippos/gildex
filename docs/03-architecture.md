@@ -98,6 +98,10 @@ limitation); integrity is enforced in the application layer (D10).
 - Episode order is creation/position order (drag reordering is not part of this
   slice). Episodes are cleaned up when their owner disappears (session recluster,
   collection delete) and stale members are pruned with the owner.
+- In the grid an episode is a collapsible section: clicking its card expands the
+  members in place, like a group tile. Automatic episodes can be regenerated on
+  demand from the episode editor or an episode card's context menu; regeneration
+  rebuilds only `auto=1` episodes, so user-authored ones are never touched.
 
 ### 3.5 Tags & Collections (D6, D21, D45)
 
