@@ -136,6 +136,7 @@ export function SettingsModal() {
   const updateSettings = useStore((s) => s.updateSettings)
   const reclusterSessions = useStore((s) => s.reclusterSessions)
   const regenerateAllEpisodes = useStore((s) => s.regenerateAllEpisodes)
+  const deleteAutoEpisodes = useStore((s) => s.deleteAutoEpisodes)
   const refreshCatalog = useStore((s) => s.refreshCatalog)
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
@@ -278,13 +279,29 @@ export function SettingsModal() {
   }
 
   const setAutoCluster = async (enabled: boolean) => {
-    if (busy || librarySettings.autoClusterEpisodes === enabled) return
+    if (busy) return
+    if (enabled && librarySettings.autoClusterEpisodes) return
+    if (!enabled) {
+      const ok = window.confirm(
+        'Turn off automatic episodes?\n\nExisting automatic episodes will be removed. Episodes you created, renamed, or edited by hand are kept.',
+      )
+      if (!ok) return
+    }
     setBusy(true)
     setError(null)
     setStatus(null)
     try {
       await updateSettings({ autoClusterEpisodes: enabled })
-      setStatus(enabled ? 'automatic episodes on' : 'automatic episodes off')
+      if (enabled) {
+        setStatus('automatic episodes on')
+        return
+      }
+      const removed = await deleteAutoEpisodes()
+      setStatus(
+        removed === 0
+          ? 'automatic episodes off'
+          : `automatic episodes off — ${removed} ${removed === 1 ? 'episode' : 'episodes'} removed`,
+      )
     } catch (err) {
       setError(errorMessage(err))
     } finally {

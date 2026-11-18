@@ -74,6 +74,20 @@ func (a *API) handleDeleteEpisode(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
+// handleClearAutoEpisodes removes every automatic episode, keeping manual ones.
+func (a *API) handleClearAutoEpisodes(w http.ResponseWriter, r *http.Request) {
+	st := a.requireStore(w)
+	if st == nil {
+		return
+	}
+	removed, err := st.ClearAutoEpisodes()
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]int{"removed": removed})
+}
+
 // handleAssignEpisodeItems moves items into an episode.
 func (a *API) handleAssignEpisodeItems(w http.ResponseWriter, r *http.Request) {
 	st := a.requireStore(w)

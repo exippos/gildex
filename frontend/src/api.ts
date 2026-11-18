@@ -200,6 +200,7 @@ export const api = {
   updateEpisode: (id: string, label: string) =>
     request<Episode>('PATCH', `/episodes/${id}`, { label }),
   deleteEpisode: (id: string) => request<{ ok: boolean }>('DELETE', `/episodes/${id}`),
+  clearAutoEpisodes: () => request<{ removed: number }>('DELETE', '/episodes/auto'),
   assignEpisodeItems: (id: string, itemIds: string[]) =>
     request<Episode>('POST', `/episodes/${id}/items`, { itemIds }),
   removeEpisodeItem: (id: string, itemId: string) =>

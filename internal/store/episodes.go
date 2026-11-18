@@ -207,6 +207,17 @@ func (s *Store) DeleteEpisode(id string) error {
 	return nil
 }
 
+// ClearAutoEpisodes deletes every automatic episode in the catalog, keeping
+// user-authored episodes and all items. It returns how many were removed.
+func (s *Store) ClearAutoEpisodes() (int, error) {
+	res, err := s.db.Exec(`DELETE FROM episodes WHERE auto = 1`)
+	if err != nil {
+		return 0, err
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
+}
+
 // AssignEpisodeItems adds items to an episode, moving them out of any other
 // episode of the same owner. Assignment is a manual touch.
 func (s *Store) AssignEpisodeItems(id string, itemIDs []string) (*model.Episode, error) {
