@@ -1100,13 +1100,6 @@ export function Grid({ cellSize }: { cellSize: number }) {
         slots.push({ kind: 'spacer', key: `spacer:${slots.length}` })
       }
     }
-    // A whole empty row, used as breathing room after an expanded group.
-    const blankRow = () => {
-      if (cols <= 0) return
-      for (let i = 0; i < cols; i++) {
-        slots.push({ kind: 'spacer', key: `spacer:${slots.length}` })
-      }
-    }
     if (groupMode) {
       for (const group of groups) {
         const open = expanded.has(group.key)
@@ -1118,6 +1111,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
           open: open && !exiting.has(group.key),
         })
         if (open) {
+          // The root tile keeps its row; spilled items start on the next one.
+          breakRow()
           const eps = episodes[episodeKey(group.source, group.id)] ?? []
           pushSectionedSlots(
             slots,
@@ -1133,10 +1128,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
           let end = slots.length - 1
           while (end > start && slots[end].kind === 'spacer') end--
           outlines.push(groupOutline(group.key, start, end, cols, cellW, rowStep))
-          // Finish the group's row, then leave one empty row before the next
-          // group so expanded content reads as its own block.
           breakRow()
-          blankRow()
         }
       }
     } else {
