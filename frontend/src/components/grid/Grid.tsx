@@ -311,6 +311,7 @@ function pushSectionedSlots(
   ownerId: string,
   eps: Episode[],
   expandedEpisodes: Set<string>,
+  breakRow: () => void,
   orderStart = 0,
 ): number {
   const byId = new Map(items.map((item) => [item.id, item]))
@@ -345,6 +346,9 @@ function pushSectionedSlots(
         order: order++,
       })
     }
+    // An open episode is a section of its own: the next episode or the
+    // unassigned block starts on a fresh row, like the next group does.
+    if (open) breakRow()
   }
   const rest = items.filter((item) => !assigned.has(item.id))
   if (shown > 0 && rest.length) {
@@ -1116,10 +1120,12 @@ export function Grid({ cellSize }: { cellSize: number }) {
             group.id,
             eps,
             expandedEpisodes,
+            breakRow,
           )
-          outlines.push(
-            groupOutline(group.key, start, slots.length - 1, cols, cellW, rowStep),
-          )
+          // Trailing spacers belong to the row break, not the group outline.
+          let end = slots.length - 1
+          while (end > start && slots[end].kind === 'spacer') end--
+          outlines.push(groupOutline(group.key, start, end, cols, cellW, rowStep))
           breakRow()
         }
       }
@@ -1136,6 +1142,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
           scopedOwner.id,
           eps,
           expandedEpisodes,
+          breakRow,
         )
       } else {
         for (const item of items) {
