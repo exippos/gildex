@@ -31,6 +31,8 @@ export type SettingsSection =
 // Library-scoped preferences stored in the .gildex catalog DB.
 export interface LibrarySettings {
   sessionGapMinutes: number
+  blurNsfw: boolean // blur items tagged `nsfwTag` in the UI
+  nsfwTag: string // tag name marking an item NSFW, "" = none
 }
 
 export interface Source {

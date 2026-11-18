@@ -31,6 +31,34 @@
   border-radius: var(--radius-sm);
 }
 
+/* NSFW blur: media is blurred and a quiet label marks it. */
+.story-media {
+  position: relative;
+}
+
+.story-media.is-nsfw img,
+.story-media.is-nsfw video {
+  filter: blur(18px) saturate(0.85);
+}
+
+.story-nsfw-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+  padding: 2px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--scrim);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 .story-media--audio {
   min-height: 200px;
 }

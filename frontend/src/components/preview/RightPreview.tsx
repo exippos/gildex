@@ -3,7 +3,7 @@
 import { useMemo, useRef, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { mediaUrl, thumbUrl } from '../../api'
-import { findCachedItem, groupItemsKey, useStore, tagFilterLabel } from '../../store'
+import { findCachedItem, groupItemsKey, useStore, tagFilterLabel, isNsfwBlurred } from '../../store'
 import type { Collection, Item, Session } from '../../types'
 import { STATUSES } from '../grid/statuses'
 import {
@@ -31,12 +31,14 @@ function MetaRow({ label, value, title }: { label: string; value: string; title?
 function Media({ item }: { item: Item }) {
   const sources = useStore((s) => s.sources)
   const libraryRoot = useStore((s) => s.library?.root ?? '')
+  const librarySettings = useStore((s) => s.librarySettings)
   const path = resolveMediaPath(item, sources, libraryRoot)
+  const nsfw = isNsfwBlurred(item, librarySettings)
 
   if (item.state === 'missing') {
     const thumb = thumbUrl(item.thumbnailPath)
     return (
-      <div className="preview-media preview-missing">
+      <div className={`preview-media preview-missing${nsfw ? ' is-nsfw' : ''}`}>
         {thumb ? (
           <div className="preview-missing-frame">
             <img className="preview-missing-thumb" src={thumb} alt="" />
@@ -54,8 +56,9 @@ function Media({ item }: { item: Item }) {
   }
   if (item.kind === 'video') {
     return (
-      <div className="preview-media">
+      <div className={`preview-media${nsfw ? ' is-nsfw' : ''}`}>
         <video src={mediaUrl(item.id)} controls preload="metadata" />
+        {nsfw && <span className="preview-nsfw-badge">nsfw</span>}
       </div>
     )
   }
@@ -68,8 +71,9 @@ function Media({ item }: { item: Item }) {
     )
   }
   return (
-    <div className="preview-media">
+    <div className={`preview-media${nsfw ? ' is-nsfw' : ''}`}>
       <img src={mediaUrl(item.id)} alt={item.relativePath} />
+      {nsfw && <span className="preview-nsfw-badge">nsfw</span>}
     </div>
   )
 }
@@ -231,6 +235,7 @@ function ItemPreview({ item }: { item: Item }) {
 function SessionPreview({ session, items }: { session: Session; items: Item[] }) {
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
   const openGroupEditor = useStore((s) => s.openGroupEditor)
+  const librarySettings = useStore((s) => s.librarySettings)
   const thumbs = items
     .filter((item) => item.sessionId === session.id && item.thumbnailPath)
     .slice(0, 12)
@@ -249,11 +254,12 @@ function SessionPreview({ session, items }: { session: Session; items: Item[] })
           {thumbs.map((item) => {
             const thumb = thumbUrl(item.thumbnailPath)
             if (!thumb) return null
+            const nsfw = isNsfwBlurred(item, librarySettings)
             return (
               <button
                 key={item.id}
                 type="button"
-                className="preview-thumb"
+                className={`preview-thumb${nsfw ? ' is-nsfw' : ''}`}
                 title={item.relativePath}
                 onClick={() => setPreviewItemId(item.id)}
               >
@@ -296,6 +302,7 @@ function CollectionPreview({
 }) {
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
   const openGroupEditor = useStore((s) => s.openGroupEditor)
+  const librarySettings = useStore((s) => s.librarySettings)
   const thumbs = items.filter((item) => item.thumbnailPath).slice(0, 9)
 
   return (
@@ -314,11 +321,12 @@ function CollectionPreview({
           {thumbs.map((item) => {
             const thumb = thumbUrl(item.thumbnailPath)
             if (!thumb) return null
+            const nsfw = isNsfwBlurred(item, librarySettings)
             return (
               <button
                 key={item.id}
                 type="button"
-                className="preview-thumb"
+                className={`preview-thumb${nsfw ? ' is-nsfw' : ''}`}
                 title={item.relativePath}
                 onClick={() => setPreviewItemId(item.id)}
               >

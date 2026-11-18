@@ -208,6 +208,27 @@
 .insp-thumb.is-missing img {
   filter: grayscale(1) brightness(0.55);
 }
+.insp-thumb.is-nsfw img {
+  filter: blur(10px) saturate(0.85);
+  transform: scale(1.2);
+}
+.insp-nsfw-badge {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  z-index: 2;
+  padding: 1px 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--scrim);
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  pointer-events: none;
+}
 .insp-missing-badge {
   position: absolute;
   left: 4px;

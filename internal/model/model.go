@@ -191,7 +191,9 @@ type FolderNode struct {
 
 // Settings carries library-scoped preferences.
 type Settings struct {
-	SessionGapMinutes int `json:"sessionGapMinutes"`
+	SessionGapMinutes int    `json:"sessionGapMinutes"`
+	BlurNsfw          bool   `json:"blurNsfw"` // blur items tagged NsfwTag in the UI
+	NsfwTag           string `json:"nsfwTag"`  // tag name marking an item NSFW, "" = none
 }
 
 // LibraryStatus summarizes the catalog for the status endpoint.

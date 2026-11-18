@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { thumbUrl } from '../../api'
-import { useStore, findCachedItem } from '../../store'
+import { useStore, findCachedItem, isNsfwBlurred } from '../../store'
 import type { Collection, Item, Session } from '../../types'
 import { NotesPanel } from './NotesPanel'
 import { StoryView } from './StoryView'
@@ -32,16 +32,18 @@ function fmtRange(startsAt: number, endsAt: number): string {
 }
 
 function ThumbStrip({ items, onOpen }: { items: Item[]; onOpen: (item: Item) => void }) {
+  const librarySettings = useStore((s) => s.librarySettings)
   const shown = items.slice(0, 48)
   return (
     <div className="insp-strip">
       {shown.map((it) => {
         const src = thumbUrl(it.thumbnailPath)
+        const nsfw = isNsfwBlurred(it, librarySettings)
         return (
           <button
             key={it.id}
             type="button"
-            className={`insp-thumb${it.state === 'missing' ? ' is-missing' : ''}`}
+            className={`insp-thumb${it.state === 'missing' ? ' is-missing' : ''}${nsfw ? ' is-nsfw' : ''}`}
             onClick={() => onOpen(it)}
             title={itemLabel(it)}
             aria-label={`open ${itemLabel(it)}`}
@@ -52,6 +54,7 @@ function ThumbStrip({ items, onOpen }: { items: Item[]; onOpen: (item: Item) => 
               <span className="insp-thumb-empty" aria-hidden="true" />
             )}
             {it.state === 'missing' && <span className="insp-missing-badge">missing</span>}
+            {nsfw && <span className="insp-nsfw-badge">nsfw</span>}
           </button>
         )
       })}

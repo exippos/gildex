@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { thumbUrl } from '../../api'
-import { useStore } from '../../store'
+import { useStore, isNsfwBlurred } from '../../store'
 import '../collections/collections.css'
 
 function basename(path: string): string {
@@ -19,6 +19,7 @@ export function GroupEditor() {
   const items = useStore((s) => s.groupEditorItems)
   const itemsLoading = useStore((s) => s.groupEditorLoading)
   const pickerResults = useStore((s) => s.groupPickerResults)
+  const librarySettings = useStore((s) => s.librarySettings)
 
   const closeGroupEditor = useStore((s) => s.closeGroupEditor)
   const createCollection = useStore((s) => s.createCollection)
@@ -267,12 +268,13 @@ export function GroupEditor() {
                         {items.map((it) => {
                           const src = thumbUrl(it.thumbnailPath)
                           const isCover = coverId === it.id
+                          const nsfw = isNsfwBlurred(it, librarySettings)
                           return (
                             <li
                               className={`col-item${isCover ? ' is-cover' : ''}`}
                               key={it.id}
                             >
-                              <span className="col-item-thumb">
+                              <span className={`col-item-thumb${nsfw ? ' is-nsfw' : ''}`}>
                                 {src ? (
                                   <img src={src} alt="" loading="lazy" />
                                 ) : (
@@ -343,11 +345,12 @@ export function GroupEditor() {
                       <div className="col-add-grid">
                         {addable.map((it) => {
                           const src = thumbUrl(it.thumbnailPath)
+                          const nsfw = isNsfwBlurred(it, librarySettings)
                           return (
                             <button
                               key={it.id}
                               type="button"
-                              className="col-add-item"
+                              className={`col-add-item${nsfw ? ' is-nsfw' : ''}`}
                               title={`Add ${basename(it.relativePath)}`}
                               aria-label={`Add ${basename(it.relativePath)}`}
                               disabled={busy}

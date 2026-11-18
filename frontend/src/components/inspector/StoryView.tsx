@@ -2,7 +2,7 @@
 // Editable user fields write through the store; media via mediaUrl only.
 import { useId, useState } from 'react'
 import { mediaUrl, thumbUrl } from '../../api'
-import { useStore } from '../../store'
+import { useStore, isNsfwBlurred } from '../../store'
 import type { Item, Status } from '../../types'
 import { resolveMediaPath } from '../paths'
 import './story-view.css'
@@ -40,6 +40,7 @@ export function StoryView({ item }: { item: Item }) {
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const sources = useStore((s) => s.sources)
   const libraryRoot = useStore((s) => s.library?.root ?? '')
+  const librarySettings = useStore((s) => s.librarySettings)
 
   const statusId = useId()
   const [editing, setEditing] = useState(false)
@@ -53,6 +54,7 @@ export function StoryView({ item }: { item: Item }) {
   const missing = item.state === 'missing'
   const fileLabel = basename(item.relativePath) || item.id
   const mediaPath = resolveMediaPath(item, sources, libraryRoot)
+  const nsfw = isNsfwBlurred(item, librarySettings) && !missing
   const hasGeneration =
     Boolean(item.prompt) ||
     Boolean(item.negativePrompt) ||
@@ -121,7 +123,8 @@ export function StoryView({ item }: { item: Item }) {
 
   return (
     <section className="story" aria-label="story view">
-      <div className={`story-media story-media--${missing ? 'missing' : item.kind}`}>
+      <div className={`story-media story-media--${missing ? 'missing' : item.kind}${nsfw ? ' is-nsfw' : ''}`}>
+        {nsfw && <span className="story-nsfw-badge">nsfw</span>}
         {missing ? (
           <div className="story-missing" role="img" aria-label="file missing">
             <span className="story-missing-tick" aria-hidden="true" />

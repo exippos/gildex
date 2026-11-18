@@ -156,6 +156,7 @@ export function SettingsModal() {
   const [tagBusy, setTagBusy] = useState(false)
   const [tagStatus, setTagStatus] = useState<string | null>(null)
   const [tagError, setTagError] = useState<string | null>(null)
+  const [blurError, setBlurError] = useState<string | null>(null)
   const [swatches, setSwatches] = useState<Partial<Record<Theme, SwatchPalette>>>({})
 
   const closeRef = useRef<HTMLButtonElement | null>(null)
@@ -284,8 +285,33 @@ export function SettingsModal() {
     }
   }
 
+  const setBlurNsfw = async (value: boolean) => {
+    setBlurError(null)
+    try {
+      await updateSettings({ blurNsfw: value })
+    } catch (err) {
+      setBlurError(errorMessage(err))
+    }
+  }
+
+  const setNsfwTag = async (name: string) => {
+    setBlurError(null)
+    try {
+      await updateSettings({ nsfwTag: name })
+    } catch (err) {
+      setBlurError(errorMessage(err))
+    }
+  }
+
   const schemaVersion =
     library && library.schemaVersion > 0 ? `v${library.schemaVersion}` : '—'
+
+  const nsfwTagOptions = Array.from(
+    new Set([
+      ...tags.map((t) => t.name),
+      ...(librarySettings.nsfwTag ? [librarySettings.nsfwTag] : []),
+    ]),
+  )
 
   const swatchStyle = (id: Theme): CSSProperties | undefined => {
     const palette = swatches[id]
@@ -633,6 +659,68 @@ export function SettingsModal() {
                       Families are derived from the name: <code>artist:foo</code> groups under
                       artist.
                     </p>
+
+                    <div className="settings-section-head">
+                      <span className="settings-eyebrow">content</span>
+                      <h3>blur NSFW</h3>
+                      <p className="settings-hint">
+                        blur items tagged with the selected tag everywhere in the gallery.
+                      </p>
+                    </div>
+
+                    <div className="settings-row">
+                      <span className="settings-label">blur NSFW</span>
+                      <div className="settings-segmented" role="group" aria-label="Blur NSFW">
+                        <button
+                          type="button"
+                          className="settings-segment"
+                          aria-pressed={librarySettings.blurNsfw}
+                          onClick={() => void setBlurNsfw(true)}
+                        >
+                          On
+                        </button>
+                        <button
+                          type="button"
+                          className="settings-segment"
+                          aria-pressed={!librarySettings.blurNsfw}
+                          onClick={() => void setBlurNsfw(false)}
+                        >
+                          Off
+                        </button>
+                      </div>
+                      <p className="settings-hint">
+                        {librarySettings.blurNsfw ? 'enabled — NSFW items are blurred.' : 'off — NSFW items show normally.'}
+                      </p>
+                    </div>
+
+                    <div className="settings-row">
+                      <label className="settings-label" htmlFor="settings-nsfw-tag">
+                        nsfw tag
+                      </label>
+                      <select
+                        id="settings-nsfw-tag"
+                        className="settings-select"
+                        value={librarySettings.nsfwTag}
+                        onChange={(event) => void setNsfwTag(event.target.value)}
+                      >
+                        <option value="">— none —</option>
+                        {nsfwTagOptions.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="settings-hint">
+                        pick the tag that marks an item as NSFW (for example{' '}
+                        <code>rating:explicit</code>).
+                      </p>
+                    </div>
+
+                    {blurError && (
+                      <p className="settings-error" role="alert">
+                        {blurError}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <NoLibrary

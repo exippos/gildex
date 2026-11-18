@@ -106,7 +106,7 @@ export const api = {
   openLibrary: (path: string) => request<LibraryStatus>('POST', '/library/open', { path }),
 
   settings: () => request<LibrarySettings>('GET', '/settings'),
-  updateSettings: (patch: { sessionGapMinutes?: number }) =>
+  updateSettings: (patch: { sessionGapMinutes?: number; blurNsfw?: boolean; nsfwTag?: string }) =>
     request<LibrarySettings>('PATCH', '/settings', patch),
   reclusterSessions: () => request<void>('POST', '/sessions/recluster'),
 

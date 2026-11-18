@@ -118,6 +118,11 @@
   border: 1px solid var(--hairline);
 }
 
+.timeline-stack-img.is-nsfw {
+  filter: blur(12px) saturate(0.85);
+  transform: scale(1.25);
+}
+
 .timeline-stack:hover .timeline-stack-img.is-top,
 .timeline-stack.is-active .timeline-stack-img.is-top {
   border-color: var(--gilt);

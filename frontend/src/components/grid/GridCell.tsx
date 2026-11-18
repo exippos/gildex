@@ -3,7 +3,7 @@
 // museum-corner selection tick.
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { useStore } from '../../store'
+import { useStore, isNsfwBlurred } from '../../store'
 import { frameUrl, thumbUrl } from '../../api'
 import type { Item } from '../../types'
 import { formatDuration } from '../format'
@@ -153,11 +153,13 @@ export function GridCell({ item, selected, isCover = false, phase, order, style,
   const openInspector = useStore((s) => s.openInspector)
   const sources = useStore((s) => s.sources)
   const libraryRoot = useStore((s) => s.library?.root ?? '')
+  const librarySettings = useStore((s) => s.librarySettings)
 
   const thumb = thumbUrl(item.thumbnailPath)
   const missing = item.state === 'missing'
   const canShowThumb = Boolean(thumb)
   const mediaPath = resolveMediaPath(item, sources, libraryRoot)
+  const nsfw = isNsfwBlurred(item, librarySettings)
 
   // Right-clicking an item outside the current selection selects it first;
   // right-clicking inside the selection keeps the batch together.
@@ -170,7 +172,7 @@ export function GridCell({ item, selected, isCover = false, phase, order, style,
   return (
     <button
       type="button"
-      className={`grid-cell${selected ? ' is-selected' : ''}${missing ? ' is-missing' : ''}${phase ? ` is-${phase === 'enter' ? 'entering' : 'exiting'}` : ''}`}
+      className={`grid-cell${selected ? ' is-selected' : ''}${missing ? ' is-missing' : ''}${nsfw ? ' is-nsfw' : ''}${phase ? ` is-${phase === 'enter' ? 'entering' : 'exiting'}` : ''}`}
       style={style}
       aria-pressed={selected}
       aria-label={`${item.kind} ${missing ? 'missing ' : ''}${mediaPath}`}
@@ -232,6 +234,7 @@ export function GridCell({ item, selected, isCover = false, phase, order, style,
 
       {missing && <span className="cell-missing-frame" aria-hidden="true" />}
       {missing && <span className="cell-missing-badge">missing</span>}
+      {nsfw && <span className="cell-nsfw-badge">nsfw</span>}
 
       {item.kind === 'video' && item.state !== 'missing' && (
         <span className="cell-badge" aria-hidden="true">

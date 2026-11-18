@@ -48,6 +48,17 @@ export function tagFilterLabel(name: string): string {
   return name === UNTAGGED_FILTER ? 'untagged' : name
 }
 
+/**
+ * Whether an item should be blurred in the UI: the "blur NSFW" setting is on
+ * and the item carries the configured NSFW tag. Tag names are matched
+ * case-insensitively so a tag renamed by casing still matches.
+ */
+export function isNsfwBlurred(item: { tags: string[] }, settings: LibrarySettings): boolean {
+  if (!settings.blurNsfw || !settings.nsfwTag) return false
+  const target = settings.nsfwTag.toLowerCase()
+  return item.tags.some((name) => name.toLowerCase() === target)
+}
+
 function tagFilterParams(filters: string[]): { tags?: string[]; untagged?: boolean } {
   const names = filters.filter((name) => name !== UNTAGGED_FILTER)
   return {
@@ -187,7 +198,11 @@ document.documentElement.setAttribute('data-effects', initialEffects)
 const initialThumbnailFit = readThumbnailFit()
 document.documentElement.setAttribute('data-thumb-fit', initialThumbnailFit)
 
-const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = { sessionGapMinutes: 120 }
+const DEFAULT_LIBRARY_SETTINGS: LibrarySettings = {
+  sessionGapMinutes: 120,
+  blurNsfw: false,
+  nsfwTag: '',
+}
 const DEFAULT_CELL_SIZE = 168
 
 // Rail selections are remembered per surface while the app runs. Opening a
@@ -379,7 +394,7 @@ interface AppState {
   openSettings: (section?: SettingsSection) => void
   closeSettings: () => void
   loadSettings: () => Promise<void>
-  updateSettings: (patch: { sessionGapMinutes?: number }) => Promise<LibrarySettings>
+  updateSettings: (patch: { sessionGapMinutes?: number; blurNsfw?: boolean; nsfwTag?: string }) => Promise<LibrarySettings>
   reclusterSessions: () => Promise<void>
 }
 

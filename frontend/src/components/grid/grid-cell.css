@@ -111,6 +111,33 @@
   pointer-events: none;
 }
 
+/* NSFW: the poster is blurred and carries a quiet label so a blurred cell is
+   never mistaken for a rendering glitch. */
+.grid-cell.is-nsfw .cell-thumb {
+  filter: blur(22px) saturate(0.85);
+  transform: scale(1.16);
+}
+
+.cell-nsfw-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  z-index: 2;
+  padding: 2px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--scrim);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 /* D42: a few thin vertical bars of varying height, like a rough spectrogram. */
 .cell-placeholder.is-audio {
   padding: 0 12%;

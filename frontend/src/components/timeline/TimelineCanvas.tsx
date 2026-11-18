@@ -9,7 +9,7 @@
 //   hourly histogram anchored to the bottom of the viewport.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { thumbUrl } from '../../api'
-import { useStore } from '../../store'
+import { useStore, isNsfwBlurred } from '../../store'
 import type { Item } from '../../types'
 import { formatDate, formatTime } from '../format'
 import './timeline-canvas.css'
@@ -165,6 +165,7 @@ export function TimelineCanvas() {
   const setPreviewItemId = useStore((s) => s.setPreviewItemId)
   const openInspector = useStore((s) => s.openInspector)
   const cellSize = useStore((s) => s.cellSize)
+  const librarySettings = useStore((s) => s.librarySettings)
 
   const minStack = clamp(Math.round(cellSize * 0.35), 28, 64)
 
@@ -374,6 +375,7 @@ export function TimelineCanvas() {
               >
                 {layers.map((item, i) => {
                   const src = thumbUrl(item.thumbnailPath)
+                  const nsfw = isNsfwBlurred(item, librarySettings)
                   const layerStyle = {
                     left: i * LAYER_OFFSET,
                     top: i * LAYER_OFFSET,
@@ -384,7 +386,7 @@ export function TimelineCanvas() {
                   return src ? (
                     <img
                       key={item.id}
-                      className={`timeline-stack-img${i === 0 ? ' is-top' : ''}`}
+                      className={`timeline-stack-img${i === 0 ? ' is-top' : ''}${nsfw ? ' is-nsfw' : ''}`}
                       style={layerStyle}
                       src={src}
                       alt=""

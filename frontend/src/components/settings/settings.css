@@ -353,6 +353,30 @@
   color: var(--text-faint);
 }
 
+/* ---- select (tag picker) ---- */
+
+.settings-select {
+  align-self: flex-start;
+  max-width: 100%;
+  min-width: 200px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--control);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.settings-select:hover {
+  border-color: var(--border-strong);
+  background: var(--control-hover);
+}
+
+.settings-select:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 1px;
+}
+
 /* ---- library card ---- */
 
 .settings-library-card {

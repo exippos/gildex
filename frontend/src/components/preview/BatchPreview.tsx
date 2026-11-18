@@ -3,7 +3,7 @@
 // destructive actions. Mirrors the floating BatchToolbar but stays open.
 import { useMemo } from 'react'
 import { thumbUrl } from '../../api'
-import { resolveItems, useStore } from '../../store'
+import { resolveItems, useStore, isNsfwBlurred } from '../../store'
 import type { Status } from '../../types'
 import { STATUSES } from '../grid/statuses'
 import { TagEditor } from './TagEditor'
@@ -16,6 +16,7 @@ export function BatchPreview() {
   const items = useStore((s) => s.items)
   const groupItems = useStore((s) => s.groupItems)
   const tags = useStore((s) => s.tags)
+  const librarySettings = useStore((s) => s.librarySettings)
   const batchTag = useStore((s) => s.batchTag)
   const batchSet = useStore((s) => s.batchSet)
   const batchRemove = useStore((s) => s.batchRemove)
@@ -83,11 +84,12 @@ export function BatchPreview() {
           {thumbs.map((item) => {
             const thumb = thumbUrl(item.thumbnailPath)
             if (!thumb) return null
+            const nsfw = isNsfwBlurred(item, librarySettings)
             return (
               <button
                 key={item.id}
                 type="button"
-                className="preview-thumb"
+                className={`preview-thumb${nsfw ? ' is-nsfw' : ''}`}
                 title={item.relativePath}
                 onClick={() => setPreviewItemId(item.id)}
               >
