@@ -105,9 +105,10 @@ limitation); integrity is enforced in the application layer (D10).
   are never touched.
 - Expanded groups and expanded episodes break to a new row: their items spill
   into the shared grid flow, and the next group tile or episode section starts
-  on the following row. Turning the automatic-episodes setting off removes
-  existing `auto=1` episodes (manual episodes and items stay); it can be turned
-  back on and regenerated on demand.
+  on the following row. An expanded group additionally leaves one empty row
+  before the next group, so its block reads separately. Turning the
+  automatic-episodes setting off removes existing `auto=1` episodes (manual
+  episodes and items stay); it can be turned back on and regenerated on demand.
 
 ### 3.5 Tags & Collections (D6, D21, D45)
 
