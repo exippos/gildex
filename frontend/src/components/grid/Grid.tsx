@@ -623,6 +623,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const selectRange = useStore((s) => s.selectRange)
   const selectAllVisible = useStore((s) => s.selectAllVisible)
   const loadItems = useStore((s) => s.loadItems)
+  const setSelected = useStore((s) => s.setSelected)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
@@ -1081,6 +1082,20 @@ export function Grid({ cellSize }: { cellSize: number }) {
     else toggleGroup(cur.slot.group)
   }
 
+  const deleteFromCatalog = () => {
+    const focused = flatSlots.find((entry) => entry.slot.key === (focusedKey ?? firstSlotKey))
+    const focusedId = focused?.slot.kind === 'cell' ? focused.slot.item.id : null
+    // Del acts on the selection; with nothing selected it targets the focused cell.
+    const ids = selection.length ? selection : focusedId ? [focusedId] : []
+    if (!ids.length) return
+    const ok = window.confirm(
+      `Remove ${ids.length} ${ids.length === 1 ? 'item' : 'items'} from the catalog?\n\nFiles stay on disk; they can be imported again.`,
+    )
+    if (!ok) return
+    if (!selection.length && focusedId) setSelected(focusedId, false)
+    void batchRemove()
+  }
+
   const handleGridKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.altKey) return
     switch (event.key) {
@@ -1124,6 +1139,11 @@ export function Grid({ cellSize }: { cellSize: number }) {
           break
         }
         return
+      case 'Delete':
+      case 'Backspace':
+        event.preventDefault()
+        deleteFromCatalog()
+        break
       default:
         return
     }

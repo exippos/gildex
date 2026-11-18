@@ -15,6 +15,7 @@ export const SHORTCUTS: Shortcut[] = [
   { keys: 'Space', action: 'Select or deselect the focused item' },
   { keys: 'Enter', action: 'Expand or collapse a group · open an item' },
   { keys: 'Ctrl / ⌘ + A', action: 'Select all visible items' },
+  { keys: 'Del', action: 'Remove the selected items from the catalog' },
   { keys: 'Home / End', action: 'Jump to the first or last item' },
   { keys: '1 – 5', action: 'Switch surface — All, Sessions, Collections, Folders, Tags' },
   { keys: '/', action: 'Search the catalog' },
