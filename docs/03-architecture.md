@@ -80,7 +80,26 @@ limitation); integrity is enforced in the application layer (D10).
   manually overridden. Sessions are first-class indexes and context owners.
   Triage and tags belong to the session itself, not its items.
 
-### 3.4 Tags & Collections (D6, D21, D45)
+### 3.4 Episodes (nested grouping, D46)
+
+- **`episode`** — `id`, `owner_type` ∈ session | collection, `owner_id`, `label`,
+  `position`, `auto`, `created_at`. Episodes are a second level of grouping
+  *inside* a group: a session or collection may contain episodes, and items with
+  no near-duplicates stay unassigned. `episode_item` carries `(episode_id,
+  item_id, position)`; an item belongs to at most one episode of a given owner.
+- Manual is the source of truth: create/rename/delete/assign are user actions.
+  `auto=1` marks an episode produced by pHash clustering. Any manual edit —
+  rename, assignment, or removal — flips it to `auto=0`, and clustering never
+  rebuilds or consumes manual episodes (their items are excluded from the pass).
+- Clustering is union-find over items with a non-zero pHash: Hamming distance
+  ≤ `phashThreshold` (D39), components of size ≥ 2 become auto episodes.
+  A rebuild only deletes `auto=1` rows. Candidate scans are capped at 5 000
+  items per owner.
+- Episode order is creation/position order (drag reordering is not part of this
+  slice). Episodes are cleaned up when their owner disappears (session recluster,
+  collection delete) and stale members are pruned with the owner.
+
+### 3.5 Tags & Collections (D6, D21, D45)
 
 - **`tag`** — `id`, `name` (unique, case-insensitive). `item_tag` join table.
   **`group_tag`** carries group-owned assignments (`owner_type` ∈ session |
@@ -98,7 +117,7 @@ envelope with names, derived families, informational counts) and
 `POST /api/tags/import` (case-insensitive merge in one transaction; never
 deletes, renames, or touches `item_tag`/`group_tag`).
 
-### 3.5 Context layer (D8, D10)
+### 3.6 Context layer (D8, D10)
 
 - **`note`** — `(owner_type, owner_id, body, type_label, created_at, updated_at)`.
 - **`reference`** — `(owner_type, owner_id, target_kind, target_id/target_path/target_url, label)`.
@@ -110,19 +129,20 @@ deletes, renames, or touches `item_tag`/`group_tag`).
 
 `owner_type` ∈ `item` | `session` | `collection`.
 
-### 3.6 Trash & lineage
+### 3.7 Trash & lineage
 
 - **`tombstone`** — `(content_hash, removed_at)` (D4, D38).
 - **`lineage_edge`** — `(parent_id, child_id, edge_type)`. **Deferred** (D11);
   modeled now only to confirm it is separate from references.
 
-### 3.7 Library settings
+### 3.8 Library settings
 
 - **`settings`** — `(key, value)`. Library-scoped preferences stored inside the
   catalog so they travel with the `.gildex` bundle. Typed access lives in
-  `internal/store/settings.go`; unknown keys are ignored. Current key:
-  `sessionGapMinutes` (default 120, range 15–1440, D20). A pHash threshold key
-  (`phashThreshold`, D39) is reserved until similarity grouping ships.
+  `internal/store/settings.go`; unknown keys are ignored. Current keys:
+  `sessionGapMinutes` (default 120, range 15–1440, D20), `blurNsfw`, `nsfwTag`,
+  `phashThreshold` (default 10, range 0–64, D39) and `autoClusterEpisodes`
+  (opt-in: rebuild auto episodes after every import).
 
 Device-scoped presentation preferences (theme, effects, grid zoom) do **not**
 belong here; they stay in browser `localStorage`.

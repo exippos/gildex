@@ -1,6 +1,6 @@
 # TODO
 - [X] Keyboard navigation
-- [ ] Nested grouping (very similar images or manual order) -- episodes
+- [X] Nested grouping (very similar images or manual order) -- episodes
 - [ ] Local reorder in collection
 - [ ] Hide drafts toggle
 - [ ] Add "sorted" flag for collections
@@ -12,7 +12,7 @@
 # Features
 - [ ] Timeline propper management
 - [ ] Collection creation master
-- [ ] Subsessions (groups visually similar images inside a session or a collection)
+- [X] Subsessions (groups visually similar images inside a session or a collection)
 
 ## UX
 

@@ -96,6 +96,13 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 | DELETE | `/api/collections/{id}` | delete collection (not items) |
 | POST | `/api/collections/{id}/items` | body `{ itemIds }` append |
 | DELETE | `/api/collections/{id}/items/{itemId}` | remove one |
+| GET | `/api/episodes?ownerType=&ownerId=` | → `Episode[]` nested in one session/collection (D46) |
+| POST | `/api/episodes` | body `{ ownerType, ownerId, label, itemIds? }` → `Episode` (manual; moves items out of other episodes of the owner) |
+| PATCH | `/api/episodes/{id}` | body `{ label }` rename → `Episode`; flips the episode to manual |
+| DELETE | `/api/episodes/{id}` | delete episode, keep items |
+| POST | `/api/episodes/{id}/items` | body `{ itemIds }` assign → `Episode`; flips to manual |
+| DELETE | `/api/episodes/{id}/items/{itemId}` | detach one item → `Episode`; flips to manual |
+| POST | `/api/episodes/cluster` | body `{ ownerType?, ownerId? }`; rebuild auto episodes for one group, or every session when omitted → `{ created }` |
 | GET | `/api/folders` | → `FolderNode[]` (directories only, recursive) |
 | GET | `/api/notes?ownerType=&ownerId=` | → `Note[]` |
 | POST | `/api/notes` | body `{ ownerType, ownerId, body, typeLabel? }` → `Note` |
