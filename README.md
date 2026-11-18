@@ -1,139 +1,145 @@
-# gildex
+# GILDEX
 
-GILDEX is a local-first desktop catalog for media collections, specialized for AI-generated portfolios: it turns a messy heap of generations into a browsable body of work — and remains fully usable for any media library
+A local-first desktop catalog for media collections, built for AI-generated portfolios.
 
-## Prototype status
+## What GILDEX is for
 
-Draft prototype of the GILDEX catalog, built against `../docs_v2/`.
+GILDEX turns a messy heap of generations into a browsable body of work. Point it
+at your media stash and it imports, parses generation metadata, clusters files
+into **sessions** by time, and gives you a fast, searchable wall of thumbnails —
+sessions first, so the story of a generation session is what you see.
 
-**Scope (P0, per `04-features.md` §1 and Vision §11):** manual import, sessions-first
-browsing, quick preview, story view + notes inspector, batch tagging + tag filter,
-collections, and a snappy virtualized grid. **Out:** regions, references, attachments,
-lineage, watcher, auto-tagging, audio polish.
+It is **local-first and non-destructive**: no network calls, media referenced in
+place (never copied or moved), and nothing is ever deleted from disk — removing
+an item only hides it from the catalog. Everything runs in a single Go binary
+with a React frontend, and it is just as useful for any ordinary image, video,
+or audio library.
 
-## Stack
+## Features
 
-| Layer | Choice |
-|---|---|
-| Backend | Go (module `gildex`), single binary, local HTTP service |
-| DB | SQLite via `modernc.org/sqlite` (pure Go) |
-| Stills decode | Go `image` + `x/image` (PNG/JPEG/WebP/GIF) |
-| Video/audio | video via ffmpeg on PATH (poster thumb + hover-play frame strip, degrades to placeholder); audio placeholder thumb |
-| Metadata parse | PNG `tEXt` chunks: A1111 `parameters`, ComfyUI `prompt`/`workflow` |
-| Near-dup | 64-bit dHash (pure Go), Hamming ≤ 10 groups |
-| Frontend | React + TypeScript + Vite, Zustand, custom virtualized grid |
+- **Library & ingest** — create or open a `.gildex` library bundle; add media
+  source folders (import once, or watch and rescan); drag-and-drop upload;
+  content-hash deduplication; missing-file placeholders.
+- **Browse** — sessions (time-gap clusters), collections, folders, tags, and a
+  timeline; a snappy virtualized grid with group tiles and hover-play for video.
+- **Episodes & near-duplicates** — automatically cluster visually similar images
+  inside a session or collection (pHash), or curate them by hand; pick a cover
+  image per episode.
+- **Organize** — tags with `family:name` families, group tags and triage on
+  sessions and collections, favorite / rating / status, a batch toolbar, and
+  ordered collections with drag-and-drop.
+- **Inspect** — a story view showing A1111/ComfyUI prompt, model, and
+  parameters; markdown notes; and a quick-preview panel.
+- **Search & filter** — full-text search over prompts, filenames, and group
+  names; AND-combined tag filters; sort by time, filename, size, session,
+  rating, status, or favorite.
+- **Settings** — four themes, effects and grid zoom, NSFW blur, session-gap
+  tuning with recluster, pHash threshold, and tag import/export.
+- **Formats** — stills PNG/JPEG/WebP/GIF/BMP; video MP4/WebM/MOV/MKV; audio
+  WAV/MP3/FLAC/OGG/M4A.
 
-## Run
+## Run from source
 
+Requirements: **Go 1.26+**, **Node.js 18+ and npm** (for the frontend), and
+optionally **ffmpeg on PATH** for video hover-play and thumbnails.
+
+```sh
+# 1. Backend (serves the API, and the built frontend when present)
+go run . -library /path/to/MyLibrary.gildex -listen :8080
+
+# 2. Frontend dev server (Vite proxies /api to :8080)
+cd frontend && npm install && npm run dev
+
+# 3. Build the frontend so the Go server serves it directly
+cd frontend && npm run build
 ```
-# backend (serves API + built frontend)
-cd prototype && go run . -library /path/to/MyLibrary.gildex -listen :8080
 
-# frontend dev (Vite proxies /api to :8080)
-cd prototype/frontend && npm install && npm run dev
-
-# frontend build (Go serves frontend/dist when present)
-cd prototype/frontend && npm run build
-```
-
-First run: the app shows a **Create/Open library** screen. Create a library
-(`<Name>.gildex`, a directory bundle holding the manifest, catalog DB, and
-caches), then **add a media source** folder — an external folder referenced in
-place, imported `once` or re-scanned on `watch` — and it imports. A1111/ComfyUI
-prompt + model are parsed automatically; files without metadata become full
-items anyway.
-
-The last library you open or create is remembered (in
-`$XDG_CONFIG_HOME/gildex/state.json`, or `~/.config/gildex/state.json`), and the
-app reopens it on the next launch unless you pass an explicit `-library` path.
-The first-run screen also offers an **Open last library** shortcut to jump back
-in.
+On first run the app shows a **Create/Open library** screen. Create a library
+(`<Name>.gildex`, a directory bundle holding the manifest, catalog database, and
+caches), then add a media source folder and it imports. The last library you
+open or create is remembered and reopened on the next launch.
 
 ### Demo without a real generation stash
 
-```
+```sh
 go run ./tools/seed -out ./seed-out -count 120 -sessions 4
-go run . -library /tmp/Demo.gildex   # then create/add ./seed-out as a source in the UI
+go run . -library /tmp/Demo.gildex   # then add ./seed-out as a source in the UI
 ```
 
-`tools/seed` writes synthetic A1111/ComfyUI-style PNGs (prompt, model, params embedded
-in `tEXt` chunks) staggered into 4 time-burst "sessions", so the full
-import → parse → session-cluster → browse loop is demoable immediately.
+`tools/seed` writes synthetic A1111/ComfyUI-style PNGs (prompt, model, and
+parameters embedded in `tEXt` chunks) staggered into four time-burst sessions, so
+the full import → parse → session-cluster → browse loop is demoable immediately.
 
-## API contract
+## Library file structure
 
-Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
-`internal/model/model.go` and mirror `frontend/src/types.ts`.
+A GILDEX library is a single relocatable directory bundle:
 
-| Method | Path | Notes |
-|---|---|---|
-| GET | `/api/status` | → `LibraryStatus` |
-| POST | `/api/library` | body `{ name, directory }`; creates ``<directory>/<name>.gildex`` and opens it → `LibraryStatus` |
-| POST | `/api/library/open` | body `{ path }`; opens an existing bundle → `LibraryStatus` |
-| GET | `/api/sources` | → `Source[]` |
-| POST | `/api/sources` | body `{ path, name?, mode? }` (`once`\|`watch`) → `Source` |
-| PATCH | `/api/sources/{id}` | body `{ name?, mode? }` → `Source` |
-| DELETE | `/api/sources/{id}` | remove source; its items become `missing` |
-| POST | `/api/sources/{id}/scan` | start an import scan of that source → `{ started }` |
-| GET | `/api/fs/list?path=` | directory browser for the in-app folder picker |
-| POST | `/api/import` | body `{ paths: string[] }`; starts async job |
-| POST | `/api/import/upload` | multipart form `files` (each part's filename = relative path); writes into `<root>/_inbox/`, then starts import → `{ started, count }` |
-| GET | `/api/import/status` | → `ImportStatus` (poll while `running`) |
-| GET | `/api/items` | query below → `ItemPage` |
-| GET | `/api/items/{id}` | → `Item` |
-| PATCH | `/api/items/{id}` | body partial: `favorite`, `rating`, `status`, `prompt`, `negativePrompt`, `modelName`, `seed`, `steps`, `sampler`, `cfgScale`, `generatedAt` |
-| PATCH | `/api/items/batch` | body `{ ids, addTags[], removeTags[], addToCollectionId, removeFromCollectionId, favorite?, rating?, status?, setSessionId?, removeFromCatalog? }` |
-| GET | `/api/sessions` | → `Session[]` |
-| PATCH | `/api/sessions/{id}` | body `{ label?, favorite?, rating?, status?, addTags?, removeTags? }` (group triage/tags, D45) |
-| GET | `/api/tags` | → `TagList` (`{ tags: Tag[], untagged }`) |
-| POST | `/api/tags` | body `{ name }` → `Tag` |
-| GET | `/api/tags/export` | → `gildex.tags` JSON attachment (D44) |
-| POST | `/api/tags/import` | body `{ names: string[] }` → `{ created, existing, ignored }` (merge-only) |
-| DELETE | `/api/tags/{id}` | delete tag (unassigns) |
-| GET | `/api/collections` | → `Collection[]` |
-| POST | `/api/collections` | body `{ name, description? }` → `Collection` |
-| PATCH | `/api/collections/{id}` | body `{ name?, description?, order?: string[], favorite?, rating?, status?, addTags?, removeTags? }` (order = full ordered itemIds, D21; triage/tags D45) |
-| DELETE | `/api/collections/{id}` | delete collection (not items) |
-| POST | `/api/collections/{id}/items` | body `{ itemIds }` append |
-| DELETE | `/api/collections/{id}/items/{itemId}` | remove one |
-| GET | `/api/episodes?ownerType=&ownerId=` | → `Episode[]` nested in one session/collection (D46) |
-| POST | `/api/episodes` | body `{ ownerType, ownerId, label, itemIds? }` → `Episode` (manual; moves items out of other episodes of the owner) |
-| PATCH | `/api/episodes/{id}` | body `{ label?, coverItemId? }` rename and/or set (`null` clears) the cover → `Episode`; flips the episode to manual |
-| DELETE | `/api/episodes/{id}` | delete episode, keep items |
-| DELETE | `/api/episodes/auto` | remove every automatic episode; manual episodes and items stay |
-| POST | `/api/episodes/{id}/items` | body `{ itemIds }` assign → `Episode`; flips to manual |
-| DELETE | `/api/episodes/{id}/items/{itemId}` | detach one item → `Episode`; flips to manual |
-| POST | `/api/episodes/cluster` | body `{ ownerType?, ownerId? }`; rebuild auto episodes for one group, or every session when omitted → `{ created }` |
-| GET | `/api/folders` | → `FolderNode[]` (directories only, recursive) |
-| GET | `/api/notes?ownerType=&ownerId=` | → `Note[]` |
-| POST | `/api/notes` | body `{ ownerType, ownerId, body, typeLabel? }` → `Note` |
-| PATCH | `/api/notes/{id}` | body `{ body? }` |
-| DELETE | `/api/notes/{id}` | |
-| GET | `/api/thumb/{file}` | thumbnail bytes (from `<root>/thumbnails/`) |
-| GET | `/api/media/{id}` | original media file bytes (image/video/audio mime) |
+```
+MyLibrary.gildex/
+├── library.gildex.json   # manifest: name, id, schema version, timestamps
+├── catalog.db            # SQLite catalog (+ -wal / -shm while running)
+├── thumbnails/           # <hash>.jpg and <hash>-fNN.jpg hover-play frames
+├── attachments/          # managed attached files, hash-addressed
+└── _inbox/               # drop folder for uploads and the watcher
+```
 
-### `/api/items` query params
+Media itself lives in the external **source** folders you add — GILDEX references
+those files in place and stores paths relative to each source, never copying
+them into the bundle. App-level state (the last opened library) is kept outside
+the bundle at `~/.config/gildex/state.json`.
 
-`sessionId`, `collectionId`, `sourceId` (filter by source), `sourceNull` (items
-with no source), `folder` (path prefix, recursive), `tags` (comma list,
-AND), `untagged` (only items with no tags), `q` (full-text over
-prompt/negative-prompt/filename/session+collection names),
-`kind`, `rating`, `status`, `favorite`, `limit` (default 200), `offset` (default 0),
-`sort` (`time` default). Response `{ items, total }`. Each item carries `sessionId`
-so the frontend can render the session timeline as sections. `LibraryStatus`
-carries `id`, `name`, and `sourceCount`.
+## How it works
 
-### Import pipeline (D3, D9, D12, D20, D33)
+A single Go binary owns everything: it serves the React frontend, runs the
+import pipeline, and talks to SQLite (via `modernc.org/sqlite`, pure Go — no
+CGo). Importing is a pipeline of discover → hash → parse metadata → thumbnail →
+pHash → cluster → index, run asynchronously and idempotently so re-imports never
+overwrite your edits. See `docs/03-architecture.md` for the data model and
+pipeline, and `docs/00-decisions.md` for the rationale behind each choice.
 
-discover → SHA-256 hash → parse metadata (A1111/ComfyUI PNG chunks) → classify
-kind/format → dimensions (Go image) → thumbnail JPEG (512px, `<root>/thumbnails/<hash>.jpg`;
-video also gets a poster + 8-frame hover strip via ffmpeg when on PATH)
-→ dHash → timestamp (file birth/mtime) → cluster time-gap sessions (2h default) →
-index. Idempotent: re-import never overwrites `manual` user edits (D41).
-Remove-from-catalog writes a content-hash tombstone and never deletes disk files (D4).
+## Source tree
 
-### Deviations from the full spec (prototype only)
+```
+main.go          entry point: flags, library open, HTTP server, watcher
+internal/        api (handlers), store (SQLite), importpkg (pipeline),
+                 metadata, phash, thumb, video, watch, model (shared types)
+frontend/        React + TypeScript + Vite app (src/ with Zustand store)
+tools/seed/      synthetic A1111/ComfyUI PNG generator for demos
+docs/            planning documents (decisions, architecture, features)
+design/          static HTML mockups (reference only, not app code)
+```
 
-- Search uses `LIKE` (case-insensitive), not FTS5 — FTS5 is the v1 hardening (D23).
-- Video items import with a poster thumbnail + hover-play frame strip when ffmpeg is on PATH, and a placeholder otherwise; audio still imports with a placeholder thumb (D17/D18/D33).
-- No regions / references / attachments / lineage / watcher (D8, D28).
+## Documentation
+
+The full planning set lives in `docs/` — see `docs/README.md` for the index.
+The HTTP API is defined in `internal/api/` and mirrored by
+`frontend/src/types.ts` and `internal/model/model.go`.
+
+## Status & scope
+
+This is a draft prototype. Known gaps versus the full design:
+
+- Search uses `LIKE` (case-insensitive); FTS5 full-text search is the v1
+  hardening (D23).
+- Video needs ffmpeg on PATH for a poster thumbnail and hover-play frames;
+  audio imports with a placeholder thumbnail.
+- Regions, references, attachments, and lineage are not yet implemented
+  (D8/D28).
+
+## Keyboard shortcuts
+
+| Keys | Action |
+|---|---|
+| `←` `→` `↑` `↓` | Move focus through the grid |
+| `Shift` + arrows | Extend the selection |
+| `Space` | Select or deselect the focused item |
+| `Enter` | Expand or collapse a group · open an item |
+| `Ctrl` / `⌘` + `A` | Select all visible items |
+| `Del` | Remove selected items from the catalog |
+| `Home` / `End` | Jump to the first or last item |
+| `1` – `5` | Switch surface — All, Sessions, Collections, Folders, Tags |
+| `/` | Search the catalog |
+| `P` | Toggle the preview panel |
+| `[` | Toggle the navigation rail |
+| `?` | Show these shortcuts |
+| `Esc` | Clear the selection · close dialogs |
