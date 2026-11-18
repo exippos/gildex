@@ -100,6 +100,7 @@ Base path `/api`. All responses JSON. Item/Session/… shapes are defined in
 | POST | `/api/episodes` | body `{ ownerType, ownerId, label, itemIds? }` → `Episode` (manual; moves items out of other episodes of the owner) |
 | PATCH | `/api/episodes/{id}` | body `{ label }` rename → `Episode`; flips the episode to manual |
 | DELETE | `/api/episodes/{id}` | delete episode, keep items |
+| DELETE | `/api/episodes/auto` | remove every automatic episode; manual episodes and items stay |
 | POST | `/api/episodes/{id}/items` | body `{ itemIds }` assign → `Episode`; flips to manual |
 | DELETE | `/api/episodes/{id}/items/{itemId}` | detach one item → `Episode`; flips to manual |
 | POST | `/api/episodes/cluster` | body `{ ownerType?, ownerId? }`; rebuild auto episodes for one group, or every session when omitted → `{ created }` |

@@ -103,6 +103,10 @@ limitation); integrity is enforced in the application layer (D10).
   demand from the episode editor, an episode card's context menu, or Settings →
   Behavior; regeneration rebuilds only `auto=1` episodes, so user-authored ones
   are never touched.
+- Expanded groups break to a new row: their items spill into the shared grid
+  flow, and the next group tile starts on the following row. Turning the
+  automatic-episodes setting off removes existing `auto=1` episodes (manual
+  episodes and items stay); it can be turned back on and regenerated on demand.
 
 ### 3.5 Tags & Collections (D6, D21, D45)
 
@@ -147,7 +151,8 @@ deletes, renames, or touches `item_tag`/`group_tag`).
   `internal/store/settings.go`; unknown keys are ignored. Current keys:
   `sessionGapMinutes` (default 120, range 15–1440, D20), `blurNsfw`, `nsfwTag`,
   `phashThreshold` (default 10, range 0–64, D39) and `autoClusterEpisodes`
-  (opt-in: rebuild auto episodes after every import).
+  (opt-in: rebuild auto episodes after every import; turning it off removes
+  existing automatic episodes).
 
 Device-scoped presentation preferences (theme, effects, grid zoom) do **not**
 belong here; they stay in browser `localStorage`.
