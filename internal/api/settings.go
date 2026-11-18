@@ -21,14 +21,16 @@ func (a *API) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		SessionGapMinutes *int    `json:"sessionGapMinutes"`
-		BlurNsfw          *bool   `json:"blurNsfw"`
-		NsfwTag           *string `json:"nsfwTag"`
+		SessionGapMinutes   *int    `json:"sessionGapMinutes"`
+		BlurNsfw            *bool   `json:"blurNsfw"`
+		NsfwTag             *string `json:"nsfwTag"`
+		PhashThreshold      *int    `json:"phashThreshold"`
+		AutoClusterEpisodes *bool   `json:"autoClusterEpisodes"`
 	}
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	s, err := st.UpdateSettings(body.SessionGapMinutes, body.BlurNsfw, body.NsfwTag)
+	s, err := st.UpdateSettings(body.SessionGapMinutes, body.BlurNsfw, body.NsfwTag, body.PhashThreshold, body.AutoClusterEpisodes)
 	if err != nil {
 		writeStoreError(w, err)
 		return

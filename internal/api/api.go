@@ -69,6 +69,14 @@ func (a *API) Register(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH /api/notes/{id}", a.handleUpdateNote)
 	mux.HandleFunc("DELETE /api/notes/{id}", a.handleDeleteNote)
 
+	mux.HandleFunc("GET /api/episodes", a.handleEpisodes)
+	mux.HandleFunc("POST /api/episodes", a.handleCreateEpisode)
+	mux.HandleFunc("POST /api/episodes/cluster", a.handleClusterEpisodes)
+	mux.HandleFunc("PATCH /api/episodes/{id}", a.handleUpdateEpisode)
+	mux.HandleFunc("DELETE /api/episodes/{id}", a.handleDeleteEpisode)
+	mux.HandleFunc("POST /api/episodes/{id}/items", a.handleAssignEpisodeItems)
+	mux.HandleFunc("DELETE /api/episodes/{id}/items/{itemId}", a.handleRemoveEpisodeItem)
+
 	mux.HandleFunc("GET /api/thumb/{file}", a.handleThumb)
 	mux.HandleFunc("GET /api/media/{id}", a.handleMedia)
 }

@@ -335,6 +335,10 @@ func (s *Store) DeleteCollection(id string) error {
 		groupOwnerCollection, id); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(`DELETE FROM episodes WHERE owner_type = ? AND owner_id = ?`,
+		groupOwnerCollection, id); err != nil {
+		return err
+	}
 	res, err := tx.Exec(`DELETE FROM collections WHERE id = ?`, id)
 	if err != nil {
 		return err
@@ -398,6 +402,19 @@ func (s *Store) RemoveCollectionItem(collectionID, itemID string) error {
 	}
 	defer tx.Rollback()
 	if _, err := tx.Exec(`DELETE FROM collection_item WHERE collection_id = ? AND item_id = ?`, collectionID, itemID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM episode_item
+		WHERE item_id = ? AND episode_id IN (
+			SELECT id FROM episodes WHERE owner_type = ? AND owner_id = ?)`,
+		itemID, groupOwnerCollection, collectionID); err != nil {
+		return err
+	}
+	// Auto episodes need at least two members; a removal can break that.
+	if _, err := tx.Exec(`DELETE FROM episodes
+		WHERE owner_type = ? AND owner_id = ? AND auto = 1
+			AND id NOT IN (SELECT episode_id FROM episode_item GROUP BY episode_id HAVING COUNT(*) >= 2)`,
+		groupOwnerCollection, collectionID); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(`UPDATE collections SET cover_item_id = NULL WHERE id = ? AND cover_item_id = ?`,

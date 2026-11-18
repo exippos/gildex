@@ -122,6 +122,26 @@ CREATE TABLE IF NOT EXISTS collection_item (
   PRIMARY KEY (collection_id, item_id)
 );
 
+-- Episodes are nested sub-groups of items inside one session or collection.
+-- auto = 1 marks an auto-clustered episode that a later clustering pass may
+-- rebuild; any manual edit flips it to 0 so user work is never destroyed.
+CREATE TABLE IF NOT EXISTS episodes (
+  id         TEXT PRIMARY KEY,
+  owner_type TEXT NOT NULL,
+  owner_id   TEXT NOT NULL,
+  label      TEXT NOT NULL DEFAULT '',
+  position   INTEGER NOT NULL DEFAULT 0,
+  auto       INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS episode_item (
+  episode_id TEXT NOT NULL REFERENCES episodes(id) ON DELETE CASCADE,
+  item_id    TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+  position   INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (episode_id, item_id)
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -162,6 +182,8 @@ CREATE INDEX IF NOT EXISTS idx_group_tag_tag ON group_tag(tag_id);
 CREATE INDEX IF NOT EXISTS idx_group_tag_owner ON group_tag(owner_type, owner_id);
 CREATE INDEX IF NOT EXISTS idx_collection_item_item ON collection_item(item_id);
 CREATE INDEX IF NOT EXISTS idx_notes_owner ON notes(owner_type, owner_id);
+CREATE INDEX IF NOT EXISTS idx_episodes_owner ON episodes(owner_type, owner_id);
+CREATE INDEX IF NOT EXISTS idx_episode_item_item ON episode_item(item_id);
 `
 
 // Open opens (and migrates) the SQLite database at dbPath.

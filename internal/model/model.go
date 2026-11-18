@@ -109,7 +109,7 @@ type Session struct {
 	Rating        int      `json:"rating"` // 0 = unrated, else 1..5
 	Status        Status   `json:"status"`
 	Tags          []string `json:"tags"` // assigned group tag names, never null
-	Nsfw          bool     `json:"nsfw"`  // cover thumbnail item carries the NSFW tag
+	Nsfw          bool     `json:"nsfw"` // cover thumbnail item carries the NSFW tag
 }
 
 // Tag is a flat user-owned vocabulary term (D6, D23). Family is derived from
@@ -165,7 +165,21 @@ type Collection struct {
 	Rating        int      `json:"rating"` // 0 = unrated, else 1..5
 	Status        Status   `json:"status"`
 	Tags          []string `json:"tags"` // assigned group tag names, never null
-	Nsfw          bool     `json:"nsfw"`  // cover thumbnail item carries the NSFW tag
+	Nsfw          bool     `json:"nsfw"` // cover thumbnail item carries the NSFW tag
+}
+
+// Episode is a nested sub-group of items inside one session or collection.
+// Episodes are either user-authored or auto-clustered from near-duplicate
+// pHashes. Auto episodes may be rebuilt; any manual edit flips Auto to false.
+type Episode struct {
+	ID            string    `json:"id"`
+	OwnerType     OwnerType `json:"ownerType"` // session | collection
+	OwnerID       string    `json:"ownerId"`
+	Label         string    `json:"label"`
+	ItemCount     int       `json:"itemCount"`
+	ThumbnailPath string    `json:"thumbnailPath"`
+	Auto          bool      `json:"auto"`
+	ItemIDs       []string  `json:"itemIds"` // ordered members, never null
 }
 
 // Note is a markdown context record (D8, D10).
@@ -193,9 +207,11 @@ type FolderNode struct {
 
 // Settings carries library-scoped preferences.
 type Settings struct {
-	SessionGapMinutes int    `json:"sessionGapMinutes"`
-	BlurNsfw          bool   `json:"blurNsfw"` // blur items tagged NsfwTag in the UI
-	NsfwTag           string `json:"nsfwTag"`  // tag name marking an item NSFW, "" = none
+	SessionGapMinutes   int    `json:"sessionGapMinutes"`
+	BlurNsfw            bool   `json:"blurNsfw"`            // blur items tagged NsfwTag in the UI
+	NsfwTag             string `json:"nsfwTag"`             // tag name marking an item NSFW, "" = none
+	PhashThreshold      int    `json:"phashThreshold"`      // near-duplicate Hamming distance (D39)
+	AutoClusterEpisodes bool   `json:"autoClusterEpisodes"` // run episode clustering after import
 }
 
 // LibraryStatus summarizes the catalog for the status endpoint.

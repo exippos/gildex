@@ -14,12 +14,25 @@ const (
 )
 
 const (
+	// DefaultPhashThreshold is the default near-duplicate Hamming distance.
+	DefaultPhashThreshold = 10
+	MinPhashThreshold     = 0
+	MaxPhashThreshold     = 64
+)
+
+const (
 	// sessionGapKey is the settings table key for the session gap preference.
 	sessionGapKey = "sessionGapMinutes"
 	// blurNsfwKey is the settings table key for the "blur NSFW" toggle.
 	blurNsfwKey = "blurNsfw"
 	// nsfwTagKey is the settings table key for the tag name that marks NSFW.
 	nsfwTagKey = "nsfwTag"
+	// phashThresholdKey is the settings table key for the episode near-dup
+	// Hamming distance.
+	phashThresholdKey = "phashThreshold"
+	// autoClusterEpisodesKey is the settings table key for the opt-in automatic
+	// episode clustering after import.
+	autoClusterEpisodesKey = "autoClusterEpisodes"
 )
 
 // setSetting upserts a single key/value row in the settings table.
@@ -34,7 +47,10 @@ func (s *Store) setSetting(key, value string) error {
 // the defaults; a stored value that is unparseable or out of range is treated
 // as absent rather than an error.
 func (s *Store) Settings() (model.Settings, error) {
-	out := model.Settings{SessionGapMinutes: DefaultSessionGapMinutes}
+	out := model.Settings{
+		SessionGapMinutes: DefaultSessionGapMinutes,
+		PhashThreshold:    DefaultPhashThreshold,
+	}
 	rows, err := s.db.Query(`SELECT key, value FROM settings`)
 	if err != nil {
 		return out, err
@@ -54,13 +70,19 @@ func (s *Store) Settings() (model.Settings, error) {
 			out.BlurNsfw = value == "1"
 		case nsfwTagKey:
 			out.NsfwTag = value
+		case phashThresholdKey:
+			if n, err := strconv.Atoi(value); err == nil && n >= MinPhashThreshold && n <= MaxPhashThreshold {
+				out.PhashThreshold = n
+			}
+		case autoClusterEpisodesKey:
+			out.AutoClusterEpisodes = value == "1"
 		}
 	}
 	return out, rows.Err()
 }
 
 // UpdateSettings applies a partial settings update. A nil field is left as-is.
-func (s *Store) UpdateSettings(sessionGapMinutes *int, blurNsfw *bool, nsfwTag *string) (model.Settings, error) {
+func (s *Store) UpdateSettings(sessionGapMinutes *int, blurNsfw *bool, nsfwTag *string, phashThreshold *int, autoClusterEpisodes *bool) (model.Settings, error) {
 	if sessionGapMinutes != nil {
 		if *sessionGapMinutes < MinSessionGapMinutes || *sessionGapMinutes > MaxSessionGapMinutes {
 			return model.Settings{}, invalid("session gap must be between 15 and 1440 minutes")
@@ -80,6 +102,23 @@ func (s *Store) UpdateSettings(sessionGapMinutes *int, blurNsfw *bool, nsfwTag *
 	}
 	if nsfwTag != nil {
 		if err := s.setSetting(nsfwTagKey, *nsfwTag); err != nil {
+			return model.Settings{}, err
+		}
+	}
+	if phashThreshold != nil {
+		if *phashThreshold < MinPhashThreshold || *phashThreshold > MaxPhashThreshold {
+			return model.Settings{}, invalid("pHash threshold must be between 0 and 64")
+		}
+		if err := s.setSetting(phashThresholdKey, strconv.Itoa(*phashThreshold)); err != nil {
+			return model.Settings{}, err
+		}
+	}
+	if autoClusterEpisodes != nil {
+		value := "0"
+		if *autoClusterEpisodes {
+			value = "1"
+		}
+		if err := s.setSetting(autoClusterEpisodesKey, value); err != nil {
 			return model.Settings{}, err
 		}
 	}

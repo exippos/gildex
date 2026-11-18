@@ -260,6 +260,14 @@ func run(ctx context.Context, done chan struct{}, st *store.Store, root, thumbDi
 		return
 	}
 	job.addStage("cluster", time.Since(t0))
+	if settings, err := st.Settings(); err == nil && settings.AutoClusterEpisodes {
+		setStage("episodes")
+		t0 = time.Now()
+		if _, err := st.AutoClusterSessions(); err != nil {
+			log.Printf("gildex: auto-cluster episodes: %v", err)
+		}
+		job.addStage("episodes", time.Since(t0))
+	}
 	setStage("index")
 	if sourceID != nil {
 		if err := st.TouchSource(*sourceID); err != nil {

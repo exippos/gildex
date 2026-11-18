@@ -411,6 +411,29 @@ func (s *Store) ReclusterSessions() error {
 		return err
 	}
 
+	// Same for nested episodes: drop the ones whose session vanished, then
+	// prune members that moved out of a reused session and any episode left
+	// empty.
+	if _, err := tx.Exec(`DELETE FROM episodes
+		WHERE owner_type = ? AND owner_id NOT IN (SELECT id FROM sessions)`,
+		groupOwnerSession); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM episode_item
+		WHERE episode_id IN (SELECT id FROM episodes WHERE owner_type = ?)
+			AND NOT EXISTS (
+				SELECT 1 FROM episodes e
+				JOIN items i ON i.session_id = e.owner_id
+				WHERE e.id = episode_item.episode_id AND i.id = episode_item.item_id)`,
+		groupOwnerSession); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM episodes
+		WHERE owner_type = ? AND id NOT IN (SELECT DISTINCT episode_id FROM episode_item)`,
+		groupOwnerSession); err != nil {
+		return err
+	}
+
 	return tx.Commit()
 }
 
