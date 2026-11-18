@@ -109,6 +109,7 @@ type Session struct {
 	Rating        int      `json:"rating"` // 0 = unrated, else 1..5
 	Status        Status   `json:"status"`
 	Tags          []string `json:"tags"` // assigned group tag names, never null
+	Nsfw          bool     `json:"nsfw"`  // cover thumbnail item carries the NSFW tag
 }
 
 // Tag is a flat user-owned vocabulary term (D6, D23). Family is derived from
@@ -164,6 +165,7 @@ type Collection struct {
 	Rating        int      `json:"rating"` // 0 = unrated, else 1..5
 	Status        Status   `json:"status"`
 	Tags          []string `json:"tags"` // assigned group tag names, never null
+	Nsfw          bool     `json:"nsfw"`  // cover thumbnail item carries the NSFW tag
 }
 
 // Note is a markdown context record (D8, D10).

@@ -91,6 +91,7 @@ export interface Session {
   rating: number
   status: Status
   tags: string[]
+  nsfw: boolean // cover thumbnail item carries the NSFW tag
 }
 
 export interface Tag {
@@ -127,6 +128,7 @@ export interface Collection {
   rating: number
   status: Status
   tags: string[]
+  nsfw: boolean // cover thumbnail item carries the NSFW tag
 }
 
 export interface Note {

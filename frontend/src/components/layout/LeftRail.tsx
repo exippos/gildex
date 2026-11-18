@@ -29,6 +29,7 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
   const tags = useStore((s) => s.tags)
   const untaggedCount = useStore((s) => s.untaggedCount)
   const library = useStore((s) => s.library)
+  const librarySettings = useStore((s) => s.librarySettings)
   const activeSessionId = useStore((s) => s.activeSessionId)
   const activeCollectionId = useStore((s) => s.activeCollectionId)
   const activeTagFilters = useStore((s) => s.activeTagFilters)
@@ -178,7 +179,9 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                 <span className="rail-row-title">All sessions</span>
                 <span className="rail-row-meta">{sessions.length} sessions</span>
               </button>
-              {sessions.map((session) => (
+              {sessions.map((session) => {
+                const nsfw = librarySettings.blurNsfw && session.nsfw
+                return (
                 <div
                   key={session.id}
                   className={`rail-row-wrap${dragOverId === session.id ? ' is-drop-target' : ''}`}
@@ -200,7 +203,7 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                     }`}
                     onClick={() => chooseSession(session.id)}
                   >
-                    <span className="rail-row-thumb" aria-hidden="true">
+                    <span className={`rail-row-thumb${nsfw ? ' is-nsfw' : ''}`} aria-hidden="true">
                       {session.thumbnailPath ? (
                         <img
                           src={thumbUrl(session.thumbnailPath)!}
@@ -230,7 +233,8 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                     edit
                   </button>
                 </div>
-              ))}
+                )
+              })}
               {sessions.length === 0 && <div className="rail-hint">no sessions yet</div>}
             </div>
           </>
@@ -247,7 +251,9 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
               >
                 <span className="rail-row-title">All collections</span>
               </button>
-              {collections.map((collection) => (
+              {collections.map((collection) => {
+                const nsfw = librarySettings.blurNsfw && collection.nsfw
+                return (
                 <div
                   key={collection.id}
                   className={`rail-row-wrap${dragOverId === collection.id ? ' is-drop-target' : ''}`}
@@ -267,7 +273,7 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                     className={`rail-row rail-row-session${activeCollectionId === collection.id ? ' is-active' : ''}`}
                     onClick={() => chooseCollection(collection.id)}
                   >
-                    <span className="rail-row-thumb" aria-hidden="true">
+                    <span className={`rail-row-thumb${nsfw ? ' is-nsfw' : ''}`} aria-hidden="true">
                       {collection.thumbnailPath ? (
                         <img
                           src={thumbUrl(collection.thumbnailPath)!}
@@ -296,7 +302,8 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                     edit
                   </button>
                 </div>
-              ))}
+                )
+              })}
               {collections.length === 0 && <div className="rail-hint">no collections yet</div>}
               {dragError && <div className="rail-hint rail-hint-error">{dragError}</div>}
             </div>

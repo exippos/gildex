@@ -27,7 +27,17 @@ func (s *Store) Collections() ([]model.Collection, error) {
 					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
 					ORDER BY ci.position ASC LIMIT 1),
 				''),
-			c.cover_item_id, c.favorite, c.rating, c.status
+			c.cover_item_id, c.favorite, c.rating, c.status,
+			COALESCE(
+				(SELECT i.id FROM items i
+					WHERE i.id = c.cover_item_id AND i.thumbnail_path <> ''
+						AND EXISTS (SELECT 1 FROM collection_item ci
+							WHERE ci.collection_id = c.id AND ci.item_id = i.id)),
+				(SELECT i.id
+					FROM collection_item ci JOIN items i ON i.id = ci.item_id
+					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
+					ORDER BY ci.position ASC LIMIT 1),
+				'')
 		FROM collections c
 		ORDER BY c.name COLLATE NOCASE ASC`)
 	if err != nil {
@@ -36,15 +46,18 @@ func (s *Store) Collections() ([]model.Collection, error) {
 	defer rows.Close()
 
 	out := []model.Collection{}
+	var thumbIDs []string
+	var thumbIdx []int
 	for rows.Next() {
 		var (
 			c        model.Collection
 			cover    sql.NullString
+			thumbID  sql.NullString
 			favorite int
 			status   string
 		)
 		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount,
-			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status); err != nil {
+			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status, &thumbID); err != nil {
 			return nil, err
 		}
 		c.CoverItemID = nullString(cover)
@@ -52,6 +65,10 @@ func (s *Store) Collections() ([]model.Collection, error) {
 		c.Status = model.Status(status)
 		c.Tags = []string{}
 		out = append(out, c)
+		if thumbID.Valid && thumbID.String != "" {
+			thumbIDs = append(thumbIDs, thumbID.String)
+			thumbIdx = append(thumbIdx, len(out)-1)
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -68,6 +85,16 @@ func (s *Store) Collections() ([]model.Collection, error) {
 			out[i].Tags = names
 		}
 	}
+
+	nsfwSet, err := s.nsfwThumbSet(thumbIDs, s.groupNsfwTag())
+	if err != nil {
+		return nil, err
+	}
+	for i, idx := range thumbIdx {
+		if nsfwSet[thumbIDs[i]] {
+			out[idx].Nsfw = true
+		}
+	}
 	return out, nil
 }
 
@@ -76,6 +103,7 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 	var (
 		c        model.Collection
 		cover    sql.NullString
+		thumbID  sql.NullString
 		favorite int
 		status   string
 	)
@@ -96,10 +124,20 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
 					ORDER BY ci.position ASC LIMIT 1),
 				''),
-			c.cover_item_id, c.favorite, c.rating, c.status
+			c.cover_item_id, c.favorite, c.rating, c.status,
+			COALESCE(
+				(SELECT i.id FROM items i
+					WHERE i.id = c.cover_item_id AND i.thumbnail_path <> ''
+						AND EXISTS (SELECT 1 FROM collection_item ci
+							WHERE ci.collection_id = c.id AND ci.item_id = i.id)),
+				(SELECT i.id
+					FROM collection_item ci JOIN items i ON i.id = ci.item_id
+					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
+					ORDER BY ci.position ASC LIMIT 1),
+				'')
 		FROM collections c WHERE c.id = ?`, id).
 		Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount,
-			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status)
+			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status, &thumbID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -114,6 +152,15 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 		return nil, err
 	}
 	c.Tags = tags
+	thumbIDStr := ""
+	if thumbID.Valid {
+		thumbIDStr = thumbID.String
+	}
+	nsfwSet, err := s.nsfwThumbSet([]string{thumbIDStr}, s.groupNsfwTag())
+	if err != nil {
+		return nil, err
+	}
+	c.Nsfw = nsfwSet[thumbIDStr]
 	return &c, nil
 }
 

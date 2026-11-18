@@ -610,6 +610,33 @@
   box-shadow: none;
 }
 
+/* NSFW: blur the cover poster and the peeked deck, and mark the tile. */
+.group-tile-deck img.is-nsfw {
+  filter: blur(12px) saturate(0.85);
+}
+
+.group-tile-poster > img.is-nsfw {
+  filter: blur(14px) saturate(0.85);
+}
+
+.group-tile-nsfw {
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  z-index: 3;
+  padding: 2px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--scrim);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 /* ---- tile placeholders (no thumbnail) ---- */
 
 .tile-glyph {

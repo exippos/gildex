@@ -5,7 +5,7 @@
 // the shared grid flow instead of giving them a block of their own.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { groupItemsKey, resolveItems, useStore, type GroupClickMode } from '../../store'
+import { groupItemsKey, resolveItems, useStore, isNsfwBlurred, type GroupClickMode } from '../../store'
 import { thumbUrl } from '../../api'
 import type { Collection, GroupType, Item, ItemSort, Session, SortDir, Status } from '../../types'
 import { ContextMenu, type MenuEntry } from '../common/ContextMenu'
@@ -76,6 +76,8 @@ interface Group {
   favorite: boolean
   rating: number
   status: Status
+  /** Cover thumbnail item carries the configured NSFW tag (backend-computed). */
+  nsfw: boolean
 }
 
 type Slot =
@@ -129,6 +131,7 @@ function makeGroup(
   thumb: string,
   total?: number,
   coverId: string | null = null,
+  nsfw = false,
 ): Group {
   let videoCount = 0
   let audioCount = 0
@@ -153,6 +156,7 @@ function makeGroup(
     favorite: false,
     rating: 0,
     status: 'draft',
+    nsfw,
   }
 }
 
@@ -189,6 +193,7 @@ function sessionGroups(
       session.thumbnailPath,
       session.itemCount,
       session.coverItemId,
+      session.nsfw,
     )
     // Catalog counts are authoritative over the (possibly truncated) page.
     group.videoCount = session.videoCount
@@ -238,6 +243,7 @@ function catalogSessionGroups(
       session.thumbnailPath,
       session.itemCount,
       session.coverItemId,
+      session.nsfw,
     )
     // Catalog values are authoritative before the first fetch.
     if (!cached) group.count = session.itemCount
@@ -265,6 +271,7 @@ function collectionGroup(collection: Collection, cached: Item[] | undefined): Gr
     collection.thumbnailPath,
     collection.itemCount,
     collection.coverItemId,
+    collection.nsfw,
   )
   group.favorite = collection.favorite
   group.rating = collection.rating
@@ -375,21 +382,41 @@ function GroupTile({
 }) {
   const [dropActive, setDropActive] = useState(false)
   const canDrop = Boolean(onDropItems) && Boolean(group.id)
+  const librarySettings = useStore((s) => s.librarySettings)
   // In preview mode a single click opens the right-panel preview and a
   // double-click toggles expansion. Groups without an id have nothing to
   // preview, so they keep the one-click expand behaviour.
   const previews = clickMode === 'preview' && Boolean(onPreview)
   const poster = group.thumb ? thumbUrl(group.thumb) : null
+  const posterNsfw =
+    (librarySettings.blurNsfw && group.nsfw) ||
+    group.items.some(
+      (item) =>
+        item.thumbnailPath !== '' &&
+        item.thumbnailPath === group.thumb &&
+        isNsfwBlurred(item, librarySettings),
+    )
   const posterStyle = poster
     ? ({ '--tile-art': `url("${poster}")` } as CSSProperties)
     : undefined
   const peeked = group.items
     .filter((item) => item.thumbnailPath)
     .slice(0, 2)
-    .map((item) => thumbUrl(item.thumbnailPath)!)
+    .map((item) => ({
+      src: thumbUrl(item.thumbnailPath)!,
+      nsfw: isNsfwBlurred(item, librarySettings),
+    }))
   // Without cached items (a collection before its first expand) repeat the
   // poster so the deck still reads as a stack.
-  const deck = peeked.length > 0 ? peeked : poster ? [poster, poster] : []
+  const deck =
+    peeked.length > 0
+      ? peeked
+      : poster
+        ? [
+            { src: poster, nsfw: posterNsfw },
+            { src: poster, nsfw: posterNsfw },
+          ]
+        : []
   const countLabel =
     group.count === group.total
       ? `${group.count} ${group.total === 1 ? 'item' : 'items'}`
@@ -463,18 +490,32 @@ function GroupTile({
     >
       {deck.length > 0 && (
         <span className="group-tile-deck" aria-hidden="true">
-          {deck.map((src, index) => (
-            <img key={`${src}-${index}`} src={src} alt="" loading="lazy" draggable={false} />
+          {deck.map((entry, index) => (
+            <img
+              key={`${entry.src}-${index}`}
+              className={entry.nsfw ? 'is-nsfw' : undefined}
+              src={entry.src}
+              alt=""
+              loading="lazy"
+              draggable={false}
+            />
           ))}
         </span>
       )}
 
       {group.favorite && <span className="group-tile-fav" aria-hidden="true" />}
+      {posterNsfw && <span className="group-tile-nsfw">nsfw</span>}
 
       <span className="group-tile-poster" style={posterStyle}>
         {poster ? (
           <>
-            <img src={poster} alt="" loading="lazy" draggable={false} />
+            <img
+              className={posterNsfw ? 'is-nsfw' : undefined}
+              src={poster}
+              alt=""
+              loading="lazy"
+              draggable={false}
+            />
             <span className="group-tile-relief is-light" aria-hidden="true" />
             <span className="group-tile-relief is-shadow" aria-hidden="true" />
           </>

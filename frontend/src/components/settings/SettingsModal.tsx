@@ -133,6 +133,7 @@ export function SettingsModal() {
   const librarySettings = useStore((s) => s.librarySettings)
   const updateSettings = useStore((s) => s.updateSettings)
   const reclusterSessions = useStore((s) => s.reclusterSessions)
+  const refreshCatalog = useStore((s) => s.refreshCatalog)
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
   const effects = useStore((s) => s.effects)
@@ -298,6 +299,8 @@ export function SettingsModal() {
     setBlurError(null)
     try {
       await updateSettings({ nsfwTag: name })
+      // Group covers carry their NSFW flag from the catalog, so re-fetch them.
+      await refreshCatalog()
     } catch (err) {
       setBlurError(errorMessage(err))
     }

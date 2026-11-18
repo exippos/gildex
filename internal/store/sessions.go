@@ -23,6 +23,13 @@ func (s *Store) Sessions() ([]model.Session, error) {
 				(SELECT i.thumbnail_path FROM items i
 					WHERE i.session_id = s.id AND i.thumbnail_path <> ''
 					ORDER BY i.timestamp DESC LIMIT 1),
+				''),
+			COALESCE(
+				(SELECT i.id FROM items i
+					WHERE i.id = s.cover_item_id AND i.session_id = s.id AND i.thumbnail_path <> ''),
+				(SELECT i.id FROM items i
+					WHERE i.session_id = s.id AND i.thumbnail_path <> ''
+					ORDER BY i.timestamp DESC LIMIT 1),
 				'')
 		FROM sessions s
 		ORDER BY s.starts_at DESC`)
@@ -32,16 +39,20 @@ func (s *Store) Sessions() ([]model.Session, error) {
 	defer rows.Close()
 
 	out := []model.Session{}
+	var thumbIDs []string
+	var thumbIdx []int
 	for rows.Next() {
 		var (
 			sess     model.Session
 			cover    sql.NullString
+			thumbID  sql.NullString
 			favorite int
 			status   string
 		)
 		if err := rows.Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover,
 			&favorite, &sess.Rating, &status,
-			&sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath); err != nil {
+			&sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath,
+			&thumbID); err != nil {
 			return nil, err
 		}
 		sess.CoverItemID = nullString(cover)
@@ -49,6 +60,10 @@ func (s *Store) Sessions() ([]model.Session, error) {
 		sess.Status = model.Status(status)
 		sess.Tags = []string{}
 		out = append(out, sess)
+		if thumbID.Valid && thumbID.String != "" {
+			thumbIDs = append(thumbIDs, thumbID.String)
+			thumbIdx = append(thumbIdx, len(out)-1)
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -65,6 +80,16 @@ func (s *Store) Sessions() ([]model.Session, error) {
 			out[i].Tags = names
 		}
 	}
+
+	nsfwSet, err := s.nsfwThumbSet(thumbIDs, s.groupNsfwTag())
+	if err != nil {
+		return nil, err
+	}
+	for i, idx := range thumbIdx {
+		if nsfwSet[thumbIDs[i]] {
+			out[idx].Nsfw = true
+		}
+	}
 	return out, nil
 }
 
@@ -73,6 +98,7 @@ func (s *Store) GetSession(id string) (*model.Session, error) {
 	var (
 		sess     model.Session
 		cover    sql.NullString
+		thumbID  sql.NullString
 		favorite int
 		status   string
 	)
@@ -88,11 +114,19 @@ func (s *Store) GetSession(id string) (*model.Session, error) {
 				(SELECT i.thumbnail_path FROM items i
 					WHERE i.session_id = s.id AND i.thumbnail_path <> ''
 					ORDER BY i.timestamp DESC LIMIT 1),
+				''),
+			COALESCE(
+				(SELECT i.id FROM items i
+					WHERE i.id = s.cover_item_id AND i.session_id = s.id AND i.thumbnail_path <> ''),
+				(SELECT i.id FROM items i
+					WHERE i.session_id = s.id AND i.thumbnail_path <> ''
+					ORDER BY i.timestamp DESC LIMIT 1),
 				'')
 		FROM sessions s WHERE s.id = ?`, id).
 		Scan(&sess.ID, &sess.Label, &sess.StartsAt, &sess.EndsAt, &cover,
 			&favorite, &sess.Rating, &status,
-			&sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath)
+			&sess.ItemCount, &sess.VideoCount, &sess.AudioCount, &sess.ThumbnailPath,
+			&thumbID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -107,6 +141,15 @@ func (s *Store) GetSession(id string) (*model.Session, error) {
 		return nil, err
 	}
 	sess.Tags = tags
+	thumbIDStr := ""
+	if thumbID.Valid {
+		thumbIDStr = thumbID.String
+	}
+	nsfwSet, err := s.nsfwThumbSet([]string{thumbIDStr}, s.groupNsfwTag())
+	if err != nil {
+		return nil, err
+	}
+	sess.Nsfw = nsfwSet[thumbIDStr]
 	return &sess, nil
 }
 

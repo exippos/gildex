@@ -244,6 +244,7 @@
 }
 
 .effects-toggle,
+.nsfw-toggle,
 .settings-toggle {
   position: relative;
   display: grid;
@@ -258,6 +259,7 @@
 }
 
 .effects-toggle:hover,
+.nsfw-toggle:hover,
 .settings-toggle:hover {
   color: var(--gilt-bright);
   background: var(--control-hover);
@@ -265,13 +267,26 @@
 }
 
 .effects-toggle svg,
+.nsfw-toggle svg,
 .settings-toggle svg {
   width: 16px;
   height: 16px;
 }
 
-.effects-toggle.is-on {
+.effects-toggle.is-on,
+.nsfw-toggle.is-on {
   color: var(--gilt-bright);
+}
+
+.nsfw-toggle:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.nsfw-toggle:disabled:hover {
+  color: var(--gilt);
+  background: var(--control);
+  border-color: var(--gilt-border);
 }
 
 /* ---- theme picker ---- */
@@ -332,7 +347,8 @@
 }
 
 /* reduced state: a hairline slash across the faceted mark */
-.effects-slash {
+.effects-slash,
+.nsfw-slash {
   position: absolute;
   left: 9px;
   right: 9px;

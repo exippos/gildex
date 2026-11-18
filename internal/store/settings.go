@@ -2,6 +2,7 @@ package store
 
 import (
 	"strconv"
+	"strings"
 
 	"gildex/internal/model"
 )
@@ -93,4 +94,48 @@ func (s *Store) SessionGapMS() int64 {
 		settings = model.Settings{SessionGapMinutes: DefaultSessionGapMinutes}
 	}
 	return int64(settings.SessionGapMinutes) * 60_000
+}
+
+// groupNsfwTag returns the tag name that marks an item NSFW, or "" when no tag
+// is configured. It intentionally ignores BlurNsfw: a group's Nsfw flag records
+// only whether its cover thumbnail carries the tag, while the UI decides when
+// to blur based on the BlurNsfw toggle. A settings read failure disables the
+// flag.
+func (s *Store) groupNsfwTag() string {
+	settings, err := s.Settings()
+	if err != nil {
+		return ""
+	}
+	return settings.NsfwTag
+}
+
+// nsfwThumbSet returns the subset of itemIDs whose assigned tags include the
+// NSFW tag (case-insensitive). An empty tag or id set yields an empty set.
+func (s *Store) nsfwThumbSet(itemIDs []string, nsfwTag string) (map[string]bool, error) {
+	out := map[string]bool{}
+	if nsfwTag == "" || len(itemIDs) == 0 {
+		return out, nil
+	}
+	tags, err := s.loadTags(itemIDs)
+	if err != nil {
+		return nil, err
+	}
+	for id, names := range tags {
+		if hasTagFold(names, nsfwTag) {
+			out[id] = true
+		}
+	}
+	return out, nil
+}
+
+func hasTagFold(names []string, target string) bool {
+	if target == "" {
+		return false
+	}
+	for _, n := range names {
+		if strings.EqualFold(n, target) {
+			return true
+		}
+	}
+	return false
 }

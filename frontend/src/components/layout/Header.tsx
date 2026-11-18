@@ -24,6 +24,16 @@ export function Header() {
   const effectsOn = effects === 'full'
   const openLibraryModal = useStore((s) => s.openLibraryModal)
   const openSettings = useStore((s) => s.openSettings)
+  const library = useStore((s) => s.library)
+  const librarySettings = useStore((s) => s.librarySettings)
+  const updateSettings = useStore((s) => s.updateSettings)
+
+  const blurNsfw = librarySettings.blurNsfw
+  const toggleNsfw = () => {
+    void updateSettings({ blurNsfw: !blurNsfw }).catch(() => {
+      /* keep the header quiet on failure */
+    })
+  }
 
   const [fileMenuOpen, setFileMenuOpen] = useState(false)
   const fileMenuRef = useRef<HTMLDivElement | null>(null)
@@ -164,6 +174,30 @@ export function Header() {
 
         <button
           type="button"
+          className={`nsfw-toggle${blurNsfw ? ' is-on' : ''}`}
+          onClick={toggleNsfw}
+          disabled={!library?.rootSet}
+          aria-pressed={blurNsfw}
+          title={blurNsfw ? 'Blur NSFW: on' : 'Blur NSFW: off'}
+          aria-label={blurNsfw ? 'Turn off NSFW blur' : 'Turn on NSFW blur'}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          {blurNsfw && <span className="nsfw-slash" aria-hidden="true" />}
+        </button>
+
+        <button
+          type="button"
           className={`effects-toggle${effectsOn ? ' is-on' : ''}`}
           onClick={() => setEffects(effectsOn ? 'reduced' : 'full')}
           aria-pressed={effectsOn}
@@ -203,10 +237,11 @@ export function Header() {
             stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
+            strokeLinejoin="round"
             aria-hidden="true"
           >
-            <circle cx="12" cy="12" r="3.2" />
-            <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1" />
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
         </button>
       </div>

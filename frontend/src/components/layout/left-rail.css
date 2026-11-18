@@ -338,6 +338,11 @@
   object-fit: cover;
 }
 
+.rail-row-thumb.is-nsfw img {
+  filter: blur(6px) saturate(0.85);
+  transform: scale(1.3);
+}
+
 .rail-row-thumb-empty {
   width: 8px;
   height: 8px;

@@ -268,7 +268,9 @@ function SessionPreview({ session, items }: { session: Session; items: Item[] })
             )
           })}
           {thumbs.length === 0 && session.thumbnailPath && (
-            <span className="preview-thumb">
+            <span
+              className={`preview-thumb${librarySettings.blurNsfw && session.nsfw ? ' is-nsfw' : ''}`}
+            >
               <img src={thumbUrl(session.thumbnailPath) ?? ''} alt="" loading="lazy" />
             </span>
           )}
