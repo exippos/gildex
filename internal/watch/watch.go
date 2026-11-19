@@ -29,16 +29,19 @@ func New(lib *store.Library, interval time.Duration) *Manager {
 	return &Manager{lib: lib, interval: interval}
 }
 
-// Run polls until ctx is cancelled.
+// Run polls until ctx is cancelled. Each scan runs to completion before the
+// interval timer restarts, so a slow scan over a large library can never be
+// followed immediately by another full scan.
 func (m *Manager) Run(ctx context.Context) {
-	ticker := time.NewTicker(m.interval)
-	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
-			m.tick()
+		case <-time.After(m.interval):
+		}
+		m.tick()
+		if err := importpkg.Wait(ctx); err != nil {
+			return
 		}
 	}
 }

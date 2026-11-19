@@ -43,6 +43,7 @@ type Existing struct {
 	RelativePath string
 	SourceID     *string
 	ManualFields map[string]bool
+	State        string
 }
 
 // FindByHash looks up an item by content hash.
@@ -50,8 +51,8 @@ func (s *Store) FindByHash(hash string) (*Existing, error) {
 	var e Existing
 	var manual string
 	var sourceID sql.NullString
-	err := s.db.QueryRow(`SELECT id, relative_path, source_id, manual_fields FROM items WHERE content_hash = ?`, hash).
-		Scan(&e.ID, &e.RelativePath, &sourceID, &manual)
+	err := s.db.QueryRow(`SELECT id, relative_path, source_id, manual_fields, state FROM items WHERE content_hash = ?`, hash).
+		Scan(&e.ID, &e.RelativePath, &sourceID, &manual, &e.State)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -73,6 +74,31 @@ func (s *Store) UpdateItemPath(id, relativePath, originPath string) error {
 func (s *Store) TombstoneExists(hash string) (bool, error) {
 	var one int
 	err := s.db.QueryRow(`SELECT 1 FROM tombstones WHERE content_hash = ?`, hash).Scan(&one)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// ItemUnchanged reports whether an item at this source and relative path is
+// already cataloged with the same size and mtime and is still present. Watch
+// scans use it to skip unchanged files before hashing or decoding them, which
+// is what keeps a periodic rescan cheap.
+func (s *Store) ItemUnchanged(sourceID *string, relativePath string, size, mtime int64) (bool, error) {
+	var one int
+	var err error
+	if sourceID == nil {
+		err = s.db.QueryRow(`SELECT 1 FROM items
+			WHERE source_id IS NULL AND relative_path = ? AND file_size = ? AND timestamp = ?
+				AND state = 'present' LIMIT 1`, relativePath, size, mtime).Scan(&one)
+	} else {
+		err = s.db.QueryRow(`SELECT 1 FROM items
+			WHERE source_id = ? AND relative_path = ? AND file_size = ? AND timestamp = ?
+				AND state = 'present' LIMIT 1`, *sourceID, relativePath, size, mtime).Scan(&one)
+	}
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}

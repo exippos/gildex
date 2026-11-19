@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -47,7 +48,7 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	go watch.New(lib, time.Minute).Run(ctx)
+	go watch.New(lib, watchInterval()).Run(ctx)
 
 	go func() {
 		log.Printf("gildex: listening on http://%s (library: %s)", *listen, displayLibrary(lib))
@@ -71,6 +72,18 @@ func main() {
 	if err := srv.Shutdown(context.Background()); err != nil {
 		log.Printf("gildex: shutdown: %v", err)
 	}
+}
+
+// watchInterval returns the polling interval for watched sources. Defaults to
+// one minute; GILDEX_WATCH_INTERVAL overrides it with a Go duration (e.g. "5m").
+func watchInterval() time.Duration {
+	if v := strings.TrimSpace(os.Getenv("GILDEX_WATCH_INTERVAL")); v != "" {
+		if d, err := time.ParseDuration(v); err == nil && d > 0 {
+			return d
+		}
+		log.Printf("gildex: ignoring invalid GILDEX_WATCH_INTERVAL %q", v)
+	}
+	return time.Minute
 }
 
 func displayLibrary(lib *store.Library) string {

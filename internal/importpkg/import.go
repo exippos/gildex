@@ -56,18 +56,19 @@ type stageStat struct {
 }
 
 type jobState struct {
-	mu         sync.Mutex
-	running    bool
-	switching  bool
-	cancel     context.CancelFunc
-	done       chan struct{}
-	total      int
-	doneCount  int
-	stage      string
-	err        string
-	duplicates []model.Duplicate
-	startedAt  time.Time
-	stages     map[string]stageStat
+	mu           sync.Mutex
+	running      bool
+	switching    bool
+	cancel       context.CancelFunc
+	done         chan struct{}
+	total        int
+	doneCount    int
+	changedCount int // files actually imported/updated (not skipped or duplicated)
+	stage        string
+	err          string
+	duplicates   []model.Duplicate
+	startedAt    time.Time
+	stages       map[string]stageStat
 }
 
 var job jobState
@@ -155,6 +156,7 @@ func start(lib *store.Library, sourceID *string, base string, paths []string) er
 	job.done = done
 	job.total = 0
 	job.doneCount = 0
+	job.changedCount = 0
 	job.stage = "discover"
 	job.err = ""
 	job.duplicates = nil
@@ -252,21 +254,29 @@ func run(ctx context.Context, done chan struct{}, st *store.Store, root, thumbDi
 		return
 	}
 
-	setStage("cluster")
-	t0 = time.Now()
-	if err := st.ReclusterSessions(); err != nil {
-		job.addStage("cluster", time.Since(t0))
-		setError(err)
-		return
-	}
-	job.addStage("cluster", time.Since(t0))
-	if settings, err := st.Settings(); err == nil && settings.AutoClusterEpisodes {
-		setStage("episodes")
+	// Rebuild sessions and episodes only when the item set actually changed.
+	// Clustering rewrites every session and touches every item, so running it
+	// on an unchanged watch tick is pure waste.
+	job.mu.Lock()
+	changed := job.changedCount
+	job.mu.Unlock()
+	if changed > 0 {
+		setStage("cluster")
 		t0 = time.Now()
-		if _, err := st.AutoClusterSessions(); err != nil {
-			log.Printf("gildex: auto-cluster episodes: %v", err)
+		if err := st.ReclusterSessions(); err != nil {
+			job.addStage("cluster", time.Since(t0))
+			setError(err)
+			return
 		}
-		job.addStage("episodes", time.Since(t0))
+		job.addStage("cluster", time.Since(t0))
+		if settings, err := st.Settings(); err == nil && settings.AutoClusterEpisodes {
+			setStage("episodes")
+			t0 = time.Now()
+			if _, err := st.AutoClusterSessions(); err != nil {
+				log.Printf("gildex: auto-cluster episodes: %v", err)
+			}
+			job.addStage("episodes", time.Since(t0))
+		}
 	}
 	setStage("index")
 	if sourceID != nil {
@@ -298,11 +308,15 @@ func processOne(ctx context.Context, st *store.Store, thumbDir string, sourceID 
 	if ctx.Err() != nil {
 		return
 	}
-	if err := processFile(st, thumbDir, sourceID, f); err != nil && !importStopped(ctx, err) {
+	changed, err := processFile(st, thumbDir, sourceID, f)
+	if err != nil && !importStopped(ctx, err) {
 		log.Printf("gildex: import %s: %v", f.rel, err)
 	}
 	job.mu.Lock()
 	job.doneCount++
+	if changed {
+		job.changedCount++
+	}
 	job.mu.Unlock()
 }
 
@@ -576,50 +590,73 @@ func hashFile(path string) (string, int64, error) {
 	return hex.EncodeToString(h.Sum(nil)), n, nil
 }
 
-func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry) error {
+func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry) (bool, error) {
+	// Cheap unchanged check first: stat the file and compare size+mtime against
+	// what we already cataloged for this path. When they match there is nothing
+	// to do, so skip hashing, decoding, and thumbnailing entirely. This is what
+	// keeps a periodic watch rescan from re-processing the whole library.
+	info, err := os.Stat(f.abs)
+	if err != nil {
+		return false, err
+	}
+	unchanged, err := st.ItemUnchanged(sourceID, f.rel, info.Size(), info.ModTime().UnixMilli())
+	if err != nil {
+		return false, err
+	}
+	if unchanged {
+		return false, nil
+	}
+
 	t0 := time.Now()
 	hash, size, err := hashFile(f.abs)
 	job.addStage("hash", time.Since(t0))
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	t0 = time.Now()
 	tombstoned, err := st.TombstoneExists(hash)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if tombstoned {
 		job.addStage("dedup", time.Since(t0))
-		return nil
+		return false, nil
 	}
 
 	existing, err := st.FindByHash(hash)
 	job.addStage("dedup", time.Since(t0))
 	if err != nil {
-		return err
+		return false, err
 	}
 	if existing != nil {
-		kind, _ := classify(f.abs)
-		var thumbName string
-		if kind == model.KindImage {
-			thumbName = hash + ".jpg"
+		// Same content is already cataloged. A move within a source updates the
+		// path (and marks the item present again); a copy elsewhere is a true
+		// duplicate. In every case there is nothing to re-decode or re-thumbnail,
+		// so stop here.
+		if existing.RelativePath != f.rel {
+			if sameSource(existing.SourceID, sourceID) {
+				return false, st.UpdateItemPath(existing.ID, f.rel, filepath.ToSlash(f.abs))
+			}
+			kind, _ := classify(f.abs)
+			var thumbName string
+			if kind == model.KindImage {
+				thumbName = hash + ".jpg"
+			}
+			addDuplicate(model.Duplicate{ID: existing.ID, Name: path.Base(f.rel), Kind: kind, Thumb: thumbName})
+			return false, nil
 		}
-		addDuplicate(model.Duplicate{ID: existing.ID, Name: path.Base(f.rel), Kind: kind, Thumb: thumbName})
-		// Move detection is within a source only (D1); the same file seen from a
-		// different source is a duplicate, not a move.
-		if existing.RelativePath != f.rel && sameSource(existing.SourceID, sourceID) {
-			return st.UpdateItemPath(existing.ID, f.rel, filepath.ToSlash(f.abs))
+		if existing.State != "present" {
+			// The file reappeared at the same path after being flagged missing.
+			// Mark it present without re-processing it.
+			return false, st.UpdateItemPath(existing.ID, f.rel, filepath.ToSlash(f.abs))
 		}
+		return false, nil
 	}
 
 	kind, format := classify(f.abs)
 	if kind == "" {
-		return nil
-	}
-	info, err := os.Stat(f.abs)
-	if err != nil {
-		return err
+		return false, nil
 	}
 	if size <= 0 {
 		size = info.Size()
@@ -713,7 +750,7 @@ func processFile(st *store.Store, thumbDir string, sourceID *string, f fileEntry
 	t0 = time.Now()
 	err = st.UpsertImport(item)
 	job.addStage("db", time.Since(t0))
-	return err
+	return err == nil, err
 }
 
 func decodeImage(path string) image.Image {
