@@ -801,6 +801,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const loadGroupItems = useStore((s) => s.loadGroupItems)
   const loadEpisodes = useStore((s) => s.loadEpisodes)
   const selection = useStore((s) => s.selection)
+  const lastSelectedId = useStore((s) => s.lastSelectedId)
   const loading = useStore((s) => s.loadingItems)
   const clearSelection = useStore((s) => s.clearSelection)
   const selectGroupItems = useStore((s) => s.selectGroupItems)
@@ -844,6 +845,9 @@ export function Grid({ cellSize }: { cellSize: number }) {
   // Flat index of the focused slot, kept so a deletion can restore focus to the
   // nearest surviving slot instead of resetting it.
   const focusIndexRef = useRef(0)
+  // Last selection anchor we've already synced the cursor to, so the effect
+  // below only reacts to a new selection rather than to every layout change.
+  const prevLastSelectedRef = useRef<string | null>(null)
 
   const registerSlot = (key: string, el: HTMLButtonElement | null) => {
     if (el) slotRefs.current.set(key, el)
@@ -1241,6 +1245,21 @@ export function Grid({ cellSize }: { cellSize: number }) {
     return out
   }, [layout])
   const firstSlotKey = flatSlots[0]?.slot.key ?? null
+
+  // Tie the keyboard cursor to the most recently selected item, so clicking an
+  // item (or selecting it via space / select-all-in-group) moves the arrow-key
+  // focus to it instead of leaving the cursor where it last was.
+  useEffect(() => {
+    if (lastSelectedId === prevLastSelectedRef.current) return
+    prevLastSelectedRef.current = lastSelectedId
+    if (!lastSelectedId) return
+    const idx = flatSlots.findIndex(
+      (entry) => entry.slot.kind === 'cell' && entry.slot.item.id === lastSelectedId,
+    )
+    if (idx === -1) return
+    focusIndexRef.current = idx
+    setFocusedKey(flatSlots[idx].slot.key)
+  }, [lastSelectedId, flatSlots])
 
   // Focus the cursor's element once it is actually rendered (virtualized rows
   // only exist while they are near the viewport).
