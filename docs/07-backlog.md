@@ -1,10 +1,11 @@
 # TODO
 - [X] Keyboard navigation
+    - [ ] Tie current KB focus to item currently selected
 - [X] Nested grouping (manual order) -- episodes
-- [ ] Local reorder in collection
+- [X] Local reorder in collection
 - [ ] Hide drafts toggle
 - [ ] Add "sorted" flag for collections
-- [ ] Drag-n-Drop reorder inside collections 
+- [X] Drag-n-Drop reorder inside collections
 - [ ] Mested sub-collections (sub-groups for very similar images)
 - [ ] Remove/Edit tag
 - [ ] Undo feature

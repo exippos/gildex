@@ -128,7 +128,11 @@ limitation); integrity is enforced in the application layer (D10).
 - **`collection`** — `id`, `name`, `description`, plus the same group triage as
   sessions (`favorite`, `rating`, `status`). `collection_item` join carries an
   explicit `position` so manual drag-order persists (D21); time-order is the
-  default and a view option.
+  default and a view option. Manual order is surfaced as the **Custom** sort
+  and is collection-scoped: it reads `position` ascending and only offers
+  drag-reorder when a single, unfiltered collection is shown. Outside a
+  collection — e.g. the **All collections** view — Custom falls back to time
+  order and reorder is disabled.
 
 Tag vocabulary transfer (D44) lives in `GET /api/tags/export` (versioned JSON
 envelope with names, derived families, informational counts) and
