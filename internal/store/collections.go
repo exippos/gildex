@@ -287,13 +287,45 @@ func (s *Store) UpdateCollection(id string, p CollectionPatch) (*model.Collectio
 	}
 
 	if p.Order != nil {
+		// The client's order is authoritative for the items it lists; any
+		// current member it does not mention (e.g. beyond a paged fetch) is
+		// preserved and appended in its existing relative order, so a reorder
+		// can never silently drop members.
+		ordered := make([]string, 0, len(*p.Order))
+		seen := make(map[string]bool, len(*p.Order))
+		for _, itemID := range *p.Order {
+			if itemID == "" || seen[itemID] {
+				continue
+			}
+			seen[itemID] = true
+			ordered = append(ordered, itemID)
+		}
+		rows, err := tx.Query(`SELECT item_id FROM collection_item WHERE collection_id = ? ORDER BY position ASC, item_id ASC`, id)
+		if err != nil {
+			return nil, err
+		}
+		var extras []string
+		for rows.Next() {
+			var itemID string
+			if err := rows.Scan(&itemID); err != nil {
+				rows.Close()
+				return nil, err
+			}
+			if !seen[itemID] {
+				seen[itemID] = true
+				extras = append(extras, itemID)
+			}
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
+		ordered = append(ordered, extras...)
+
 		if _, err := tx.Exec(`DELETE FROM collection_item WHERE collection_id = ?`, id); err != nil {
 			return nil, err
 		}
-		for i, itemID := range *p.Order {
-			if itemID == "" {
-				continue
-			}
+		for i, itemID := range ordered {
 			if _, err := tx.Exec(`INSERT OR IGNORE INTO collection_item (collection_id, item_id, position) VALUES (?, ?, ?)`,
 				id, itemID, i); err != nil {
 				return nil, err

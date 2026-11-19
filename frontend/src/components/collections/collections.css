@@ -162,6 +162,34 @@
   border-bottom: none;
 }
 
+/* manual drag reorder (D21) */
+.col-item.is-reorderable {
+  cursor: grab;
+}
+.col-item.is-reorder-drag {
+  opacity: 0.35;
+}
+.col-item.is-reorder-over-before {
+  box-shadow: inset 0 2px 0 0 var(--gilt);
+}
+.col-item.is-reorder-over-after {
+  box-shadow: inset 0 -2px 0 0 var(--gilt);
+}
+
+.col-item-grip {
+  flex: 0 0 auto;
+  width: 10px;
+  color: var(--text-faint);
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: -3px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.col-item.is-reorderable:hover .col-item-grip {
+  color: var(--gilt);
+}
+
 .col-item-thumb {
   flex: 0 0 auto;
   width: 32px;

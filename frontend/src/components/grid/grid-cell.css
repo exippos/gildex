@@ -19,8 +19,8 @@
 }
 
 .grid-cell:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline: 1px solid var(--text-muted);
+  outline-offset: -1px;
 }
 
 /* selection: 2px gilt ring */
@@ -32,6 +32,15 @@
   border-radius: var(--radius-sm);
   z-index: 3;
   pointer-events: none;
+}
+
+/* manual reorder drop indicator (custom-sorted collection): a gilt bar on the
+   insertion edge, before/after the target cell in reading order */
+.grid-cell.is-reorder-before {
+  box-shadow: inset 3px 0 0 0 var(--gilt-bright);
+}
+.grid-cell.is-reorder-after {
+  box-shadow: inset -3px 0 0 0 var(--gilt-bright);
 }
 
 .cell-thumb {

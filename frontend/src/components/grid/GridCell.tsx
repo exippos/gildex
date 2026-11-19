@@ -7,7 +7,7 @@ import { useStore, isNsfwBlurred } from '../../store'
 import { frameUrl, thumbUrl } from '../../api'
 import type { Item } from '../../types'
 import { formatDuration } from '../format'
-import { setDraggedItems } from '../groups/drag'
+import { readDraggedItemIds, setDraggedItems } from '../groups/drag'
 import { resolveMediaPath } from '../paths'
 import './grid-cell.css'
 
@@ -22,6 +22,12 @@ interface GridCellProps {
   tabIndex?: number
   slotRef?: (el: HTMLButtonElement | null) => void
   onMenu?: (x: number, y: number) => void
+  /** When true the cell is a manual-reorder drop target (custom-sorted collection). */
+  reorderable?: boolean
+  reorderHighlight?: 'before' | 'after'
+  onReorderOver?: (itemId: string, after: boolean) => void
+  onReorderLeave?: () => void
+  onReorderDrop?: (itemId: string, after: boolean, draggedIds: string[]) => void
 }
 
 /** Deterministic bar heights for the D42 audio placeholder. */
@@ -158,6 +164,11 @@ export function GridCell({
   tabIndex,
   slotRef,
   onMenu,
+  reorderable = false,
+  reorderHighlight,
+  onReorderOver,
+  onReorderLeave,
+  onReorderDrop,
 }: GridCellProps) {
   const setSelected = useStore((s) => s.setSelected)
   const selectRange = useStore((s) => s.selectRange)
@@ -185,7 +196,7 @@ export function GridCell({
     <button
       type="button"
       ref={slotRef}
-      className={`grid-cell${selected ? ' is-selected' : ''}${missing ? ' is-missing' : ''}${nsfw ? ' is-nsfw' : ''}${phase ? ` is-${phase === 'enter' ? 'entering' : 'exiting'}` : ''}`}
+      className={`grid-cell${selected ? ' is-selected' : ''}${missing ? ' is-missing' : ''}${nsfw ? ' is-nsfw' : ''}${phase ? ` is-${phase === 'enter' ? 'entering' : 'exiting'}` : ''}${reorderHighlight ? ` is-reorder-${reorderHighlight}` : ''}`}
       style={style}
       tabIndex={tabIndex}
       aria-pressed={selected}
@@ -199,7 +210,37 @@ export function GridCell({
         const selection = useStore.getState().selection
         const ids = selection.includes(item.id) ? selection : [item.id]
         setDraggedItems(event.dataTransfer, ids)
+        event.dataTransfer.effectAllowed = reorderable ? 'move' : 'copy'
       }}
+      onDragOver={
+        reorderable
+          ? (event) => {
+              event.preventDefault()
+              event.dataTransfer.dropEffect = 'move'
+              const rect = event.currentTarget.getBoundingClientRect()
+              onReorderOver?.(item.id, event.clientX > rect.left + rect.width / 2)
+            }
+          : undefined
+      }
+      onDragLeave={
+        reorderable
+          ? (event) => {
+              const next = event.relatedTarget as Node | null
+              if (!next || !event.currentTarget.contains(next)) onReorderLeave?.()
+            }
+          : undefined
+      }
+      onDrop={
+        reorderable
+          ? (event) => {
+              event.preventDefault()
+              const ids = readDraggedItemIds(event.dataTransfer)
+              if (!ids.length) return
+              const rect = event.currentTarget.getBoundingClientRect()
+              onReorderDrop?.(item.id, event.clientX > rect.left + rect.width / 2, ids)
+            }
+          : undefined
+      }
       onContextMenu={(event) => {
         if (!onMenu) return
         event.preventDefault()

@@ -7,6 +7,7 @@ import './gallery-view-controls.css'
 
 const SORTS: ReadonlyArray<{ id: ItemSort; label: string }> = [
   { id: 'time', label: 'Time' },
+  { id: 'custom', label: 'Custom' },
   { id: 'filename', label: 'Filename' },
   { id: 'size', label: 'Size' },
   { id: 'session', label: 'Session' },
@@ -22,6 +23,10 @@ export function GalleryViewControls() {
   const setSort = useStore((s) => s.setSort)
   const sortDir = useStore((s) => s.sortDir)
   const setSortDir = useStore((s) => s.setSortDir)
+  const surface = useStore((s) => s.surface)
+  // Manual order only means anything inside a collection, so the option is
+  // hidden elsewhere rather than silently falling back to time order.
+  const sorts = surface === 'collections' ? SORTS : SORTS.filter((s) => s.id !== 'custom')
 
   return (
     <div className="gallery-view-controls" role="group" aria-label="Gallery item view">
@@ -47,7 +52,7 @@ export function GalleryViewControls() {
           onChange={(event) => setSort(event.target.value as ItemSort)}
           aria-label="Sort by"
         >
-          {SORTS.map((option) => (
+          {sorts.map((option) => (
             <option key={option.id} value={option.id}>
               {option.label}
             </option>
@@ -55,16 +60,18 @@ export function GalleryViewControls() {
         </select>
       </label>
 
-      <button
-        type="button"
-        className="gallery-sort-dir"
-        onClick={() => setSortDir(sortDir === 'asc' ? 'desc' : 'asc')}
-        title={sortDir === 'asc' ? 'Sort descending' : 'Sort ascending'}
-        aria-label="Toggle sort direction"
-        aria-pressed={sortDir === 'asc'}
-      >
-        {sortDir === 'asc' ? '↑' : '↓'}
-      </button>
+      {sort !== 'custom' && (
+        <button
+          type="button"
+          className="gallery-sort-dir"
+          onClick={() => setSortDir(sortDir === 'asc' ? 'desc' : 'asc')}
+          title={sortDir === 'asc' ? 'Sort descending' : 'Sort ascending'}
+          aria-label="Toggle sort direction"
+          aria-pressed={sortDir === 'asc'}
+        >
+          {sortDir === 'asc' ? '↑' : '↓'}
+        </button>
+      )}
     </div>
   )
 }

@@ -2,9 +2,10 @@
 // pick the label image (cover) shown on the group tile. Reads store.groupEditor.
 // Centered over a scrim; flat panel, hairline rules, gilt only on the edge.
 import { useEffect, useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { DragEvent, FormEvent } from 'react'
 import { thumbUrl } from '../../api'
 import { useStore, isNsfwBlurred } from '../../store'
+import type { Item } from '../../types'
 import '../collections/collections.css'
 
 function basename(path: string): string {
@@ -30,12 +31,17 @@ export function GroupEditor() {
   const removeFromGroup = useStore((s) => s.removeFromGroup)
   const setGroupCover = useStore((s) => s.setGroupCover)
   const searchGroupPicker = useStore((s) => s.searchGroupPicker)
+  const reorderCollection = useStore((s) => s.reorderCollection)
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Reorder state for the collection member list.
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [overIndex, setOverIndex] = useState<number | null>(null)
+  const [overAfter, setOverAfter] = useState(false)
 
   const type = editor?.type ?? 'collection'
   const id = editor?.id ?? null
@@ -85,6 +91,50 @@ export function GroupEditor() {
   const addable = pickerResults
     .filter((item) => !memberIds.has(item.id))
     .slice(0, 24)
+
+  // Working copy of the member list so a drag reorder reads back instantly;
+  // re-synced whenever the source list changes (e.g. after a persist).
+  const [ordered, setOrdered] = useState<Item[]>(items)
+  useEffect(() => setOrdered(items), [items])
+
+  const canReorder = type === 'collection' && !isNew
+
+  const startReorder = (index: number, event: DragEvent<HTMLLIElement>) => {
+    if (!canReorder) return
+    setDragIndex(index)
+    setOverIndex(null)
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(index))
+  }
+
+  const handleReorderOver = (index: number, event: DragEvent<HTMLLIElement>) => {
+    if (!canReorder || dragIndex === null) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    const rect = event.currentTarget.getBoundingClientRect()
+    setOverIndex(index)
+    setOverAfter(event.clientY > rect.top + rect.height / 2)
+  }
+
+  const handleReorderDrop = (index: number, event: DragEvent<HTMLLIElement>) => {
+    event.preventDefault()
+    if (!canReorder || dragIndex === null || !id) return
+    const from = dragIndex
+    const targetPos = index + (overAfter ? 1 : 0)
+    const next = ordered.slice()
+    const [moved] = next.splice(from, 1)
+    const insertAt = from < targetPos ? targetPos - 1 : targetPos
+    next.splice(insertAt, 0, moved)
+    setOrdered(next)
+    setDragIndex(null)
+    setOverIndex(null)
+    void reorderCollection(id, next.map((it) => it.id))
+  }
+
+  const endReorder = () => {
+    setDragIndex(null)
+    setOverIndex(null)
+  }
 
   if (!editor) return null
 
@@ -263,17 +313,35 @@ export function GroupEditor() {
                       </span>
                     </div>
 
-                    {items.length > 0 ? (
+                    {ordered.length > 0 ? (
                       <ul className="col-items">
-                        {items.map((it) => {
+                        {ordered.map((it, index) => {
                           const src = thumbUrl(it.thumbnailPath)
                           const isCover = coverId === it.id
                           const nsfw = isNsfwBlurred(it, librarySettings)
+                          const overClass =
+                            overIndex === index
+                              ? overAfter
+                                ? ' is-reorder-over-after'
+                                : ' is-reorder-over-before'
+                              : ''
                           return (
                             <li
-                              className={`col-item${isCover ? ' is-cover' : ''}`}
+                              className={`col-item${isCover ? ' is-cover' : ''}${
+                                canReorder ? ' is-reorderable' : ''
+                              }${dragIndex === index ? ' is-reorder-drag' : ''}${overClass}`}
                               key={it.id}
+                              draggable={canReorder}
+                              onDragStart={(e) => startReorder(index, e)}
+                              onDragOver={(e) => handleReorderOver(index, e)}
+                              onDrop={(e) => handleReorderDrop(index, e)}
+                              onDragEnd={endReorder}
                             >
+                              {canReorder && (
+                                <span className="col-item-grip" aria-hidden="true" title="drag to reorder">
+                                  ⋮⋮
+                                </span>
+                              )}
                               <span className={`col-item-thumb${nsfw ? ' is-nsfw' : ''}`}>
                                 {src ? (
                                   <img src={src} alt="" loading="lazy" />

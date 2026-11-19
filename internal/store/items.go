@@ -151,6 +151,12 @@ func (s *Store) QueryItems(q ItemQuery) (model.ItemPage, error) {
 		dir = "ASC"
 	}
 	field := "i.timestamp"
+	// "custom" is the manual collection order (D21). Position lives on the
+	// collection_item join, so it is read back through a correlated subquery.
+	// It always runs ascending: the direction is the order the user arranged,
+	// not a reversible sort. Without a collection it falls back to time.
+	var orderArgs []any
+	custom := false
 	switch q.Sort {
 	case "name":
 		field = "i.relative_path"
@@ -165,10 +171,21 @@ func (s *Store) QueryItems(q ItemQuery) (model.ItemPage, error) {
 		field = "CASE i.status WHEN 'idea' THEN 0 WHEN 'draft' THEN 1 WHEN 'wip' THEN 2 WHEN 'final' THEN 3 ELSE 4 END"
 	case "favorite":
 		field = "i.favorite"
+	case "custom":
+		if q.CollectionID != "" {
+			field = "(SELECT ci.position FROM collection_item ci WHERE ci.collection_id = ? AND ci.item_id = i.id)"
+			orderArgs = append(orderArgs, q.CollectionID)
+			custom = true
+		}
 	}
-	order := " ORDER BY " + field + " " + dir + ", i.id " + dir
+	var order string
+	if custom {
+		order = " ORDER BY " + field + " ASC, i.id ASC"
+	} else {
+		order = " ORDER BY " + field + " " + dir + ", i.id " + dir
+	}
 	query := `SELECT ` + itemCols + ` FROM items i` + clause + order + ` LIMIT ? OFFSET ?`
-	rowArgs := append(append([]any{}, args...), limit, offset)
+	rowArgs := append(append(append([]any{}, args...), orderArgs...), limit, offset)
 
 	rows, err := s.db.Query(query, rowArgs...)
 	if err != nil {

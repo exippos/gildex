@@ -824,6 +824,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const selectAllVisible = useStore((s) => s.selectAllVisible)
   const loadItems = useStore((s) => s.loadItems)
   const setSelected = useStore((s) => s.setSelected)
+  const reorderCollection = useStore((s) => s.reorderCollection)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const rafRef = useRef<number | null>(null)
@@ -838,6 +839,7 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const [exiting, setExiting] = useState<Set<string>>(() => new Set())
   const [menu, setMenu] = useState<MenuTarget | null>(null)
   const [focusedKey, setFocusedKey] = useState<string | null>(null)
+  const [dropTarget, setDropTarget] = useState<{ id: string; after: boolean } | null>(null)
   const slotRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
   // Flat index of the focused slot, kept so a deletion can restore focus to the
   // nearest surviving slot instead of resetting it.
@@ -1203,6 +1205,30 @@ export function Grid({ cellSize }: { cellSize: number }) {
     [layout],
   )
 
+  // Manual reorder is available only when a single collection is shown in its
+  // custom (manual) order, unfiltered — a filtered subset cannot vouch for the
+  // full membership order.
+  const canReorder =
+    surface === 'collections' &&
+    activeCollectionId !== null &&
+    sort === 'custom' &&
+    !search.trim() &&
+    activeTagFilters.length === 0
+
+  const handleReorderDrop = (targetId: string, after: boolean, draggedIds: string[]) => {
+    if (!canReorder || !activeCollectionId) return
+    setDropTarget(null)
+    const draggedSet = new Set(draggedIds)
+    const dragged = itemOrder.filter((id) => draggedSet.has(id))
+    if (!dragged.length) return
+    const rest = itemOrder.filter((id) => !draggedSet.has(id))
+    const idx = rest.indexOf(targetId)
+    const targetPos = (idx === -1 ? rest.length : idx) + (after ? 1 : 0)
+    const next = [...rest.slice(0, targetPos), ...dragged, ...rest.slice(targetPos)]
+    if (next.length !== itemOrder.length) return
+    void reorderCollection(activeCollectionId, next)
+  }
+
   // Flat visual order of every slot, so the keyboard cursor can step through
   // tiles and cells alike and map back to a row for scroll-into-view.
   const flatSlots = useMemo(() => {
@@ -1460,9 +1486,11 @@ export function Grid({ cellSize }: { cellSize: number }) {
     focusSlot(flatSlots[idx])
   }, [flatSlots, focusedKey])
 
-  // A cancelable view change leaves no stale menu floating over new content.
+  // A cancelable view change leaves no stale menu or drop indicator floating
+  // over new content.
   useEffect(() => {
     setMenu(null)
+    setDropTarget(null)
   }, [queryKey, cellSize])
 
   // A pending tile preview must not outlive the grid.
@@ -2006,6 +2034,17 @@ export function Grid({ cellSize }: { cellSize: number }) {
                     style={cellStyle}
                     tabIndex={slot.key === (focusedKey ?? firstSlotKey) ? 0 : -1}
                     slotRef={(el) => registerSlot(slot.key, el)}
+                    reorderable={canReorder}
+                    reorderHighlight={
+                      canReorder && dropTarget?.id === slot.item.id
+                        ? dropTarget.after
+                          ? 'after'
+                          : 'before'
+                        : undefined
+                    }
+                    onReorderOver={(itemId, after) => setDropTarget({ id: itemId, after })}
+                    onReorderLeave={() => setDropTarget(null)}
+                    onReorderDrop={handleReorderDrop}
                     onMenu={(x, y) =>
                       setMenu({ kind: 'cell', x, y, item: slot.item, group })
                     }

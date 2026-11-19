@@ -38,6 +38,7 @@ const SORT_PARAM: Record<ItemSort, string> = {
   rating: 'rating',
   status: 'status',
   favorite: 'favorite',
+  custom: 'custom',
 }
 
 // Tag filters are a multi-select AND chain. "Untagged" is a UI-side pseudo
@@ -447,10 +448,12 @@ interface AppState {
   exportTags: () => Promise<void>
   importTags: (names: string[]) => Promise<TagImportSummary>
   createCollection: (name: string, description: string, itemIds?: string[]) => Promise<string | null>
-  updateCollection: (id: string, patch: { name?: string; description?: string } & GroupPatch) => Promise<void>
+  updateCollection: (id: string, patch: { name?: string; description?: string; order?: string[] } & GroupPatch) => Promise<void>
   updateSession: (id: string, patch: { label?: string } & GroupPatch) => Promise<void>
   saveGroup: (type: GroupType, id: string, patch: GroupPatch) => Promise<void>
   deleteCollection: (id: string) => Promise<void>
+  /** Persist a manual reorder of one collection's items (D21). */
+  reorderCollection: (id: string, order: string[]) => Promise<void>
 
   loadNotes: (ownerType: OwnerType, ownerId: string) => Promise<void>
   addNote: (body: string, typeLabel?: string) => Promise<void>
@@ -894,7 +897,10 @@ export const useStore = create<AppState>((set, get) => ({
     // Keep each surface's rail selection. `loadItems` already scopes the
     // session / collection / folder ids to their surface, so switching tabs
     // and returning restores the last selected row instead of "All".
-    set({ surface, previewGroup: null })
+    // Manual (custom) order only applies to collections; leaving that surface
+    // drops it so the sort control never points at a hidden option.
+    const sort = surface !== 'collections' && get().sort === 'custom' ? 'time' : get().sort
+    set({ surface, previewGroup: null, sort })
   },
   setActiveSessionId: (id) => {
     set({ activeSessionId: id, previewGroup: null })
@@ -1045,7 +1051,7 @@ export const useStore = create<AppState>((set, get) => ({
       const page = await api.items(
         type === 'session'
           ? { sessionId: id, limit: 2000, sort: 'time', dir: 'desc' }
-          : { collectionId: id, limit: 2000, sort: 'time', dir: 'desc' },
+          : { collectionId: id, limit: 2000, sort: 'custom', dir: 'asc' },
       )
       const current = get().groupEditor
       if (current?.id === id && current.type === type) {
@@ -1230,6 +1236,14 @@ export const useStore = create<AppState>((set, get) => ({
   updateSession: async (id, patch) => {
     await api.updateSession(id, patch)
     await get().refreshCatalog()
+  },
+  reorderCollection: async (id, order) => {
+    await api.updateCollection(id, { order })
+    // Drop the collection's cached page so an expanded tile refetches in the
+    // new manual order, then refresh the grid and the open editor.
+    set((s) => clearGroupCache(s, 'collection', id))
+    await get().refreshCatalog()
+    await get().loadGroupEditorItems()
   },
   saveGroup: async (type, id, patch) => {
     if (type === 'session') await get().updateSession(id, patch)
