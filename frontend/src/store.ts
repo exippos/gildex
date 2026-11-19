@@ -446,6 +446,8 @@ interface AppState {
   syncItem: (id: string) => Promise<void>
 
   createTag: (name: string) => Promise<void>
+  updateTag: (id: string, name: string) => Promise<void>
+  deleteTag: (id: string) => Promise<void>
   exportTags: () => Promise<void>
   importTags: (names: string[]) => Promise<TagImportSummary>
   createCollection: (name: string, description: string, itemIds?: string[]) => Promise<string | null>
@@ -1222,6 +1224,18 @@ export const useStore = create<AppState>((set, get) => ({
 
   createTag: async (name) => {
     await api.createTag(name)
+    await get().refreshCatalog()
+  },
+  // Renaming/removing a tag rewrites names on every item and group, so drop
+  // cached group pages before refetching the catalog.
+  updateTag: async (id, name) => {
+    await api.updateTag(id, name)
+    set({ groupItems: {}, groupLoading: {} })
+    await get().refreshCatalog()
+  },
+  deleteTag: async (id) => {
+    await api.deleteTag(id)
+    set({ groupItems: {}, groupLoading: {} })
     await get().refreshCatalog()
   },
   exportTags: async () => {

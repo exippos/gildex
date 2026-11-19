@@ -72,13 +72,88 @@ func (s *Store) GetTag(id string) (*model.Tag, error) {
 	return &tag, nil
 }
 
-// DeleteTag removes a tag and unassigns it from items.
+// RenameTag changes a tag's name. Tag identity is case-insensitive, so the new
+// name must be free; rename never merges into an existing tag. Families are
+// derived from the name, so they follow automatically. If the library's NSFW
+// setting pointed at this tag, it is retargeted to the new name.
+func (s *Store) RenameTag(id, name string) (*model.Tag, error) {
+	name = strings.TrimSpace(name)
+	if !validTagName(name) {
+		return nil, invalid("tag name is required")
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var oldName string
+	err = tx.QueryRow(`SELECT name FROM tags WHERE id = ?`, id).Scan(&oldName)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var clash string
+	err = tx.QueryRow(`SELECT id FROM tags WHERE name = ? COLLATE NOCASE AND id <> ?`, name, id).Scan(&clash)
+	switch {
+	case err == nil:
+		return nil, invalid("a tag named “" + name + "” already exists")
+	case !errors.Is(err, sql.ErrNoRows):
+		return nil, err
+	}
+
+	if _, err := tx.Exec(`UPDATE tags SET name = ? WHERE id = ?`, name, id); err != nil {
+		return nil, err
+	}
+	if err := retargetNsfwTag(tx, oldName, name); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return s.GetTag(id)
+}
+
+// retargetNsfwTag points the nsfwTag setting at newName when it named oldName.
+func retargetNsfwTag(tx *sql.Tx, oldName, newName string) error {
+	var current string
+	err := tx.QueryRow(`SELECT value FROM settings WHERE key = ?`, nsfwTagKey).Scan(&current)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if !strings.EqualFold(current, oldName) {
+		return nil
+	}
+	_, err = tx.Exec(`INSERT INTO settings(key, value) VALUES(?, ?)
+		ON CONFLICT(key) DO UPDATE SET value = excluded.value`, nsfwTagKey, newName)
+	return err
+}
+
+// DeleteTag removes a tag and unassigns it from items and groups. If the
+// library's NSFW setting named this tag, it is cleared.
 func (s *Store) DeleteTag(id string) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+
+	var name string
+	err = tx.QueryRow(`SELECT name FROM tags WHERE id = ?`, id).Scan(&name)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+
 	if _, err := tx.Exec(`DELETE FROM item_tag WHERE tag_id = ?`, id); err != nil {
 		return err
 	}
@@ -92,7 +167,27 @@ func (s *Store) DeleteTag(id string) error {
 	if n, _ := res.RowsAffected(); n == 0 {
 		return ErrNotFound
 	}
+	if err := clearNsfwTag(tx, name); err != nil {
+		return err
+	}
 	return tx.Commit()
+}
+
+// clearNsfwTag unsets the nsfwTag setting when it names tagName.
+func clearNsfwTag(tx *sql.Tx, tagName string) error {
+	var current string
+	err := tx.QueryRow(`SELECT value FROM settings WHERE key = ?`, nsfwTagKey).Scan(&current)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if !strings.EqualFold(current, tagName) {
+		return nil
+	}
+	_, err = tx.Exec(`DELETE FROM settings WHERE key = ?`, nsfwTagKey)
+	return err
 }
 
 // querier is satisfied by both *sql.DB and *sql.Tx.

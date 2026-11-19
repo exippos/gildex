@@ -172,6 +172,7 @@ export const api = {
 
   tags: () => request<TagList>('GET', '/tags'),
   createTag: (name: string) => request<Tag>('POST', '/tags', { name }),
+  updateTag: (id: string, name: string) => request<Tag>('PATCH', `/tags/${id}`, { name }),
   deleteTag: (id: string) => request<void>('DELETE', `/tags/${id}`),
   exportTags: () => download('/tags/export', 'gildex-tags.json'),
   importTags: (names: string[]) =>

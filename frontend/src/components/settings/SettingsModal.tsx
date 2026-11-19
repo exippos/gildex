@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useStore } from '../../store'
 import { THEMES, THEME_LABELS, type Theme } from '../../theme'
-import type { SettingsSection } from '../../types'
+import type { SettingsSection, Tag } from '../../types'
 import { SHORTCUTS } from '../shortcuts'
 import { SourceManager } from '../sources/SourceManager'
 import './settings.css'
@@ -149,6 +149,8 @@ export function SettingsModal() {
   const cellSize = useStore((s) => s.cellSize)
   const setCellSize = useStore((s) => s.setCellSize)
   const tags = useStore((s) => s.tags)
+  const updateTag = useStore((s) => s.updateTag)
+  const deleteTag = useStore((s) => s.deleteTag)
   const exportTags = useStore((s) => s.exportTags)
   const importTags = useStore((s) => s.importTags)
   const openLibraryModal = useStore((s) => s.openLibraryModal)
@@ -162,6 +164,9 @@ export function SettingsModal() {
   const [tagBusy, setTagBusy] = useState(false)
   const [tagStatus, setTagStatus] = useState<string | null>(null)
   const [tagError, setTagError] = useState<string | null>(null)
+  const [editingTagId, setEditingTagId] = useState<string | null>(null)
+  const [editingTagName, setEditingTagName] = useState('')
+  const [tagRowBusy, setTagRowBusy] = useState<string | null>(null)
   const [blurError, setBlurError] = useState<string | null>(null)
   const [swatches, setSwatches] = useState<Partial<Record<Theme, SwatchPalette>>>({})
 
@@ -367,6 +372,61 @@ export function SettingsModal() {
     } finally {
       setTagBusy(false)
       if (tagFileRef.current) tagFileRef.current.value = ''
+    }
+  }
+
+  const beginTagEdit = (tag: Tag) => {
+    setTagError(null)
+    setTagStatus(null)
+    setEditingTagId(tag.id)
+    setEditingTagName(tag.name)
+  }
+
+  const cancelTagEdit = () => {
+    setEditingTagId(null)
+    setEditingTagName('')
+  }
+
+  const saveTagEdit = async (tag: Tag) => {
+    const next = editingTagName.trim()
+    if (!next || next === tag.name) {
+      cancelTagEdit()
+      return
+    }
+    if (tagRowBusy) return
+    setTagRowBusy(tag.id)
+    setTagError(null)
+    setTagStatus(null)
+    try {
+      await updateTag(tag.id, next)
+      setTagStatus(`renamed “${tag.name}” to “${next}”`)
+      cancelTagEdit()
+    } catch (err) {
+      setTagError(errorMessage(err))
+    } finally {
+      setTagRowBusy(null)
+    }
+  }
+
+  const removeTag = async (tag: Tag) => {
+    if (tagRowBusy) return
+    const ok = window.confirm(
+      `Remove tag “${tag.name}”?\n\nIt will be unassigned from ${tag.itemCount} ${
+        tag.itemCount === 1 ? 'item' : 'items'
+      } and from any sessions or collections. This cannot be undone.`,
+    )
+    if (!ok) return
+    setTagRowBusy(tag.id)
+    setTagError(null)
+    setTagStatus(null)
+    try {
+      await deleteTag(tag.id)
+      setTagStatus(`removed “${tag.name}”`)
+      if (editingTagId === tag.id) cancelTagEdit()
+    } catch (err) {
+      setTagError(errorMessage(err))
+    } finally {
+      setTagRowBusy(null)
     }
   }
 
@@ -683,6 +743,94 @@ export function SettingsModal() {
                         move the tag list between libraries or share it. only names travel; item
                         assignments stay in this catalog.
                       </p>
+                    </div>
+
+                    <div className="settings-row">
+                      <span className="settings-label">manage</span>
+                      <p className="settings-hint">
+                        rename a tag, or remove it from the vocabulary and from every item and group
+                        that carries it.
+                      </p>
+                      <ul className="settings-tag-list">
+                        {tags.map((tag) => {
+                          const editing = editingTagId === tag.id
+                          const rowBusy = tagRowBusy === tag.id
+                          return (
+                            <li key={tag.id} className="settings-tag-row">
+                              {editing ? (
+                                <input
+                                  className="settings-tag-input"
+                                  value={editingTagName}
+                                  autoFocus
+                                  aria-label={`Rename tag ${tag.name}`}
+                                  disabled={rowBusy}
+                                  onChange={(event) => setEditingTagName(event.target.value)}
+                                  onKeyDown={(event) => {
+                                    if (event.key === 'Enter') {
+                                      event.preventDefault()
+                                      void saveTagEdit(tag)
+                                    } else if (event.key === 'Escape') {
+                                      event.preventDefault()
+                                      cancelTagEdit()
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <span className="settings-tag-name" title={tag.name}>
+                                  {tag.name}
+                                </span>
+                              )}
+                              <span className="settings-tag-count" title="items using this tag">
+                                {tag.itemCount}
+                              </span>
+                              <div className="settings-tag-actions">
+                                {editing ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="settings-btn"
+                                      onClick={() => void saveTagEdit(tag)}
+                                      disabled={rowBusy || !editingTagName.trim()}
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="settings-btn"
+                                      onClick={cancelTagEdit}
+                                      disabled={rowBusy}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="settings-btn"
+                                      onClick={() => beginTagEdit(tag)}
+                                      disabled={rowBusy}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="settings-btn is-danger"
+                                      onClick={() => void removeTag(tag)}
+                                      disabled={rowBusy}
+                                    >
+                                      Remove
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </li>
+                          )
+                        })}
+                        {tags.length === 0 && (
+                          <li className="settings-tag-empty">no tags yet</li>
+                        )}
+                      </ul>
                     </div>
 
                     <div className="settings-row">

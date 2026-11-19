@@ -157,6 +157,29 @@ func (a *API) handleCreateTag(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, tag)
 }
 
+func (a *API) handleUpdateTag(w http.ResponseWriter, r *http.Request) {
+	st := a.requireStore(w)
+	if st == nil {
+		return
+	}
+	var body struct {
+		Name string `json:"name"`
+	}
+	if !decodeJSON(w, r, &body) {
+		return
+	}
+	if strings.TrimSpace(body.Name) == "" {
+		writeError(w, http.StatusBadRequest, "name is required")
+		return
+	}
+	tag, err := st.RenameTag(r.PathValue("id"), body.Name)
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, tag)
+}
+
 func (a *API) handleDeleteTag(w http.ResponseWriter, r *http.Request) {
 	st := a.requireStore(w)
 	if st == nil {
