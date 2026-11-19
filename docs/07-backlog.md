@@ -4,9 +4,9 @@
 - [X] Nested grouping (manual order) -- episodes
 - [X] Local reorder in collection
 - [ ] Hide drafts toggle
-- [ ] Add "sorted" flag for collections
+- [X] Add "sorted" flag for collections
 - [X] Drag-n-Drop reorder inside collections
-- [ ] Mested sub-collections (sub-groups for very similar images)
+- [ ] Nested sub-collections (sub-groups for very similar images)
 - [ ] Remove/Edit tag
 - [ ] Undo feature
 
