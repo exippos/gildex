@@ -109,3 +109,65 @@ func TestCollectionReorderPreservesUnlistedMembers(t *testing.T) {
 		}
 	}
 }
+
+// TestCollectionSortedFlag covers the user-set sorted/raw marker: it defaults
+// off, round-trips through UpdateCollection, and is read back by both
+// GetCollection and the Collections list.
+func TestCollectionSortedFlag(t *testing.T) {
+	s, err := Open(filepath.Join(t.TempDir(), "catalog.db"), t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+
+	col, err := s.CreateCollection("picks", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if col.Sorted {
+		t.Fatal("new collection should default to unsorted")
+	}
+
+	sorted := true
+	got, err := s.UpdateCollection(col.ID, CollectionPatch{Sorted: &sorted})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.Sorted {
+		t.Fatal("UpdateCollection did not persist sorted=true")
+	}
+
+	one, err := s.GetCollection(col.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !one.Sorted {
+		t.Fatal("GetCollection did not read sorted=true")
+	}
+
+	list, err := s.Collections()
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, c := range list {
+		if c.ID == col.ID {
+			found = true
+			if !c.Sorted {
+				t.Fatal("Collections did not read sorted=true")
+			}
+		}
+	}
+	if !found {
+		t.Fatal("collection missing from list")
+	}
+
+	unsorted := false
+	got, err = s.UpdateCollection(col.ID, CollectionPatch{Sorted: &unsorted})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Sorted {
+		t.Fatal("UpdateCollection did not persist sorted=false")
+	}
+}

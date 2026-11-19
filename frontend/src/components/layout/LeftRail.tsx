@@ -288,6 +288,11 @@ export function LeftRail({ style }: { style?: CSSProperties }) {
                     <span className="rail-row-text">
                       <span className="rail-row-title">{collection.name}</span>
                       <span className="rail-row-meta">
+                        {collection.sorted && (
+                          <span className="rail-row-sorted" title="Curated — manually sorted">
+                            sorted
+                          </span>
+                        )}
                         <span className="rail-row-count">{collection.itemCount}</span>
                       </span>
                     </span>

@@ -179,7 +179,7 @@ export const api = {
   collections: () => request<Collection[]>('GET', '/collections'),
   createCollection: (body: { name: string; description?: string }) =>
     request<Collection>('POST', '/collections', body),
-  updateCollection: (id: string, body: { name?: string; description?: string; order?: string[]; coverItemId?: string | null } & GroupPatch) =>
+  updateCollection: (id: string, body: { name?: string; description?: string; order?: string[]; coverItemId?: string | null; sorted?: boolean } & GroupPatch) =>
     request<Collection>('PATCH', `/collections/${id}`, body),
   deleteCollection: (id: string) => request<void>('DELETE', `/collections/${id}`),
   addToCollection: (id: string, itemIds: string[]) =>

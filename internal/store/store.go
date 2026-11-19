@@ -112,7 +112,8 @@ CREATE TABLE IF NOT EXISTS collections (
   cover_item_id TEXT,
   favorite      INTEGER NOT NULL DEFAULT 0,
   rating        INTEGER NOT NULL DEFAULT 0,
-  status        TEXT NOT NULL DEFAULT 'draft'
+  status        TEXT NOT NULL DEFAULT 'draft',
+  sorted        INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS collection_item (
@@ -223,6 +224,7 @@ func migrate(db *sql.DB) error {
 		{"collections", "favorite", `ALTER TABLE collections ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0`},
 		{"collections", "rating", `ALTER TABLE collections ADD COLUMN rating INTEGER NOT NULL DEFAULT 0`},
 		{"collections", "status", `ALTER TABLE collections ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'`},
+		{"collections", "sorted", `ALTER TABLE collections ADD COLUMN sorted INTEGER NOT NULL DEFAULT 0`},
 		{"episodes", "cover_item_id", `ALTER TABLE episodes ADD COLUMN cover_item_id TEXT`},
 		{"items", "source_id", `ALTER TABLE items ADD COLUMN source_id TEXT`},
 		{"items", "frame_count", `ALTER TABLE items ADD COLUMN frame_count INTEGER NOT NULL DEFAULT 0`},

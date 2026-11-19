@@ -166,6 +166,9 @@ type Collection struct {
 	Status        Status   `json:"status"`
 	Tags          []string `json:"tags"` // assigned group tag names, never null
 	Nsfw          bool     `json:"nsfw"` // cover thumbnail item carries the NSFW tag
+	// Sorted is a user-set flag distinguishing a curated (manually sorted)
+	// collection from a raw one. It is never inferred; only the user toggles it.
+	Sorted bool `json:"sorted"`
 }
 
 // Episode is a nested sub-group of items inside one session or collection.

@@ -27,7 +27,7 @@ func (s *Store) Collections() ([]model.Collection, error) {
 					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
 					ORDER BY ci.position ASC LIMIT 1),
 				''),
-			c.cover_item_id, c.favorite, c.rating, c.status,
+			c.cover_item_id, c.favorite, c.rating, c.status, c.sorted,
 			COALESCE(
 				(SELECT i.id FROM items i
 					WHERE i.id = c.cover_item_id AND i.thumbnail_path <> ''
@@ -55,14 +55,16 @@ func (s *Store) Collections() ([]model.Collection, error) {
 			thumbID  sql.NullString
 			favorite int
 			status   string
+			sorted   int
 		)
 		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount,
-			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status, &thumbID); err != nil {
+			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status, &sorted, &thumbID); err != nil {
 			return nil, err
 		}
 		c.CoverItemID = nullString(cover)
 		c.Favorite = favorite != 0
 		c.Status = model.Status(status)
+		c.Sorted = sorted != 0
 		c.Tags = []string{}
 		out = append(out, c)
 		if thumbID.Valid && thumbID.String != "" {
@@ -111,6 +113,7 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 		thumbID  sql.NullString
 		favorite int
 		status   string
+		sorted   int
 	)
 	err := s.db.QueryRow(`
 		SELECT c.id, c.name, c.description,
@@ -129,7 +132,7 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 					WHERE ci.collection_id = c.id AND i.thumbnail_path <> ''
 					ORDER BY ci.position ASC LIMIT 1),
 				''),
-			c.cover_item_id, c.favorite, c.rating, c.status,
+			c.cover_item_id, c.favorite, c.rating, c.status, c.sorted,
 			COALESCE(
 				(SELECT i.id FROM items i
 					WHERE i.id = c.cover_item_id AND i.thumbnail_path <> ''
@@ -142,7 +145,7 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 				'')
 		FROM collections c WHERE c.id = ?`, id).
 		Scan(&c.ID, &c.Name, &c.Description, &c.ItemCount, &c.VideoCount, &c.AudioCount,
-			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status, &thumbID)
+			&c.ThumbnailPath, &cover, &favorite, &c.Rating, &status, &sorted, &thumbID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -152,6 +155,7 @@ func (s *Store) GetCollection(id string) (*model.Collection, error) {
 	c.CoverItemID = nullString(cover)
 	c.Favorite = favorite != 0
 	c.Status = model.Status(status)
+	c.Sorted = sorted != 0
 	tags, err := s.loadGroupTags(groupOwnerCollection, id)
 	if err != nil {
 		return nil, err
@@ -196,6 +200,7 @@ type CollectionPatch struct {
 	Favorite    *bool
 	Rating      *int
 	Status      *string
+	Sorted      *bool // user-set sorted/raw flag; never inferred
 	AddTags     []string
 	RemoveTags  []string
 }
@@ -239,6 +244,10 @@ func (s *Store) UpdateCollection(id string, p CollectionPatch) (*model.Collectio
 		}
 		sets = append(sets, "status = ?")
 		args = append(args, *p.Status)
+	}
+	if p.Sorted != nil {
+		sets = append(sets, "sorted = ?")
+		args = append(args, boolInt(*p.Sorted))
 	}
 	if p.CoverItemID.Set {
 		if p.CoverItemID.Value == nil {

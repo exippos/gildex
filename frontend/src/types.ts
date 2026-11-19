@@ -132,6 +132,9 @@ export interface Collection {
   status: Status
   tags: string[]
   nsfw: boolean // cover thumbnail item carries the NSFW tag
+  // User-set flag: a curated (manually sorted) collection vs. a raw one.
+  // Never inferred — only the user toggles it.
+  sorted: boolean
 }
 
 // A nested sub-group of items inside one session or collection. Episodes are

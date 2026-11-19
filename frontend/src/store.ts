@@ -448,7 +448,7 @@ interface AppState {
   exportTags: () => Promise<void>
   importTags: (names: string[]) => Promise<TagImportSummary>
   createCollection: (name: string, description: string, itemIds?: string[]) => Promise<string | null>
-  updateCollection: (id: string, patch: { name?: string; description?: string; order?: string[] } & GroupPatch) => Promise<void>
+  updateCollection: (id: string, patch: { name?: string; description?: string; order?: string[]; sorted?: boolean } & GroupPatch) => Promise<void>
   updateSession: (id: string, patch: { label?: string } & GroupPatch) => Promise<void>
   saveGroup: (type: GroupType, id: string, patch: GroupPatch) => Promise<void>
   deleteCollection: (id: string) => Promise<void>

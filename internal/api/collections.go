@@ -78,6 +78,14 @@ func (a *API) handleUpdateCollection(w http.ResponseWriter, r *http.Request) {
 		}
 		patch.Order = &order
 	}
+	if v, ok := raw["sorted"]; ok {
+		var sorted bool
+		if err := json.Unmarshal(v, &sorted); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid sorted")
+			return
+		}
+		patch.Sorted = &sorted
+	}
 	cover, err := rawNullableString(raw, "coverItemId")
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid coverItemId")
