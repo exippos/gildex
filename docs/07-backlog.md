@@ -1,6 +1,6 @@
 # TODO
 - [X] Keyboard navigation
-    - [ ] Tie current KB focus to item currently selected
+    - [X] Tie current KB focus to item currently selected
 - [X] Nested grouping (manual order) -- episodes
 - [X] Local reorder in collection
 - [ ] Hide drafts toggle
