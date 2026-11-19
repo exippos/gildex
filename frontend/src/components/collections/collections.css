@@ -123,26 +123,6 @@
   color: var(--text-muted);
 }
 
-/* Inline checkbox field (e.g. the collection "sorted" flag). */
-.col-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.col-check input[type='checkbox'] {
-  width: auto;
-  margin-top: 1px;
-  accent-color: var(--gilt);
-}
-
-.col-check-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .col-section {
   display: flex;
   flex-direction: column;

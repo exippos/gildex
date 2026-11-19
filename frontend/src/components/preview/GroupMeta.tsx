@@ -10,6 +10,7 @@ type GroupRecord = Session | Collection
 export function GroupMeta({ type, group }: { type: GroupType; group: GroupRecord }) {
   const tags = useStore((s) => s.tags)
   const saveGroup = useStore((s) => s.saveGroup)
+  const updateCollection = useStore((s) => s.updateCollection)
   const noun = type === 'session' ? 'session' : 'collection'
 
   // Tolerate a stale backend that predates group metadata (D45).
@@ -17,6 +18,8 @@ export function GroupMeta({ type, group }: { type: GroupType; group: GroupRecord
   const rating = group.rating ?? 0
   const status = group.status ?? 'draft'
   const groupTags = group.tags ?? []
+  // The sorted/raw marker is collection-only and user-set, never inferred.
+  const sorted = type === 'collection' && 'sorted' in group ? group.sorted : false
 
   return (
     <>
@@ -71,6 +74,19 @@ export function GroupMeta({ type, group }: { type: GroupType; group: GroupRecord
             ))}
           </div>
         </div>
+
+        {type === 'collection' && (
+          <label className="preview-check" title="Curated — manually sorted">
+            <input
+              type="checkbox"
+              checked={sorted}
+              onChange={(e) =>
+                void updateCollection(group.id, { sorted: e.target.checked })
+              }
+            />
+            <span className="preview-control-label">sorted</span>
+          </label>
+        )}
       </div>
 
       <div className="preview-section">

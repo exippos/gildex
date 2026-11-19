@@ -381,6 +381,20 @@
   margin-top: 12px;
 }
 
+/* Collection-only sorted/raw checkbox, sits below the status row. */
+.preview-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+.preview-check input[type='checkbox'] {
+  width: auto;
+  accent-color: var(--gilt);
+}
+
 .preview-status-row {
   display: flex;
   gap: 4px;

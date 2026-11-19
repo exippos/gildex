@@ -35,7 +35,6 @@ export function GroupEditor() {
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [sorted, setSorted] = useState(false)
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,12 +62,10 @@ export function GroupEditor() {
       const next = editor.id ? sessions.find((s) => s.id === editor.id) : undefined
       setName(next?.label ?? '')
       setDescription('')
-      setSorted(false)
     } else {
       const next = editor.id ? collections.find((c) => c.id === editor.id) : undefined
       setName(next?.name ?? '')
       setDescription(next?.description ?? '')
-      setSorted(next?.sorted ?? false)
     }
     setQuery('')
     setError(null)
@@ -162,7 +159,7 @@ export function GroupEditor() {
       } else if (type === 'session') {
         await updateSession(id, { label: trimmed })
       } else {
-        await updateCollection(id, { name: trimmed, description: description.trim(), sorted })
+        await updateCollection(id, { name: trimmed, description: description.trim() })
       }
       closeGroupEditor()
     } catch (err) {
@@ -291,22 +288,6 @@ export function GroupEditor() {
                     placeholder="what holds these together?"
                     aria-label="collection description"
                   />
-                </label>
-              )}
-
-              {type === 'collection' && !isNew && (
-                <label className="col-check">
-                  <input
-                    type="checkbox"
-                    checked={sorted}
-                    onChange={(e) => setSorted(e.target.checked)}
-                  />
-                  <span className="col-check-text">
-                    <span className="col-label display">sorted</span>
-                    <span className="col-hint">
-                      mark as curated — tells sorted collections from raw ones
-                    </span>
-                  </span>
                 </label>
               )}
 
