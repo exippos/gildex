@@ -10,9 +10,9 @@ export interface Shortcut {
 }
 
 export const SHORTCUTS: Shortcut[] = [
-  { keys: '← → ↑ ↓', action: 'Move focus through the grid' },
+  { keys: '← → ↑ ↓', action: 'Move the selection through the grid' },
   { keys: 'Shift + arrows', action: 'Extend the selection' },
-  { keys: 'Space', action: 'Select or deselect the focused item' },
+  { keys: 'Space', action: 'Select or deselect the current item' },
   { keys: 'Enter', action: 'Expand or collapse a group · open an item' },
   { keys: 'Ctrl / ⌘ + A', action: 'Select all visible items' },
   { keys: 'Del', action: 'Remove the selected items from the catalog' },

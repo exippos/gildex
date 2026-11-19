@@ -1382,21 +1382,31 @@ export function Grid({ cellSize }: { cellSize: number }) {
     }
   }
 
+  // Arrow navigation moves the current selection, not a separate focus cursor:
+  // landing on a cell selects it (the gilt border follows), and landing on a
+  // tile / episode / section drops the item selection. Shift extends a range.
+  const selectAndFocus = (entry: { slot: Slot; row: number }, shift: boolean) => {
+    if (shift) {
+      if (entry.slot.kind === 'cell') selectRange(entry.slot.item.id, itemOrder)
+    } else if (entry.slot.kind === 'cell') {
+      setSelected(entry.slot.item.id, false)
+    } else {
+      clearSelection()
+    }
+    focusSlot(entry)
+  }
+
   const moveFocus = (delta: number, shift: boolean) => {
     if (!flatSlots.length) return
     const idx = flatSlots.findIndex((entry) => entry.slot.key === (focusedKey ?? firstSlotKey))
     const from = idx === -1 ? 0 : idx
     const next = Math.max(0, Math.min(flatSlots.length - 1, from + delta))
-    const target = flatSlots[next]
-    if (shift && target.slot.kind === 'cell') {
-      selectRange(target.slot.item.id, itemOrder)
-    }
-    focusSlot(target)
+    selectAndFocus(flatSlots[next], shift)
   }
 
   const focusIndex = (index: number) => {
     if (!flatSlots.length) return
-    focusSlot(flatSlots[Math.max(0, Math.min(flatSlots.length - 1, index))])
+    selectAndFocus(flatSlots[Math.max(0, Math.min(flatSlots.length - 1, index))], false)
   }
 
   const activateSpace = () => {
