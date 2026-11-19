@@ -183,6 +183,7 @@ export interface LibraryStatus {
   sourceCount: number
   appVersion: string
   schemaVersion: number
+  platform: string // runtime.GOOS, so the UI can label OS actions
 }
 
 export interface ImportDuplicate {

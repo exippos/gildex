@@ -436,6 +436,9 @@
 }
 
 .preview-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding-top: 12px;
 }
 
@@ -459,8 +462,9 @@
   color: var(--on-gilt);
 }
 
-/* secondary group action: edit a session or collection */
-.preview-edit-group {
+/* secondary group action: edit a session or collection, reveal a file */
+.preview-edit-group,
+.preview-reveal {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--gilt-border);
@@ -473,7 +477,8 @@
   text-transform: uppercase;
 }
 
-.preview-edit-group:hover {
+.preview-edit-group:hover,
+.preview-reveal:hover {
   border-color: var(--gilt);
   background: var(--gilt-dim);
   color: var(--gilt-bright);

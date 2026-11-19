@@ -417,6 +417,7 @@ interface AppState {
   setPreviewItemId: (id: string | null) => void
   setPreviewGroup: (group: { type: GroupType; id: string } | null) => void
   openInspector: (ownerType: OwnerType, ownerId: string, ownerLabel?: string) => Promise<void>
+  revealItem: (id: string) => Promise<void>
   closeInspector: () => void
 
   openGroupEditor: (type: GroupType, id: string | null, pendingItemIds?: string[]) => void
@@ -1015,6 +1016,14 @@ export const useStore = create<AppState>((set, get) => ({
   openInspector: async (ownerType, ownerId, ownerLabel) => {
     set({ inspector: { ownerType, ownerId, ownerLabel } })
     await get().loadNotes(ownerType, ownerId)
+  },
+  // Ask the local backend to open the OS file manager at the item's file.
+  revealItem: async (id) => {
+    try {
+      await api.revealItem(id)
+    } catch (e) {
+      window.alert((e as Error).message)
+    }
   },
   closeInspector: () => set({ inspector: null, notes: [] }),
 

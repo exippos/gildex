@@ -232,6 +232,7 @@ type LibraryStatus struct {
 	SourceCount     int    `json:"sourceCount"`
 	AppVersion      string `json:"appVersion"`
 	SchemaVersion   int    `json:"schemaVersion"`
+	Platform        string `json:"platform"` // runtime.GOOS, so the UI can label OS actions
 }
 
 // Duplicate describes a file whose content hash was already cataloged.

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -272,6 +273,7 @@ func (l *Library) Status() (model.LibraryStatus, error) {
 		LastLibrary:   l.LastLibrary(),
 		AppVersion:    AppVersion,
 		SchemaVersion: l.SchemaVersion(),
+		Platform:      runtime.GOOS,
 	}
 	if st == nil {
 		return status, nil

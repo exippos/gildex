@@ -8,6 +8,7 @@ import type { CSSProperties } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { episodeKey, groupItemsKey, resolveItems, useStore, isNsfwBlurred, type GroupClickMode } from '../../store'
 import { thumbUrl } from '../../api'
+import { revealLabel } from '../platform'
 import type {
   Collection,
   Episode,
@@ -810,6 +811,8 @@ export function Grid({ cellSize }: { cellSize: number }) {
   const batchRemove = useStore((s) => s.batchRemove)
   const openCollectionPicker = useStore((s) => s.openCollectionPicker)
   const openInspector = useStore((s) => s.openInspector)
+  const revealItem = useStore((s) => s.revealItem)
+  const libraryPlatform = useStore((s) => s.library?.platform ?? '')
   const openGroupEditor = useStore((s) => s.openGroupEditor)
   const openEpisodeEditor = useStore((s) => s.openEpisodeEditor)
   const assignEpisodeItems = useStore((s) => s.assignEpisodeItems)
@@ -1782,6 +1785,16 @@ export function Grid({ cellSize }: { cellSize: number }) {
         },
       })
       entries.push({ kind: 'submenu', label: 'Episode', items: episodeItems })
+    }
+
+    if (item.state !== 'missing') {
+      entries.push({
+        kind: 'item',
+        label: revealLabel(libraryPlatform),
+        onSelect: () => {
+          void revealItem(item.id)
+        },
+      })
     }
 
     entries.push({

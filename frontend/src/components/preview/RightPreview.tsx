@@ -16,6 +16,7 @@ import { resolveMediaPath } from '../paths'
 import { BatchPreview } from './BatchPreview'
 import { GroupMeta } from './GroupMeta'
 import { TagEditor } from './TagEditor'
+import { revealLabel } from '../platform'
 import './right-preview.css'
 
 function MetaRow({ label, value, title }: { label: string; value: string; title?: string }) {
@@ -82,6 +83,8 @@ function ItemPreview({ item }: { item: Item }) {
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const saveItem = useStore((s) => s.saveItem)
   const openInspector = useStore((s) => s.openInspector)
+  const revealItem = useStore((s) => s.revealItem)
+  const libraryPlatform = useStore((s) => s.library?.platform ?? '')
   const tags = useStore((s) => s.tags)
   const tagItem = useStore((s) => s.tagItem)
   const sources = useStore((s) => s.sources)
@@ -193,6 +196,15 @@ function ItemPreview({ item }: { item: Item }) {
         >
           Inspect
         </button>
+        {item.state !== 'missing' && (
+          <button
+            type="button"
+            className="preview-reveal"
+            onClick={() => void revealItem(item.id)}
+          >
+            {revealLabel(libraryPlatform)}
+          </button>
+        )}
       </div>
 
       <div className="preview-section">

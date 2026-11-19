@@ -44,6 +44,7 @@ func (a *API) Register(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH /api/items/batch", a.handleBatch)
 	mux.HandleFunc("GET /api/items/{id}", a.handleGetItem)
 	mux.HandleFunc("PATCH /api/items/{id}", a.handlePatchItem)
+	mux.HandleFunc("POST /api/items/{id}/reveal", a.handleRevealItem)
 
 	mux.HandleFunc("GET /api/sessions", a.handleSessions)
 	mux.HandleFunc("POST /api/sessions/recluster", a.handleReclusterSessions)

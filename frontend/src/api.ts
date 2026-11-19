@@ -163,6 +163,7 @@ export const api = {
   item: (id: string) => request<Item>('GET', `/items/${id}`),
   updateItem: (id: string, patch: ItemPatch) =>
     request<Item>('PATCH', `/items/${id}`, patch),
+  revealItem: (id: string) => request<void>('POST', `/items/${id}/reveal`),
   batch: (patch: BatchPatch) => request<{ ok: boolean }>('PATCH', '/items/batch', patch),
 
   sessions: () => request<Session[]>('GET', '/sessions'),
